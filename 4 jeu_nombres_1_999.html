@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J'écoute, j'écris !</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+  background: linear-gradient(135deg, #7dd3fc, #a78bfa 55%, #f9a8d4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #26324a;
+}
+.app {
+  width: min(760px, 100%);
+  background: rgba(255,255,255,.96);
+  border-radius: 30px;
+  padding: 28px;
+  box-shadow: 0 18px 50px rgba(40,30,80,.22);
+  text-align: center;
+}
+h1 { margin: 0 0 6px; font-size: clamp(30px, 5vw, 48px); }
+.subtitle { margin: 0 0 20px; color: #667085; font-size: 18px; }
+.top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
+}
+.badge {
+  background: #eef2ff; color: #4f46e5; padding: 9px 15px;
+  border-radius: 999px; font-weight: bold;
+}
+.score { background: #fff7ed; color: #c2410c; padding: 9px 15px; border-radius: 999px; font-weight: bold; }
+.listen {
+  border: none; cursor: pointer; color: white; background: #7c3aed;
+  border-radius: 22px; padding: 16px 28px; font-size: 22px; font-weight: bold;
+  box-shadow: 0 7px 0 #5b21b6; margin: 5px 0 20px;
+}
+.listen:active { transform: translateY(5px); box-shadow: 0 2px 0 #5b21b6; }
+.answer {
+  min-height: 72px; border: 4px solid #c7d2fe; border-radius: 18px;
+  display: flex; justify-content: center; align-items: center;
+  font-size: 42px; font-weight: bold; letter-spacing: 4px;
+  margin: 0 auto 18px; max-width: 360px; background: #f8fafc;
+}
+.keypad {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; max-width: 420px; margin: auto;
+}
+.key {
+  border: none; border-radius: 18px; min-height: 68px;
+  background: #e0e7ff; color: #312e81; font-size: 30px;
+  font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #a5b4fc;
+}
+.key:hover { background: #c7d2fe; }
+.key:active { transform: translateY(4px); box-shadow: 0 1px 0 #a5b4fc; }
+.clear { background: #fee2e2; color: #b91c1c; box-shadow: 0 5px 0 #fca5a5; }
+.validate {
+  background: #22c55e; color: white; box-shadow: 0 5px 0 #15803d;
+}
+.validate:hover { background: #16a34a; }
+.feedback {
+  min-height: 48px; margin: 18px 0 0; font-size: 21px; font-weight: bold;
+}
+.correct { color: #15803d; }
+.wrong { color: #dc2626; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(35,25,70,.58);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.modal {
+  background: white; width: min(550px,100%); border-radius: 30px;
+  padding: 35px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.modal h2 { font-size: 38px; margin: 0 0 12px; }
+.final-score { font-size: 64px; font-weight: bold; color: #7c3aed; margin: 10px; }
+.restart {
+  border: none; background: #f97316; color: white; border-radius: 18px;
+  padding: 15px 28px; font-size: 21px; font-weight: bold; cursor: pointer;
+  box-shadow: 0 5px 0 #c2410c;
+}
+.confetti { font-size: 35px; margin-bottom: 5px; }
+@media(max-width:500px) {
+  .app { padding: 20px 14px; }
+  .key { min-height: 60px; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>🔊 J'écoute, j'écris !</h1>
+  <p class="subtitle">Écoute le nombre puis écris-le en chiffres.</p>
+
+  <div class="top">
+    <div class="badge" id="round">Essai 1 / 10</div>
+    <div class="score" id="score">Score : 0</div>
+  </div>
+
+  <button class="listen" id="listen">🔊 Écouter le nombre</button>
+
+  <div class="answer" id="answer" aria-label="Réponse"></div>
+
+  <div class="keypad">
+    <button class="key" data-key="1">1</button>
+    <button class="key" data-key="2">2</button>
+    <button class="key" data-key="3">3</button>
+    <button class="key" data-key="4">4</button>
+    <button class="key" data-key="5">5</button>
+    <button class="key" data-key="6">6</button>
+    <button class="key" data-key="7">7</button>
+    <button class="key" data-key="8">8</button>
+    <button class="key" data-key="9">9</button>
+    <button class="key clear" data-key="clear">⌫</button>
+    <button class="key" data-key="0">0</button>
+    <button class="key validate" data-key="validate">✓</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="confetti">🎉 ⭐ 🥳 ⭐ 🎉</div>
+    <h2 id="finalTitle">Bravo !</h2>
+    <div class="final-score" id="finalScore">0 / 10</div>
+    <p id="finalMessage"></p>
+    <button class="restart" id="restart">🔄 Recommencer</button>
+  </div>
+</div>
+
+<script>
+let target = 0;
+let answer = "";
+let score = 0;
+let trial = 1;
+let locked = false;
+
+const answerEl = document.getElementById("answer");
+const feedbackEl = document.getElementById("feedback");
+const roundEl = document.getElementById("round");
+const scoreEl = document.getElementById("score");
+const overlay = document.getElementById("overlay");
+
+function frenchNumber(n) {
+  // Basic French number wording for 1–999.
+  const units = ["","un","deux","trois","quatre","cinq","six","sept","huit","neuf"];
+  const teens = ["dix","onze","douze","treize","quatorze","quinze","seize"];
+  const tens = ["","","vingt","trente","quarante","cinquante","soixante"];
+  if (n < 10) return units[n];
+  if (n < 17) return teens[n-10];
+  if (n < 20) return "dix-" + units[n-10];
+  if (n < 70) {
+    let t = Math.floor(n/10), u = n%10;
+    return tens[t] + (u === 0 ? "" : u === 1 ? "-et-un" : "-" + units[u]);
+  }
+  if (n < 80) {
+    return n === 71 ? "soixante-et-onze" :
+      "soixante-" + (n-60 < 17 ? teens[n-70] : units[n-60]);
+  }
+  if (n < 100) {
+    return n === 80 ? "quatre-vingts" : "quatre-vingt-" + units[n-80];
+  }
+  if (n < 200) return n === 100 ? "cent" : "cent " + frenchNumber(n-100);
+  if (n < 1000) {
+    let h = Math.floor(n/100), r = n%100;
+    return units[h] + " cent" + (r === 0 ? "s" : " " + frenchNumber(r));
+  }
+}
+
+function newNumber() {
+  target = Math.floor(Math.random() * 999) + 1;
+  answer = "";
+  locked = false;
+  answerEl.textContent = "";
+  feedbackEl.textContent = "";
+  feedbackEl.className = "feedback";
+  roundEl.textContent = `Essai ${trial} / 10`;
+  scoreEl.textContent = `Score : ${score}`;
+  setTimeout(speakNumber, 300);
+}
+
+function speakNumber() {
+  if (!("speechSynthesis" in window)) {
+    feedbackEl.textContent = "Le son n'est pas disponible sur ce navigateur.";
+    feedbackEl.className = "feedback wrong";
+    return;
+  }
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(frenchNumber(target));
+  utterance.lang = "fr-FR";
+  utterance.rate = 0.78;
+  utterance.pitch = 1.05;
+  speechSynthesis.speak(utterance);
+}
+
+function addDigit(d) {
+  if (locked || answer.length >= 3) return;
+  answer += d;
+  answerEl.textContent = answer;
+}
+
+function clearAnswer() {
+  if (locked) return;
+  answer = answer.slice(0, -1);
+  answerEl.textContent = answer;
+}
+
+function validate() {
+  if (locked) return;
+  if (answer === "") {
+    feedbackEl.textContent = "Écris d'abord un nombre !";
+    feedbackEl.className = "feedback wrong";
+    return;
+  }
+
+  locked = true;
+  const good = Number(answer) === target;
+
+  if (good) {
+    score++;
+    feedbackEl.textContent = "🌟 Bravo ! C'est correct !";
+    feedbackEl.className = "feedback correct";
+  } else {
+    feedbackEl.textContent = `❌ Pas tout à fait… C'était ${target}.`;
+    feedbackEl.className = "feedback wrong";
+  }
+
+  scoreEl.textContent = `Score : ${score}`;
+
+  setTimeout(() => {
+    if (trial >= 10) finish();
+    else {
+      trial++;
+      newNumber();
+    }
+  }, 1400);
+}
+
+function finish() {
+  document.getElementById("finalScore").textContent = `${score} / 10`;
+  let title, message;
+  if (score === 10) {
+    title = "🏆 Excellent !";
+    message = "10 bonnes réponses ! Tu maîtrises très bien les nombres.";
+  } else if (score >= 8) {
+    title = "🌟 Bravo !";
+    message = "Super travail ! Encore un petit entraînement et ce sera parfait.";
+  } else if (score >= 5) {
+    title = "👏 Bien joué !";
+    message = "Tu progresses ! Continue à t'entraîner pour gagner encore des points.";
+  } else {
+    title = "💪 Continue !";
+    message = "Chaque essai te fait progresser. Recommence et essaie de battre ton score !";
+  }
+  document.getElementById("finalTitle").textContent = title;
+  document.getElementById("finalMessage").textContent = message;
+  overlay.style.display = "flex";
+}
+
+document.querySelectorAll(".key").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const k = btn.dataset.key;
+    if (k === "clear") clearAnswer();
+    else if (k === "validate") validate();
+    else addDigit(k);
+  });
+});
+
+document.getElementById("listen").addEventListener("click", speakNumber);
+
+document.addEventListener("keydown", e => {
+  if (/^[0-9]$/.test(e.key)) addDigit(e.key);
+  else if (e.key === "Backspace") clearAnswer();
+  else if (e.key === "Enter") validate();
+});
+
+document.getElementById("restart").addEventListener("click", () => {
+  overlay.style.display = "none";
+  score = 0;
+  trial = 1;
+  newNumber();
+});
+
+newNumber();
+</script>
+</body>
+</html>

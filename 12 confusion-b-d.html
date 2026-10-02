@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confusion b / d : écoute, lis, choisis</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --ink: #17324d;
+      --b-color: #2563eb;
+      --d-color: #ea8c1a;
+      --page-bg: linear-gradient(135deg, #bcecff 0%, #e9f8ff 46%, #fff4ba 100%);
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0; width: 100%;
+      font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+    }
+    button { font-family: inherit; }
+
+    .game-shell { width: 100%; max-width: 900px; margin: 0 auto; padding: 28px 20px 36px; }
+
+    .hero-shape { position: absolute; border-radius: 999px; opacity: .72; pointer-events: none; }
+    .hero-shape-one { width: 110px; height: 110px; background: #ffd866; top: -45px; left: 8%; }
+    .hero-shape-two { width: 76px; height: 76px; background: #9de6c7; bottom: -30px; right: 14%; }
+    .hero-shape-three { width: 42px; height: 42px; background: #ff9fbd; top: 32px; right: 8%; }
+
+    .hero-panel {
+      position: relative; overflow: hidden;
+      border: 4px solid rgba(255,255,255,.9);
+      box-shadow: 0 14px 0 rgba(32, 96, 139, .14);
+      animation: rise-in .55s ease both;
+      background: linear-gradient(135deg, #5cbcf5 0%, #8bdded 100%);
+    }
+
+    .mascot {
+      width: 92px; height: 92px; display: grid; place-items: center;
+      border-radius: 28px; background: #ffffff;
+      box-shadow: 0 8px 0 rgba(30, 117, 156, .16);
+      transform: rotate(5deg); font-size: 50px; flex-shrink: 0;
+    }
+
+    /* --- Rappel mnémotechnique du "lit" b-d --- */
+    .mnemo-banner {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,.85);
+      border-radius: 18px;
+      padding: 10px 16px;
+    }
+    .mnemo-letters {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      font-weight: 700;
+      font-size: 2.1rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .mnemo-letters .b { color: var(--b-color); }
+    .mnemo-letters .d { color: var(--d-color); }
+    .mnemo-text { font-size: .92rem; font-weight: 600; color: #17496f; }
+
+    .game-card {
+      box-shadow: 0 16px 0 rgba(32, 96, 139, .13);
+      animation: rise-in .6s .08s ease both;
+      background: #fffdf7;
+    }
+
+    .phase-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; border-radius: 999px;
+      font-weight: 700; font-size: .95rem;
+    }
+    .phase-pill.listen { background: #f1e8ff; color: #7c3aed; }
+    .phase-pill.syllables { background: #eaf3ff; color: #1d4ed8; }
+    .phase-pill.words { background: #fff0dd; color: #b45309; }
+
+    .score-chip { border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: .95rem; }
+
+    /* --- Étape 1 : écoute et choisis --- */
+    .listen-prompt {
+      margin-top: 22px;
+      text-align: center;
+    }
+    .replay-button {
+      border: none;
+      background: #f1e8ff;
+      color: #7c3aed;
+      width: 76px; height: 76px;
+      border-radius: 999px;
+      display: inline-grid; place-items: center;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #d9c3ff;
+      transition: transform .12s ease, box-shadow .12s ease;
+      touch-action: manipulation;
+    }
+    .replay-button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #d9c3ff; }
+    .replay-button:active { transform: translateY(2px); box-shadow: 0 1px 0 #d9c3ff; }
+
+    .choice-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 22px; }
+    .choice-card {
+      flex: 1 1 160px;
+      max-width: 220px;
+      min-height: 140px;
+      border-radius: 24px;
+      border: 4px solid #ffffff;
+      background: #eef7ff;
+      font-size: 3rem;
+      font-weight: 700;
+      color: #17324d;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #cfe2ff;
+      transition: transform .13s ease, box-shadow .13s ease, background .13s ease;
+      touch-action: manipulation;
+    }
+    .choice-card:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 0 #cfe2ff; }
+    .choice-card:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #cfe2ff; }
+    .choice-card:disabled { cursor: default; }
+    .choice-card.correct { background: #9de6c7; border-color: #45b984; box-shadow: 0 6px 0 #45b984; color: #12452f; animation: happy-pop .35s ease; }
+    .choice-card.incorrect { background: #ffc6d3; border-color: #ee7795; box-shadow: 0 6px 0 #ee7795; color: #7a1732; animation: little-shake .35s ease; }
+
+    /* --- Étapes 2 & 3 : lecture flash --- */
+    .flash-card {
+      margin-top: 22px;
+      border-radius: 28px;
+      border: 4px solid #ffffff;
+      background: #eef7ff;
+      box-shadow: inset 0 0 0 3px rgba(59,130,246,.12);
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      text-align: center;
+      transition: transform .15s ease;
+    }
+    .flash-card.words { background: #fff8ec; box-shadow: inset 0 0 0 3px rgba(234,140,26,.14); }
+
+    .flash-word {
+      font-size: 4.4rem;
+      font-weight: 700;
+      color: #17324d;
+      line-height: 1;
+      word-break: break-word;
+    }
+
+    .listen-icon-button {
+      border: none;
+      background: #ffffff;
+      color: #2563eb;
+      width: 52px; height: 52px;
+      border-radius: 999px;
+      display: grid; place-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #cfe2ff;
+      transition: transform .12s ease, box-shadow .12s ease;
+      touch-action: manipulation;
+    }
+    .listen-icon-button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #cfe2ff; }
+    .listen-icon-button:active { transform: translateY(2px); box-shadow: 0 1px 0 #cfe2ff; }
+
+    .judge-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 22px; }
+    .judge-button {
+      flex: 1 1 200px;
+      max-width: 260px;
+      border: none;
+      border-radius: 20px;
+      padding: 16px 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .13s ease, box-shadow .13s ease;
+      touch-action: manipulation;
+    }
+    .judge-button.good { background: #9de6c7; color: #0e3a28; box-shadow: 0 6px 0 #45b984; }
+    .judge-button.retry { background: #ffd0a8; color: #7a3a05; box-shadow: 0 6px 0 #e8942a; }
+    .judge-button:hover { transform: translateY(-2px); }
+    .judge-button:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2) !important; }
+
+    .result-panel { animation: rise-in .38s ease both; background: linear-gradient(135deg, #d7f8e5 0%, #fff1a9 100%); }
+    .result-panel.perfect { background: linear-gradient(135deg, #ffe08a 0%, #ffb6c8 100%); }
+    .confetti-dot { position: absolute; width: 13px; height: 13px; border-radius: 999px; }
+
+    @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes card-pop { 0% { transform: scale(.96); } 100% { transform: scale(1); } }
+    @keyframes happy-pop { 50% { transform: scale(1.08) rotate(-2deg); } }
+    @keyframes little-shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .flash-card.pop { animation: card-pop .22s ease; }
+
+    #confetti-overlay { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 999; }
+    .confetti-fall {
+      position: absolute; top: -40px; border-radius: 3px; opacity: .95;
+      animation: confetti-drop linear forwards;
+    }
+    @keyframes confetti-drop {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(var(--spin)); opacity: .9; }
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .game-shell { padding: 18px 12px 26px; }
+      .mascot { width: 70px; height: 70px; font-size: 38px; border-radius: 22px; }
+      .hero-panel h1 { font-size: 25px !important; }
+      .flash-word { font-size: 3rem; }
+      .flash-card { min-height: 170px; }
+      .choice-card { font-size: 2.2rem; min-height: 110px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="confetti-overlay" aria-hidden="true"></div>
+
+  <header class="w-full">
+    <div class="game-shell">
+      <section class="hero-panel rounded-[32px] px-6 py-7 sm:px-10 sm:py-9">
+        <span class="hero-shape hero-shape-one"></span>
+        <span class="hero-shape hero-shape-two"></span>
+        <span class="hero-shape hero-shape-three"></span>
+        <div class="relative flex items-center justify-between gap-5">
+          <div>
+            <p class="mb-2 font-bold uppercase" style="color:#17496f; font-size:14px; letter-spacing:.08rem;">Lecture flash • Spécial confusion b / d</p>
+            <h1 class="leading-tight" style="color:#17324d; font-weight:700; font-size:32px;">Écoute, lis et choisis : b ou d ?</h1>
+            <p class="mt-2 max-w-xl" style="color:#17496f; font-weight:500; font-size:17px;">Un entraînement en 3 étapes pour ne plus confondre le b et le d.</p>
+          </div>
+          <div class="mascot" aria-hidden="true">🛏️</div>
+        </div>
+        <div class="mnemo-banner">
+          <div class="mnemo-letters"><span class="b">b</span><span class="d">d</span></div>
+          <p class="mnemo-text">Astuce du petit lit : ensemble, « bd » forme un lit ! Le <strong style="color:var(--b-color);">b</strong> a son gros ventre à droite, le <strong style="color:var(--d-color);">d</strong> a le sien à gauche.</p>
+        </div>
+      </section>
+    </div>
+  </header>
+
+  <main class="w-full">
+    <div class="game-shell pt-0">
+      <section class="game-card rounded-[30px] border-4 border-white p-5 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span id="phase-pill" class="phase-pill listen">
+            <i data-lucide="ear" width="16" height="16" aria-hidden="true"></i>
+            <span id="phase-label">Étape 1 : Écoute et choisis</span>
+          </span>
+          <div class="flex flex-wrap gap-2">
+            <span class="score-chip bg-sky-100" style="color:#17496f;">Carte <span id="progress-value">1 / 8</span></span>
+            <span class="score-chip bg-amber-100" style="color:#855210;">Réussites <span id="score-value">0</span></span>
+          </div>
+        </div>
+
+        <!-- Étape 1 : discrimination auditive -->
+        <div id="listen-section">
+          <div class="listen-prompt">
+            <button id="replay-button" type="button" class="replay-button" aria-label="Réécouter la syllabe">
+              <i data-lucide="volume-2" width="30" height="30" aria-hidden="true"></i>
+            </button>
+            <p class="mt-3 font-bold" style="font-size:1.05rem;">Écoute bien, puis clique sur la bonne syllabe.</p>
+          </div>
+          <div id="choice-row" class="choice-row"></div>
+        </div>
+
+        <!-- Étapes 2 & 3 : lecture flash -->
+        <div id="reading-section" class="hidden">
+          <div id="flash-card" class="flash-card">
+            <p id="flash-word" class="flash-word">…</p>
+            <button id="listen-word-button" type="button" class="listen-icon-button" aria-label="Entendre la prononciation">
+              <i data-lucide="volume-2" width="24" height="24" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <p class="mt-4 text-center" style="color:#47708c; font-weight:500; font-size:15px;">L'enseignant (ou l'élève) écoute la lecture à voix haute, puis clique sur le bon bouton.</p>
+
+          <div class="judge-row">
+            <button id="good-button" type="button" class="judge-button good">
+              <i data-lucide="check-circle-2" width="22" height="22" aria-hidden="true"></i>
+              Bien lu !
+            </button>
+            <button id="retry-button" type="button" class="judge-button retry">
+              <i data-lucide="repeat" width="22" height="22" aria-hidden="true"></i>
+              À revoir
+            </button>
+          </div>
+        </div>
+
+        <section id="results-panel" class="result-panel relative mt-7 hidden overflow-hidden rounded-[25px] p-7 text-center">
+          <span class="confetti-dot left-[10%] top-5 bg-[#ff8dae]"></span>
+          <span class="confetti-dot right-[13%] top-9 bg-[#57c99a]"></span>
+          <span class="confetti-dot bottom-5 left-[20%] bg-[#ffd866]"></span>
+          <span class="confetti-dot bottom-5 right-[22%] bg-[#6fb8ff]"></span>
+          <div class="relative">
+            <div id="results-emoji" class="mb-3 text-5xl" aria-hidden="true">🏆</div>
+            <h2 id="results-title" style="color:#17452f; font-weight:700; font-size:26px;">Séance terminée !</h2>
+            <p id="score-listen" class="mt-3 text-lg font-bold"></p>
+            <p id="score-syllables" class="text-lg font-bold"></p>
+            <p id="score-words" class="text-lg font-bold"></p>
+            <p id="encouragement" class="mt-2 text-lg font-semibold"></p>
+            <button id="restart-button" type="button" class="mt-6 inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold" style="background:#ff9f48; color:#5e3105; border:none; cursor:pointer; box-shadow:0 5px 0 rgba(132,77,12,.3);">
+              <i data-lucide="rotate-ccw" width="20" height="20" aria-hidden="true"></i>
+              <span style="font-size:18px;">Recommencer une séance</span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="w-full">
+    <div class="game-shell pt-0 text-center">
+      <p style="color:#35607c; font-weight:500; font-size:16px;">Les syllabes et les mots mêlent volontairement le b et le d pour bien entraîner la discrimination.</p>
+    </div>
+  </footer>
+
+  <script>
+    const DISCRIM_ROUNDS = 8;
+    const SYLLABLES_PER_ROUND = 12;
+    const WORDS_PER_ROUND = 12;
+    const VOWELS = ["a", "e", "i", "o", "u", "ou"];
+
+    // Syllabes b/d avec sons simples, toujours mêlées
+    const B_SYLLABLES = ["ba", "be", "bi", "bo", "bu", "bou"];
+    const D_SYLLABLES = ["da", "de", "di", "do", "du", "dou"];
+    const ALL_SYLLABLES = [...B_SYLLABLES, ...D_SYLLABLES];
+
+    // Mots courts et décodables, mêlant b et d
+    const WORDS = [
+      "banane", "robe", "cube", "bébé", "botte", "tube", "sabot", "ruban", "cabine", "tribu",
+      "domino", "dame", "dune", "salade", "radio", "dodo", "douze", "sardine", "radis", "idée",
+    ];
+
+    function pickRandomSubset(list, count) {
+      const copy = [...list];
+      const result = [];
+      const total = Math.min(count, copy.length);
+      for (let i = 0; i < total; i++) {
+        const index = Math.floor(Math.random() * copy.length);
+        result.push(copy[index]);
+        copy.splice(index, 1);
+      }
+      return result;
+    }
+
+    // --- Éléments du DOM ---
+    const listenSection = document.getElementById("listen-section");
+    const readingSection = document.getElementById("reading-section");
+    const replayButton = document.getElementById("replay-button");
+    const choiceRow = document.getElementById("choice-row");
+
+    const flashCard = document.getElementById("flash-card");
+    const flashWord = document.getElementById("flash-word");
+    const listenWordButton = document.getElementById("listen-word-button");
+    const goodButton = document.getElementById("good-button");
+    const retryButton = document.getElementById("retry-button");
+
+    const phasePill = document.getElementById("phase-pill");
+    const phaseLabel = document.getElementById("phase-label");
+    const progressValue = document.getElementById("progress-value");
+    const scoreValue = document.getElementById("score-value");
+
+    const resultsPanel = document.getElementById("results-panel");
+    const resultsEmoji = document.getElementById("results-emoji");
+    const resultsTitle = document.getElementById("results-title");
+    const scoreListenEl = document.getElementById("score-listen");
+    const scoreSyllablesEl = document.getElementById("score-syllables");
+    const scoreWordsEl = document.getElementById("score-words");
+    const encouragement = document.getElementById("encouragement");
+    const confettiOverlay = document.getElementById("confetti-overlay");
+
+    // --- État du jeu ---
+    let currentPhase = "listen"; // "listen" -> "syllables" -> "words"
+    let currentIndex = 0;
+    let deck = [];
+    let currentRound = null;
+    let listenGood = 0;
+    let syllablesGood = 0;
+    let wordsGood = 0;
+    let frenchVoice = null;
+
+    function pickFrenchVoice() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      frenchVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("fr")) || null;
+    }
+    if ("speechSynthesis" in window) {
+      pickFrenchVoice();
+      window.speechSynthesis.addEventListener("voiceschanged", pickFrenchVoice);
+    }
+
+    function speak(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "fr-FR";
+      if (frenchVoice) utterance.voice = frenchVoice;
+      utterance.rate = 0.82;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function totalGood() {
+      return listenGood + syllablesGood + wordsGood;
+    }
+
+    function updateTopBar(totalInPhase) {
+      progressValue.textContent = (currentIndex + 1) + " / " + totalInPhase;
+      scoreValue.textContent = totalGood();
+    }
+
+    /* ===================== ÉTAPE 1 : ÉCOUTE ET CHOISIS ===================== */
+
+    function startListenPhase() {
+      currentPhase = "listen";
+      currentIndex = 0;
+      listenGood = 0;
+      phasePill.className = "phase-pill listen";
+      phaseLabel.textContent = "Étape 1 : Écoute et choisis";
+      listenSection.classList.remove("hidden");
+      readingSection.classList.add("hidden");
+      showListenRound();
+    }
+
+    function showListenRound() {
+      const vowel = VOWELS[Math.floor(Math.random() * VOWELS.length)];
+      const targetLetter = Math.random() < 0.5 ? "b" : "d";
+      const otherLetter = targetLetter === "b" ? "d" : "b";
+      currentRound = { syllable: targetLetter + vowel, other: otherLetter + vowel };
+
+      updateTopBar(DISCRIM_ROUNDS);
+
+      choiceRow.innerHTML = "";
+      const options = Math.random() < 0.5
+        ? [currentRound.syllable, currentRound.other]
+        : [currentRound.other, currentRound.syllable];
+
+      options.forEach((option) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "choice-card";
+        btn.textContent = option;
+        btn.addEventListener("click", () => handleListenChoice(btn, option));
+        choiceRow.appendChild(btn);
+      });
+
+      window.setTimeout(() => speak(currentRound.syllable), 350);
+    }
+
+    function handleListenChoice(button, chosen) {
+      const buttons = [...choiceRow.querySelectorAll(".choice-card")];
+      buttons.forEach((b) => { b.disabled = true; });
+
+      const isCorrect = chosen === currentRound.syllable;
+      if (isCorrect) {
+        listenGood += 1;
+        button.classList.add("correct");
+      } else {
+        button.classList.add("incorrect");
+        buttons.find((b) => b.textContent === currentRound.syllable)?.classList.add("correct");
+      }
+
+      scoreValue.textContent = totalGood();
+      currentIndex += 1;
+
+      window.setTimeout(() => {
+        if (currentIndex >= DISCRIM_ROUNDS) {
+          startSyllablesPhase();
+        } else {
+          showListenRound();
+        }
+      }, 1300);
+    }
+
+    replayButton.addEventListener("click", () => {
+      if (currentRound) speak(currentRound.syllable);
+    });
+
+    /* ===================== ÉTAPES 2 & 3 : LECTURE FLASH ===================== */
+
+    function startSyllablesPhase() {
+      currentPhase = "syllables";
+      currentIndex = 0;
+      syllablesGood = 0;
+      deck = pickRandomSubset(ALL_SYLLABLES, SYLLABLES_PER_ROUND);
+      phasePill.className = "phase-pill syllables";
+      phaseLabel.textContent = "Étape 2 : Syllabes (b et d mêlés)";
+      flashCard.classList.remove("words");
+      listenSection.classList.add("hidden");
+      readingSection.classList.remove("hidden");
+      showCurrentCard();
+    }
+
+    function startWordsPhase() {
+      currentPhase = "words";
+      currentIndex = 0;
+      wordsGood = 0;
+      deck = pickRandomSubset(WORDS, WORDS_PER_ROUND);
+      phasePill.className = "phase-pill words";
+      phaseLabel.textContent = "Étape 3 : Mots (b et d mêlés)";
+      flashCard.classList.add("words");
+      showCurrentCard();
+    }
+
+    function showCurrentCard() {
+      const total = currentPhase === "syllables" ? SYLLABLES_PER_ROUND : WORDS_PER_ROUND;
+      updateTopBar(total);
+      flashWord.textContent = deck[currentIndex];
+      flashCard.classList.remove("pop");
+      void flashCard.offsetWidth;
+      flashCard.classList.add("pop");
+    }
+
+    function judgeReading(isGood) {
+      if (isGood) {
+        if (currentPhase === "syllables") syllablesGood += 1;
+        else wordsGood += 1;
+      }
+      scoreValue.textContent = totalGood();
+      currentIndex += 1;
+
+      const totalInPhase = currentPhase === "syllables" ? SYLLABLES_PER_ROUND : WORDS_PER_ROUND;
+      if (currentIndex >= totalInPhase) {
+        if (currentPhase === "syllables") {
+          startWordsPhase();
+        } else {
+          finishSession();
+        }
+      } else {
+        showCurrentCard();
+      }
+    }
+
+    goodButton.addEventListener("click", () => judgeReading(true));
+    retryButton.addEventListener("click", () => judgeReading(false));
+    listenWordButton.addEventListener("click", () => speak(deck[currentIndex]));
+
+    /* ===================== FIN DE SÉANCE ===================== */
+
+    function launchBigConfetti() {
+      const colors = ["#ff8dae", "#57c99a", "#ffd866", "#6fb8ff", "#c084fc"];
+      for (let i = 0; i < 90; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-fall";
+        const size = 6 + Math.random() * 8;
+        piece.style.width = size + "px";
+        piece.style.height = (size * 0.4) + "px";
+        piece.style.left = (Math.random() * 100) + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.setProperty("--spin", (Math.random() * 720 - 360) + "deg");
+        piece.style.animationDuration = (2.2 + Math.random() * 1.6) + "s";
+        piece.style.animationDelay = (Math.random() * 0.8) + "s";
+        confettiOverlay.appendChild(piece);
+        window.setTimeout(() => piece.remove(), 4600);
+      }
+    }
+
+    function finishSession() {
+      listenSection.classList.add("hidden");
+      readingSection.classList.add("hidden");
+      document.querySelector(".flex.flex-wrap.items-center.justify-between").classList.add("hidden");
+
+      resultsPanel.classList.remove("hidden");
+      scoreListenEl.textContent = "Étape 1 - Écoute : " + listenGood + " / " + DISCRIM_ROUNDS;
+      scoreSyllablesEl.textContent = "Étape 2 - Syllabes : " + syllablesGood + " / " + SYLLABLES_PER_ROUND;
+      scoreWordsEl.textContent = "Étape 3 - Mots : " + wordsGood + " / " + WORDS_PER_ROUND;
+
+      const isPerfect = listenGood === DISCRIM_ROUNDS && syllablesGood === SYLLABLES_PER_ROUND && wordsGood === WORDS_PER_ROUND;
+      resultsPanel.classList.toggle("perfect", isPerfect);
+
+      const maxTotal = DISCRIM_ROUNDS + SYLLABLES_PER_ROUND + WORDS_PER_ROUND;
+
+      if (isPerfect) {
+        resultsEmoji.textContent = "🎉";
+        resultsTitle.textContent = "Séance parfaite !";
+        encouragement.textContent = "Bravo ! Tu ne confonds plus le b et le d !";
+        launchBigConfetti();
+      } else if (totalGood() >= maxTotal * 0.6) {
+        resultsEmoji.textContent = "🏆";
+        resultsTitle.textContent = "Belle séance !";
+        encouragement.textContent = "Tu progresses bien, continue à t'entraîner chaque jour !";
+      } else {
+        resultsEmoji.textContent = "💪";
+        resultsTitle.textContent = "Séance terminée !";
+        encouragement.textContent = "Pense à l'astuce du petit lit, et recommence pour progresser !";
+      }
+
+      resultsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function restartSession() {
+      resultsPanel.classList.add("hidden");
+      resultsPanel.classList.remove("perfect");
+      document.querySelector(".flex.flex-wrap.items-center.justify-between").classList.remove("hidden");
+      startListenPhase();
+    }
+
+    document.getElementById("restart-button").addEventListener("click", restartSession);
+
+    if (window.lucide) lucide.createIcons();
+    startListenPhase();
+  </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Écoute et Trouve le Nombre</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --ink: #17324d;
+      --blue: #3b82f6;
+      --yellow: #ffd866;
+      --mint: #9de6c7;
+      --pink: #ffb6c8;
+      --page-bg: linear-gradient(135deg, #bcecff 0%, #e9f8ff 46%, #fff4ba 100%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      width: 100%;
+      font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+    }
+
+    button { font-family: inherit; }
+
+    .game-shell {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 28px 20px 36px;
+    }
+
+    .hero-shape {
+      position: absolute;
+      border-radius: 999px;
+      opacity: .72;
+      pointer-events: none;
+    }
+    .hero-shape-one { width: 110px; height: 110px; background: #ffd866; top: -45px; left: 8%; }
+    .hero-shape-two { width: 76px; height: 76px; background: #9de6c7; bottom: -30px; right: 14%; }
+    .hero-shape-three { width: 42px; height: 42px; background: #ff9fbd; top: 32px; right: 8%; }
+
+    .hero-panel {
+      position: relative;
+      overflow: hidden;
+      border: 4px solid rgba(255, 255, 255, .9);
+      box-shadow: 0 14px 0 rgba(32, 96, 139, .14);
+      animation: rise-in .55s ease both;
+      background: linear-gradient(135deg, #5cbcf5 0%, #8bdded 100%);
+    }
+
+    .mascot {
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 8px 0 rgba(30, 117, 156, .16);
+      transform: rotate(5deg);
+      font-size: 50px;
+      flex-shrink: 0;
+    }
+
+    .game-card {
+      box-shadow: 0 16px 0 rgba(32, 96, 139, .13);
+      animation: rise-in .6s .08s ease both;
+      background: #fffdf7;
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .number-button {
+      min-height: 58px;
+      border: 3px solid #d5e7f3;
+      border-radius: 17px;
+      background: #ffffff;
+      color: #17324d;
+      font-size: 1.28rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #c6ddea;
+      transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+      touch-action: manipulation;
+    }
+    .number-button:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 7px 0 #c6ddea;
+      background: #f2fbff;
+    }
+    .number-button:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #c6ddea;
+    }
+    .number-button:focus-visible,
+    .listen-button:focus-visible,
+    .restart-button:focus-visible {
+      outline: 4px solid #17324d;
+      outline-offset: 3px;
+    }
+    .number-button:disabled { cursor: default; }
+    .number-button.correct {
+      background: #9de6c7;
+      border-color: #45b984;
+      box-shadow: 0 4px 0 #45b984;
+      color: #12452f;
+      animation: happy-pop .35s ease;
+    }
+    .number-button.incorrect {
+      background: #ffc6d3;
+      border-color: #ee7795;
+      box-shadow: 0 4px 0 #ee7795;
+      color: #7a1732;
+      animation: little-shake .35s ease;
+    }
+
+    .tens-label { letter-spacing: .08em; }
+
+    .listen-button, .restart-button {
+      transition: transform .15s ease, box-shadow .15s ease;
+      box-shadow: 0 5px 0 rgba(132, 77, 12, .3);
+      touch-action: manipulation;
+      border: none;
+      cursor: pointer;
+    }
+    .listen-button { background: #ffd866; color: #633c08; }
+    .restart-button { background: #ff9f48; color: #5e3105; }
+    .listen-button:hover, .restart-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 rgba(132, 77, 12, .3);
+    }
+    .listen-button:active, .restart-button:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(132, 77, 12, .3);
+    }
+
+    .result-panel {
+      animation: rise-in .38s ease both;
+      background: linear-gradient(135deg, #d7f8e5 0%, #fff1a9 100%);
+    }
+
+    .confetti-dot {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+    }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes happy-pop { 50% { transform: scale(1.09) rotate(-2deg); } }
+    @keyframes little-shake {
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    @media (max-width: 640px) {
+      .game-shell { padding: 18px 12px 26px; }
+      .mascot { width: 70px; height: 70px; font-size: 38px; border-radius: 22px; }
+      .number-grid { gap: 6px; }
+      .number-button { min-height: 47px; border-radius: 13px; font-size: 1rem; }
+      .hero-panel h1 { font-size: 27px !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="w-full">
+    <div class="game-shell">
+      <section class="hero-panel rounded-[32px] px-6 py-7 sm:px-10 sm:py-9">
+        <span class="hero-shape hero-shape-one"></span>
+        <span class="hero-shape hero-shape-two"></span>
+        <span class="hero-shape hero-shape-three"></span>
+        <div class="relative flex items-center justify-between gap-5">
+          <div>
+            <p class="mb-2 font-bold uppercase" style="color:#17496f; font-size:14px; letter-spacing:.08rem;">Défi mathématique • CE2</p>
+            <h1 class="leading-tight" style="color:#17324d; font-weight:700; font-size:36px;">Écoute et trouve le nombre !</h1>
+            <p class="mt-2 max-w-xl" style="color:#17496f; font-weight:500; font-size:18px;">Entends un nombre entre 60 et 99, puis retrouve-le dans le tableau.</p>
+          </div>
+          <div class="mascot" aria-hidden="true">🔊</div>
+        </div>
+      </section>
+    </div>
+  </header>
+
+  <main class="w-full">
+    <div class="game-shell pt-0">
+      <section class="game-card rounded-[30px] border-4 border-white p-5 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="rounded-full bg-sky-100 px-4 py-2">
+            <span class="font-bold" style="color:#17496f; font-size:16px;">Question</span>
+            <span id="progress-value" class="ml-1 font-bold" aria-live="polite">1 / 10</span>
+          </div>
+          <div class="rounded-full bg-amber-100 px-4 py-2">
+            <span class="font-bold" style="color:#855210; font-size:16px;">Étoiles</span>
+            <span id="score-value" class="ml-1 font-bold" aria-live="polite">0</span>
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-[24px] border-2 border-dashed border-sky-200 bg-sky-50 px-5 py-5 text-center">
+          <p id="game-message" class="text-xl font-bold sm:text-2xl" aria-live="polite">Écoute bien le nombre !</p>
+          <button id="listen-button" type="button" class="listen-button mt-4 inline-flex items-center gap-2 rounded-full px-5 py-3 font-bold">
+            <i data-lucide="volume-2" width="22" height="22" aria-hidden="true"></i>
+            <span style="font-size:18px;">Réécouter le nombre</span>
+          </button>
+        </div>
+
+        <p class="mt-5 text-center" style="color:#47708c; font-weight:500; font-size:16px;">Astuce : regarde d'abord la bonne ligne de dizaines !</p>
+
+        <div id="board-wrap" class="mt-7 space-y-5" aria-label="Tableau des nombres de 60 à 99">
+          <section aria-labelledby="row-60">
+            <h2 id="row-60" class="tens-label mb-2 text-sm font-bold text-sky-700">LES 60</h2>
+            <div class="number-grid" data-row="60"></div>
+          </section>
+          <section aria-labelledby="row-70">
+            <h2 id="row-70" class="tens-label mb-2 text-sm font-bold text-violet-700">LES 70</h2>
+            <div class="number-grid" data-row="70"></div>
+          </section>
+          <section aria-labelledby="row-80">
+            <h2 id="row-80" class="tens-label mb-2 text-sm font-bold text-emerald-700">LES 80</h2>
+            <div class="number-grid" data-row="80"></div>
+          </section>
+          <section aria-labelledby="row-90">
+            <h2 id="row-90" class="tens-label mb-2 text-sm font-bold text-rose-700">LES 90</h2>
+            <div class="number-grid" data-row="90"></div>
+          </section>
+        </div>
+
+        <aside class="mt-7 flex flex-wrap justify-center gap-4 text-sm font-semibold" aria-label="Légende">
+          <span class="flex items-center gap-2"><span class="h-4 w-4 rounded-full bg-[#9de6c7]"></span> Bonne réponse</span>
+          <span class="flex items-center gap-2"><span class="h-4 w-4 rounded-full bg-[#ffc6d3]"></span> On apprend de ses erreurs</span>
+        </aside>
+
+        <section id="results-panel" class="result-panel relative mt-7 hidden overflow-hidden rounded-[25px] p-7 text-center">
+          <span class="confetti-dot left-[10%] top-5 bg-[#ff8dae]"></span>
+          <span class="confetti-dot right-[13%] top-9 bg-[#57c99a]"></span>
+          <span class="confetti-dot bottom-5 left-[20%] bg-[#ffd866]"></span>
+          <span class="confetti-dot bottom-5 right-[22%] bg-[#6fb8ff]"></span>
+          <div class="relative">
+            <div class="mb-3 text-5xl" aria-hidden="true">🏆</div>
+            <h2 style="color:#17452f; font-weight:700; font-size:27px;">Défi terminé !</h2>
+            <p id="final-score" class="mt-3 text-2xl font-bold" aria-live="polite"></p>
+            <p id="encouragement" class="mt-2 text-lg font-semibold" aria-live="polite"></p>
+            <button id="restart-button" type="button" class="restart-button mt-6 inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold">
+              <i data-lucide="rotate-ccw" width="20" height="20" aria-hidden="true"></i>
+              <span style="font-size:18px;">Recommencer une partie</span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="w-full">
+    <div class="game-shell pt-0 text-center">
+      <p style="color:#35607c; font-weight:500; font-size:16px;">Prends ton temps, écoute bien et amuse-toi !</p>
+    </div>
+  </footer>
+
+  <script>
+    const TOTAL_QUESTIONS = 10;
+
+    // Construction du tableau 60 → 99
+    document.querySelectorAll(".number-grid").forEach((grid) => {
+      const start = Number(grid.dataset.row);
+      for (let n = start; n < start + 10; n++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "number-button";
+        b.dataset.number = String(n);
+        b.textContent = String(n);
+        grid.appendChild(b);
+      }
+    });
+
+    const buttons = [...document.querySelectorAll(".number-button")];
+    const boardWrap = document.getElementById("board-wrap");
+    const progressValue = document.getElementById("progress-value");
+    const scoreValue = document.getElementById("score-value");
+    const gameMessage = document.getElementById("game-message");
+    const resultsPanel = document.getElementById("results-panel");
+    const finalScore = document.getElementById("final-score");
+    const encouragement = document.getElementById("encouragement");
+    const listenButton = document.getElementById("listen-button");
+
+    let targetNumber = 60;
+    let questionIndex = 0;   // nombre de questions déjà répondues
+    let score = 0;
+    let acceptingAnswer = false;
+    let lastNumber = null;
+    let frenchVoice = null;
+
+    function pickFrenchVoice() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      frenchVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("fr")) || null;
+    }
+
+    if ("speechSynthesis" in window) {
+      pickFrenchVoice();
+      window.speechSynthesis.addEventListener("voiceschanged", pickFrenchVoice);
+    }
+
+    function speakNumber(number) {
+      if (!("speechSynthesis" in window)) {
+        gameMessage.textContent = "Le son n'est pas disponible ici. Choisis le nombre demandé.";
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(String(number));
+      utterance.lang = "fr-FR";
+      if (frenchVoice) utterance.voice = frenchVoice;
+      utterance.rate = 0.78;
+      utterance.pitch = 1.12;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function updateScoreboard() {
+      const shown = Math.min(questionIndex + 1, TOTAL_QUESTIONS);
+      progressValue.textContent = shown + " / " + TOTAL_QUESTIONS;
+      scoreValue.textContent = score;
+    }
+
+    function prepareQuestion() {
+      buttons.forEach((button) => {
+        button.disabled = false;
+        button.classList.remove("correct", "incorrect");
+      });
+
+      let nextNumber;
+      do {
+        nextNumber = Math.floor(Math.random() * 40) + 60;
+      } while (nextNumber === lastNumber);
+
+      targetNumber = nextNumber;
+      lastNumber = nextNumber;
+      acceptingAnswer = true;
+      gameMessage.textContent = "Écoute bien le nombre, puis clique dessus !";
+      updateScoreboard();
+
+      window.setTimeout(() => speakNumber(targetNumber), 320);
+    }
+
+    function finishGame() {
+      acceptingAnswer = false;
+      boardWrap.classList.add("hidden");
+      resultsPanel.classList.remove("hidden");
+      finalScore.textContent = "Ton score : " + score + " / " + TOTAL_QUESTIONS;
+
+      if (score === TOTAL_QUESTIONS) {
+        encouragement.textContent = "Incroyable ! Tu es un champion des nombres !";
+      } else if (score >= 7) {
+        encouragement.textContent = "Bravo ! Tu connais déjà très bien les nombres.";
+      } else {
+        encouragement.textContent = "Bravo pour tes efforts ! Rejoue pour progresser encore.";
+      }
+
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      resultsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function handleAnswer(event) {
+      if (!acceptingAnswer) return;
+
+      const selectedButton = event.currentTarget;
+      const selectedNumber = Number(selectedButton.dataset.number);
+      acceptingAnswer = false;
+      buttons.forEach((button) => { button.disabled = true; });
+
+      const correctButton = buttons.find((b) => Number(b.dataset.number) === targetNumber);
+      const isCorrect = selectedNumber === targetNumber;
+
+      if (isCorrect) {
+        score += 1;
+        selectedButton.classList.add("correct");
+        gameMessage.textContent = "Bravo ! C'est la bonne réponse !";
+      } else {
+        selectedButton.classList.add("incorrect");
+        if (correctButton) correctButton.classList.add("correct");
+        gameMessage.textContent = "Presque ! La bonne réponse était " + targetNumber + ".";
+      }
+
+      scoreValue.textContent = score;
+      questionIndex += 1;
+
+      window.setTimeout(() => {
+        if (questionIndex >= TOTAL_QUESTIONS) {
+          finishGame();
+        } else {
+          prepareQuestion();
+        }
+      }, 1250);
+    }
+
+    function restartGame() {
+      score = 0;
+      questionIndex = 0;
+      lastNumber = null;
+      resultsPanel.classList.add("hidden");
+      boardWrap.classList.remove("hidden");
+      prepareQuestion();
+    }
+
+    buttons.forEach((button) => button.addEventListener("click", handleAnswer));
+
+    listenButton.addEventListener("click", () => {
+      if (acceptingAnswer) speakNumber(targetNumber);
+    });
+
+    document.getElementById("restart-button").addEventListener("click", restartGame);
+
+    if (window.lucide) lucide.createIcons();
+    prepareQuestion();
+  </script>
+</body>
+</html>

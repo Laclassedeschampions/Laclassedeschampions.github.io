@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calcule et clique sur la frise</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --ink: #17324d;
+      --line-color: #60a5fa;
+      --line-bg: #eaf3ff;
+      --mint: #9de6c7;
+      --pink: #ffb6c8;
+      --page-bg: linear-gradient(135deg, #bcecff 0%, #e9f8ff 46%, #fff4ba 100%);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      width: 100%;
+      font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+    }
+    button { font-family: inherit; }
+
+    .game-shell { width: 100%; max-width: 1100px; margin: 0 auto; padding: 28px 20px 36px; }
+
+    .hero-shape { position: absolute; border-radius: 999px; opacity: .72; pointer-events: none; }
+    .hero-shape-one { width: 110px; height: 110px; background: #ffd866; top: -45px; left: 8%; }
+    .hero-shape-two { width: 76px; height: 76px; background: #9de6c7; bottom: -30px; right: 14%; }
+    .hero-shape-three { width: 42px; height: 42px; background: #ff9fbd; top: 32px; right: 8%; }
+
+    .hero-panel {
+      position: relative;
+      overflow: hidden;
+      border: 4px solid rgba(255, 255, 255, .9);
+      box-shadow: 0 14px 0 rgba(32, 96, 139, .14);
+      animation: rise-in .55s ease both;
+      background: linear-gradient(135deg, #5cbcf5 0%, #8bdded 100%);
+    }
+
+    .mascot {
+      width: 92px; height: 92px; display: grid; place-items: center;
+      border-radius: 28px; background: #ffffff;
+      box-shadow: 0 8px 0 rgba(30, 117, 156, .16);
+      transform: rotate(5deg); font-size: 50px; flex-shrink: 0;
+    }
+
+    .game-card {
+      box-shadow: 0 16px 0 rgba(32, 96, 139, .13);
+      animation: rise-in .6s .08s ease both;
+      background: #fffdf7;
+    }
+
+    /* --- Calcul --- */
+    .calc-card {
+      background: #eaf3ff;
+      border: 3px dashed #bcdcff;
+      border-radius: 24px;
+      padding: 22px 18px;
+      text-align: center;
+    }
+    .calc-expression {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #1d4ed8;
+      letter-spacing: .02em;
+    }
+    .calc-expression .op { color: #b45309; }
+
+    /* --- Frise numérique en lignes de dizaines --- */
+    .number-rows { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+    .number-row-label {
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: #2563eb;
+      margin-bottom: 6px;
+    }
+    .number-row-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .line-button {
+      min-width: 0;
+      min-height: 46px;
+      padding: 2px;
+      border-radius: 12px;
+      border: 2px solid #cfe2ff;
+      background: #ffffff;
+      color: #17324d;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #c6ddea;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+      touch-action: manipulation;
+    }
+    .line-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 0 #c6ddea; background: #f2fbff; }
+    .line-button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #c6ddea; }
+    .line-button:focus-visible { outline: 4px solid #17324d; outline-offset: 2px; }
+    .line-button:disabled { cursor: default; }
+    .line-button.correct { background: #9de6c7; border-color: #45b984; box-shadow: 0 3px 0 #45b984; color: #12452f; animation: happy-pop .35s ease; }
+    .line-button.incorrect { background: #ffc6d3; border-color: #ee7795; box-shadow: 0 3px 0 #ee7795; color: #7a1732; animation: little-shake .35s ease; }
+
+    /* --- Feedback / boutons --- */
+    .feedback-banner { border-radius: 18px; padding: 12px 16px; font-weight: 700; text-align: center; }
+    .feedback-banner.success { background: #d7f8e5; color: #0e5a37; }
+    .feedback-banner.error { background: #ffe1e6; color: #7a1732; }
+
+    .restart-button {
+      background: #ff9f48; color: #5e3105; border: none; cursor: pointer;
+      box-shadow: 0 5px 0 rgba(132, 77, 12, .3);
+      transition: transform .15s ease, box-shadow .15s ease;
+      touch-action: manipulation;
+    }
+    .restart-button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 rgba(132, 77, 12, .3); }
+    .restart-button:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(132, 77, 12, .3); }
+
+    .result-panel { animation: rise-in .38s ease both; background: linear-gradient(135deg, #d7f8e5 0%, #fff1a9 100%); }
+    .result-panel.perfect { background: linear-gradient(135deg, #ffe08a 0%, #ffb6c8 100%); }
+    .confetti-dot { position: absolute; width: 13px; height: 13px; border-radius: 999px; }
+
+    @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes happy-pop { 50% { transform: scale(1.09) rotate(-2deg); } }
+    @keyframes little-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+    /* --- Grosse pluie de cotillons pour le 5/5 --- */
+    #confetti-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+    }
+    .confetti-fall {
+      position: absolute;
+      top: -40px;
+      border-radius: 3px;
+      opacity: .95;
+      animation: confetti-drop linear forwards;
+    }
+    @keyframes confetti-drop {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(var(--spin)); opacity: .9; }
+    }
+
+    @media (max-width: 640px) {
+      .game-shell { padding: 18px 12px 26px; }
+      .mascot { width: 70px; height: 70px; font-size: 38px; border-radius: 22px; }
+      .hero-panel h1 { font-size: 27px !important; }
+      .calc-expression { font-size: 2rem; }
+      .line-button { min-height: 38px; font-size: .85rem; border-radius: 9px; }
+      .number-rows { gap: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="confetti-overlay" aria-hidden="true"></div>
+
+  <header class="w-full">
+    <div class="game-shell">
+      <section class="hero-panel rounded-[32px] px-6 py-7 sm:px-10 sm:py-9">
+        <span class="hero-shape hero-shape-one"></span>
+        <span class="hero-shape hero-shape-two"></span>
+        <span class="hero-shape hero-shape-three"></span>
+        <div class="relative flex items-center justify-between gap-5">
+          <div>
+            <p class="mb-2 font-bold uppercase" style="color:#17496f; font-size:14px; letter-spacing:.08rem;">Calcul mental • Primaire</p>
+            <h1 class="leading-tight" style="color:#17324d; font-weight:700; font-size:36px;">Calcule et clique sur la frise !</h1>
+            <p class="mt-2 max-w-xl" style="color:#17496f; font-weight:500; font-size:18px;">Résous le calcul, puis trouve la réponse sur la ligne des nombres.</p>
+          </div>
+          <div class="mascot" aria-hidden="true">🔢</div>
+        </div>
+      </section>
+    </div>
+  </header>
+
+  <main class="w-full">
+    <div class="game-shell pt-0">
+      <section class="game-card rounded-[30px] border-4 border-white p-5 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="rounded-full bg-sky-100 px-4 py-2">
+            <span class="font-bold" style="color:#17496f; font-size:16px;">Question</span>
+            <span id="progress-value" class="ml-1 font-bold" aria-live="polite">1 / 5</span>
+          </div>
+          <div class="rounded-full bg-amber-100 px-4 py-2">
+            <span class="font-bold" style="color:#855210; font-size:16px;">Score</span>
+            <span id="score-value" class="ml-1 font-bold" aria-live="polite">0 / 5</span>
+          </div>
+        </div>
+
+        <div class="calc-card mt-6">
+          <p id="calc-expression" class="calc-expression" aria-live="polite">…</p>
+        </div>
+
+        <p class="mt-5 text-center font-bold" style="color:#47708c; font-size:16px;">Clique sur le bon nombre de la frise (de 0 à 50) :</p>
+
+        <div id="number-rows" class="number-rows" aria-label="Frise numérique de 0 à 50, rangée par dizaines"></div>
+
+        <p id="game-message" class="feedback-banner mt-4" style="visibility:hidden;" aria-live="polite">.</p>
+
+        <section id="results-panel" class="result-panel relative mt-7 hidden overflow-hidden rounded-[25px] p-7 text-center">
+          <span class="confetti-dot left-[10%] top-5 bg-[#ff8dae]"></span>
+          <span class="confetti-dot right-[13%] top-9 bg-[#57c99a]"></span>
+          <span class="confetti-dot bottom-5 left-[20%] bg-[#ffd866]"></span>
+          <span class="confetti-dot bottom-5 right-[22%] bg-[#6fb8ff]"></span>
+          <div class="relative">
+            <div id="results-emoji" class="mb-3 text-5xl" aria-hidden="true">🏆</div>
+            <h2 id="results-title" style="color:#17452f; font-weight:700; font-size:27px;">Défi terminé !</h2>
+            <p id="final-score" class="mt-3 text-2xl font-bold" aria-live="polite"></p>
+            <p id="encouragement" class="mt-2 text-lg font-semibold" aria-live="polite"></p>
+            <button id="restart-button" type="button" class="restart-button mt-6 inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold">
+              <i data-lucide="rotate-ccw" width="20" height="20" aria-hidden="true"></i>
+              <span style="font-size:18px;">Recommencer une partie</span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="w-full">
+    <div class="game-shell pt-0 text-center">
+      <p style="color:#35607c; font-weight:500; font-size:16px;">Astuce : compte sur tes doigts ou avance/recule sur la frise pour trouver la réponse !</p>
+    </div>
+  </footer>
+
+  <script>
+    const TOTAL_QUESTIONS = 5;
+    const LINE_MIN = 0;
+    const LINE_MAX = 50;
+
+    const numberRows = document.getElementById("number-rows");
+    const progressValue = document.getElementById("progress-value");
+    const scoreValue = document.getElementById("score-value");
+    const calcExpression = document.getElementById("calc-expression");
+    const gameMessage = document.getElementById("game-message");
+    const resultsPanel = document.getElementById("results-panel");
+    const resultsEmoji = document.getElementById("results-emoji");
+    const resultsTitle = document.getElementById("results-title");
+    const finalScore = document.getElementById("final-score");
+    const encouragement = document.getElementById("encouragement");
+    const confettiOverlay = document.getElementById("confetti-overlay");
+
+    let answerValue = 0;
+    let questionIndex = 0;
+    let score = 0;
+    let acceptingAnswer = false;
+    let lastKey = null;
+    let lineButtons = [];
+
+    // --- Construction de la frise 0 à 50, rangée en lignes de dizaines ---
+    const ROWS = [
+      { label: "0 à 9", start: 0, end: 9 },
+      { label: "10 à 19", start: 10, end: 19 },
+      { label: "20 à 29", start: 20, end: 29 },
+      { label: "30 à 39", start: 30, end: 39 },
+      { label: "40 à 50", start: 40, end: 50 },
+    ];
+
+    ROWS.forEach((row) => {
+      const section = document.createElement("div");
+
+      const label = document.createElement("p");
+      label.className = "number-row-label";
+      label.textContent = row.label;
+      section.appendChild(label);
+
+      const grid = document.createElement("div");
+      grid.className = "number-row-grid";
+      grid.style.gridTemplateColumns = "repeat(" + (row.end - row.start + 1) + ", minmax(0, 1fr))";
+
+      for (let n = row.start; n <= row.end; n++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "line-button";
+        btn.dataset.number = String(n);
+        btn.textContent = String(n);
+        btn.addEventListener("click", handleAnswer);
+        grid.appendChild(btn);
+      }
+
+      section.appendChild(grid);
+      numberRows.appendChild(section);
+    });
+
+    lineButtons = [...numberRows.querySelectorAll(".line-button")];
+
+    function updateScoreboard() {
+      const shown = Math.min(questionIndex + 1, TOTAL_QUESTIONS);
+      progressValue.textContent = shown + " / " + TOTAL_QUESTIONS;
+      scoreValue.textContent = score + " / " + TOTAL_QUESTIONS;
+    }
+
+    function prepareQuestion() {
+      lineButtons.forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove("correct", "incorrect");
+      });
+
+      let start, operator, delta, result, key;
+      do {
+        start = Math.floor(Math.random() * 59) + 1; // 1 à 59
+        operator = Math.random() < 0.5 ? "+" : "-";
+        delta = Math.random() < 0.5 ? 1 : 2;
+        result = operator === "+" ? start + delta : start - delta;
+        key = start + operator + delta;
+      } while (result < LINE_MIN || result > LINE_MAX || key === lastKey);
+
+      lastKey = key;
+      answerValue = result;
+
+      calcExpression.innerHTML = start + ' <span class="op">' + operator + "</span> " + delta + " =\u00a0?";
+
+      gameMessage.style.visibility = "hidden";
+      gameMessage.classList.remove("success", "error");
+      acceptingAnswer = true;
+
+      updateScoreboard();
+    }
+
+    function launchBigConfetti() {
+      const colors = ["#ff8dae", "#57c99a", "#ffd866", "#6fb8ff", "#c084fc"];
+      const pieceCount = 90;
+
+      for (let i = 0; i < pieceCount; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-fall";
+        const size = 6 + Math.random() * 8;
+        piece.style.width = size + "px";
+        piece.style.height = (size * 0.4) + "px";
+        piece.style.left = (Math.random() * 100) + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.setProperty("--spin", (Math.random() * 720 - 360) + "deg");
+        piece.style.animationDuration = (2.2 + Math.random() * 1.6) + "s";
+        piece.style.animationDelay = (Math.random() * 0.8) + "s";
+        confettiOverlay.appendChild(piece);
+        window.setTimeout(() => piece.remove(), 4600);
+      }
+    }
+
+    function finishGame() {
+      acceptingAnswer = false;
+      document.querySelector(".calc-card").classList.add("hidden");
+      document.getElementById("number-rows").classList.add("hidden");
+      document.querySelectorAll("main p.text-center.font-bold").forEach((p) => p.classList.add("hidden"));
+      gameMessage.classList.add("hidden");
+
+      resultsPanel.classList.remove("hidden");
+      finalScore.textContent = "Ton score : " + score + " / " + TOTAL_QUESTIONS;
+
+      const isPerfect = score === TOTAL_QUESTIONS;
+      resultsPanel.classList.toggle("perfect", isPerfect);
+
+      if (isPerfect) {
+        resultsEmoji.textContent = "🎉";
+        resultsTitle.textContent = "Score parfait !";
+        encouragement.textContent = "Bravo, championne, bravo, champion ! 5 sur 5, tu maîtrises à la perfection !";
+        launchBigConfetti();
+      } else if (score >= 3) {
+        resultsEmoji.textContent = "🏆";
+        resultsTitle.textContent = "Défi terminé !";
+        encouragement.textContent = "Bien joué ! Encore un petit effort pour viser le 5 sur 5.";
+      } else {
+        resultsEmoji.textContent = "💪";
+        resultsTitle.textContent = "Défi terminé !";
+        encouragement.textContent = "Continue à t'entraîner, tu vas y arriver !";
+      }
+
+      resultsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function handleAnswer(event) {
+      if (!acceptingAnswer) return;
+
+      const selectedButton = event.currentTarget;
+      const selectedNumber = Number(selectedButton.dataset.number);
+      acceptingAnswer = false;
+      lineButtons.forEach((btn) => { btn.disabled = true; });
+
+      const correctButton = lineButtons[answerValue];
+      const isCorrect = selectedNumber === answerValue;
+
+      gameMessage.style.visibility = "visible";
+
+      if (isCorrect) {
+        score += 1;
+        selectedButton.classList.add("correct");
+        gameMessage.textContent = "Bravo ! C'est la bonne réponse : " + answerValue + " 🎉";
+        gameMessage.classList.add("success");
+      } else {
+        selectedButton.classList.add("incorrect");
+        if (correctButton) {
+          correctButton.classList.add("correct");
+        }
+        gameMessage.textContent = "Presque ! La bonne réponse était " + answerValue + ".";
+        gameMessage.classList.add("error");
+      }
+
+      scoreValue.textContent = score + " / " + TOTAL_QUESTIONS;
+      questionIndex += 1;
+
+      window.setTimeout(() => {
+        if (questionIndex >= TOTAL_QUESTIONS) {
+          finishGame();
+        } else {
+          prepareQuestion();
+        }
+      }, 1500);
+    }
+
+    function restartGame() {
+      score = 0;
+      questionIndex = 0;
+      lastKey = null;
+
+      resultsPanel.classList.add("hidden");
+      resultsPanel.classList.remove("perfect");
+      document.querySelector(".calc-card").classList.remove("hidden");
+      document.getElementById("number-rows").classList.remove("hidden");
+      document.querySelectorAll("main p.text-center.font-bold").forEach((p) => p.classList.remove("hidden"));
+      gameMessage.classList.remove("hidden");
+
+      prepareQuestion();
+    }
+
+    document.getElementById("restart-button").addEventListener("click", restartGame);
+
+    if (window.lucide) lucide.createIcons();
+    prepareQuestion();
+  </script>
+</body>
+</html>

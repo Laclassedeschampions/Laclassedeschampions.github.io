@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture de Nombres</title>
+  <style>
+    :root {
+      --ink: #15355b;
+      --paper: #fffdf5;
+      --sun: #ffd75e;
+      --coral: #ff6b5f;
+      --mint: #40cbb6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(160deg, #12315a 0%, #1d4a7a 55%, #123a63 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .app-shell { width: 100%; min-height: 100vh; position: relative; overflow: hidden; padding: 1.5rem; }
+    .shape { position: absolute; border-radius: 999px; pointer-events: none; opacity: 0.55; }
+    .shape-one { width: 180px; height: 180px; background: #ffcc55; top: -70px; left: -55px; transform: rotate(20deg); }
+    .shape-two { width: 230px; height: 230px; background: #3dc9b8; right: -95px; top: 22%; border-radius: 40px; transform: rotate(28deg); }
+    .shape-three { width: 125px; height: 125px; background: #ff7a6f; bottom: -45px; left: 8%; }
+    .content-frame { position: relative; z-index: 1; width: 100%; max-width: 1000px; margin: 0 auto; }
+    header { padding-top: .5rem; padding-bottom: 1.6rem; text-align: center; }
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.15); border-radius: 999px;
+      padding: .5rem 1rem; color: #fff; font-size: .85rem; font-weight: 600;
+    }
+    h1 { margin-top: .75rem; font-size: 2rem; font-weight: 700; color: #fff; }
+    .subtitle { margin: .5rem auto 0; max-width: 36rem; color: rgba(255,255,255,.9); font-size: 1rem; }
+    .card {
+      margin: 0 auto; max-width: 42rem; border-radius: 2rem;
+      background: var(--paper); padding: 2rem;
+      box-shadow: 0 20px 0 rgba(7,31,61,.18), 0 24px 48px rgba(3,19,43,.35);
+    }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .round-label { font-weight: 600; color: #54708b; font-size: .95rem; }
+    #round-counter { margin-top: .25rem; font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+    .eye-icon {
+      display: flex; height: 3.5rem; width: 3.5rem; align-items: center; justify-content: center;
+      border-radius: 1rem; background: var(--sun); color: var(--ink); flex-shrink: 0;
+    }
+    .progress-track { margin-top: 1.2rem; height: .7rem; border-radius: 999px; background: #dce8ee; overflow: hidden; }
+    #progress-bar { height: 100%; border-radius: 999px; background: var(--mint); transition: width .3s ease; }
+    .instruction { margin-top: 1.8rem; text-align: center; }
+    .instruction h2 { font-size: 1.3rem; font-weight: 700; color: var(--ink); }
+    .instruction p { margin-top: .4rem; color: #54708b; font-size: .95rem; }
+    .number-display {
+      margin: 1.4rem auto 0; padding: 1.2rem 1rem; text-align: center;
+      border-radius: 1.5rem; border: 4px dashed #b9cede; background: #f3f8fa;
+      font-size: 4.5rem; font-weight: 700; color: var(--ink); line-height: 1.1;
+      letter-spacing: .06em; font-variant-numeric: tabular-nums;
+    }
+    .judgement { margin-top: 1.6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+    button { font-family: inherit; cursor: pointer; }
+    .judge-button {
+      min-height: 64px; border: 0; border-radius: 1rem; font-size: 1.1rem; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      transition: transform .15s ease, filter .15s ease;
+      box-shadow: 0 4px 0 rgba(7,31,61,.2);
+    }
+    .judge-button:hover { filter: brightness(1.05); }
+    .judge-button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(7,31,61,.2); }
+    #valid-button { background: var(--mint); color: #0d3a33; }
+    #invalid-button { background: var(--coral); color: #fff; }
+    .judge-help { margin-top: .8rem; text-align: center; font-size: .85rem; color: #54708b; }
+    .flash-good { animation: flashGood .5s ease-out; }
+    .flash-bad { animation: flashBad .5s ease-out; }
+    @keyframes flashGood { 0% { background: #c9f0e6; } 100% { background: #f3f8fa; } }
+    @keyframes flashBad { 0% { background: #ffd9d5; } 100% { background: #f3f8fa; } }
+    footer { padding-top: 1.4rem; text-align: center; }
+    footer p { font-size: .85rem; color: rgba(255,255,255,.85); }
+    .hidden { display: none; }
+    .pop-in { animation: pop .4s cubic-bezier(.2,.9,.3,1.2) both; }
+    @keyframes pop { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: scale(1); } }
+    button:focus-visible { outline: 4px solid #173d70; outline-offset: 3px; }
+    .result-card { text-align: center; padding: 2.5rem; }
+    .trophy {
+      margin: 0 auto; height: 5rem; width: 5rem; display: flex; align-items: center; justify-content: center;
+      border-radius: 999px; background: var(--sun); color: var(--ink);
+    }
+    #result-screen h2 { margin-top: 1.2rem; font-size: 1.6rem; font-weight: 700; }
+    .result-message { margin: .8rem auto 0; max-width: 28rem; color: #54708b; }
+    .score-box { margin: 1.8rem auto 0; max-width: 18rem; border-radius: 1.5rem; background: #edf8f6; padding: 1.3rem 1.5rem; }
+    .score-label { font-weight: 600; color: #23796e; }
+    #final-score { margin-top: .25rem; font-size: 3rem; font-weight: 700; color: var(--ink); }
+    #restart-button {
+      margin-top: 2rem; padding: 1rem 2rem; border: 0; border-radius: 1rem;
+      background: var(--sun); color: var(--ink); font-size: 1.05rem; font-weight: 700;
+      box-shadow: 0 4px 0 rgba(7,31,61,.2); cursor: pointer;
+    }
+    #restart-button:active { transform: translateY(2px); }
+    @media (max-width: 640px) {
+      .app-shell { padding: 1rem; }
+      .card { padding: 1.3rem; border-radius: 1.5rem; }
+      .number-display { font-size: 2.8rem; }
+      h1 { font-size: 1.5rem; }
+      .judge-button { min-height: 56px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="shape shape-one"></div>
+    <div class="shape shape-two"></div>
+    <div class="shape shape-three"></div>
+
+    <header class="content-frame">
+      <div class="badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.597a6.06 6.06 0 0 0 6.937-6.937 6.06 6.06 0 0 0-6.937 6.937z"/><path d="M12 3v1M5.6 5.6l.7.7M3 12h1M18 12h1M17.7 6.3l-.7.7M7.5 16.5 3 21M12.5 12.5 21 3"/></svg>
+        <span>Atelier de numération — entraînement à la lecture</span>
+      </div>
+      <h1>Lecture de Nombres</h1>
+      <p class="subtitle">Lis le nombre à voix haute. Un camarade ou le professeur valide ta lecture. 10 nombres par partie !</p>
+    </header>
+
+    <main class="content-frame">
+      <section id="game-screen">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="round-label">Essai</p>
+              <p id="round-counter">1 / 10</p>
+            </div>
+            <div class="eye-icon" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-label="Progression">
+            <div id="progress-bar" style="width: 10%;"></div>
+          </div>
+
+          <div class="instruction">
+            <h2>Lis ce nombre à voix haute</h2>
+            <p>Épelle les classes si tu veux : « cent-quarante-trois-mille-deux-cent-cinq… »</p>
+          </div>
+
+          <div class="number-display" id="number-display">12345</div>
+
+          <div class="judgement">
+            <button id="valid-button" class="judge-button" type="button">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Bien lu
+            </button>
+            <button id="invalid-button" class="judge-button" type="button">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Erreur de lecture
+            </button>
+          </div>
+          <p class="judge-help">Réservé au professeur ou au camarade qui écoute la lecture.</p>
+        </article>
+      </section>
+
+      <section id="result-screen" class="hidden">
+        <article class="card result-card pop-in">
+          <div class="trophy" aria-hidden="true">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><path d="M6 6H4a2 2 0 0 0-2 2a4 4 0 0 0 4 4h1"/><path d="M18 6h2a2 2 0 0 1 2 2a4 4 0 0 1-4 4h-1"/><path d="M9 15v3"/><path d="M15 15v3"/><path d="M7 21h10"/></svg>
+          </div>
+          <h2>Entraînement terminé !</h2>
+          <p class="result-message" id="result-message">Voici ton résultat de lecture.</p>
+          <div class="score-box">
+            <p class="score-label">Nombres bien lus</p>
+            <p id="final-score">0 / 10</p>
+          </div>
+          <button id="restart-button" type="button">Recommencer</button>
+        </article>
+      </section>
+    </main>
+
+    <footer class="content-frame">
+      <p>Le nombre s'affiche sans espace des milliers : à toi de repérer les classes Milliers / Unités !</p>
+    </footer>
+  </div>
+
+  <script>
+    let currentRound = 1;
+    let score = 0;
+    let locked = false;
+
+    const numberDisplay = document.getElementById("number-display");
+    const roundCounter = document.getElementById("round-counter");
+    const progressBar = document.getElementById("progress-bar");
+    const gameScreen = document.getElementById("game-screen");
+    const resultScreen = document.getElementById("result-screen");
+    const validButton = document.getElementById("valid-button");
+    const invalidButton = document.getElementById("invalid-button");
+
+    // Nombre de 5 ou 6 chiffres, affiché sans espace des milliers
+    function generateNumber() {
+      const digits = Math.random() < 0.5 ? 5 : 6;
+      if (digits === 5) {
+        return Math.floor(Math.random() * 90000) + 10000;
+      }
+      return Math.floor(Math.random() * 900000) + 100000;
+    }
+
+    function updateRoundDisplay() {
+      roundCounter.textContent = currentRound + " / 10";
+      progressBar.style.width = (currentRound * 10) + "%";
+    }
+
+    function startRound() {
+      currentNumber = generateNumber();
+      numberDisplay.textContent = currentNumber; // sans espace des milliers
+      numberDisplay.classList.remove("flash-good", "flash-bad");
+      updateRoundDisplay();
+      locked = false;
+    }
+
+    function judge(isCorrect) {
+      if (locked) return;
+      locked = true;
+      if (isCorrect) {
+        score++;
+        numberDisplay.classList.add("flash-good");
+      } else {
+        numberDisplay.classList.add("flash-bad");
+      }
+      window.setTimeout(nextRound, 700);
+    }
+
+    function nextRound() {
+      if (currentRound >= 10) {
+        showResults();
+        return;
+      }
+      currentRound++;
+      startRound();
+    }
+
+    function showResults() {
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+      document.getElementById("final-score").textContent = score + " / 10";
+      const message = document.getElementById("result-message");
+      if (score === 10) {
+        message.textContent = "Parfait ! Tu lis les nombres comme un expert.";
+      } else if (score >= 7) {
+        message.textContent = "Très bien ! Encore quelques entraînements et ce sera parfait.";
+      } else if (score >= 4) {
+        message.textContent = "Continue de t'entraîner, tu progresses !";
+      } else {
+        message.textContent = "Courage ! Rejoue avec un camarade pour t'aider à progresser.";
+      }
+    }
+
+    function restartGame() {
+      currentRound = 1;
+      score = 0;
+      resultScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+      startRound();
+    }
+
+    validButton.addEventListener("click", () => judge(true));
+    invalidButton.addEventListener("click", () => judge(false));
+    document.getElementById("restart-button").addEventListener("click", restartGame);
+
+    // Raccourcis clavier pour le professeur : V = bien lu, X = erreur
+    document.addEventListener("keydown", (event) => {
+      if (!resultScreen.classList.contains("hidden")) {
+        if (event.key === "Enter") restartGame();
+        return;
+      }
+      if (event.key === "v" || event.key === "V") judge(true);
+      if (event.key === "x" || event.key === "X") judge(false);
+    });
+
+    let currentNumber = generateNumber();
+    startRound();
+  </script>
+</body>
+</html>

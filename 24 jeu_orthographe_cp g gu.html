@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jeu d'orthographe – CP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Baloo 2', cursive;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0f0ff 0%, #fff8e7 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 2rem;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #2c5f9e;
+      letter-spacing: -0.5px;
+    }
+
+    #score-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: #666;
+      width: 100%;
+      max-width: 480px;
+      justify-content: space-between;
+      background: white;
+      border-radius: 12px;
+      padding: 8px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #image-card {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid #dde8f5;
+      background: #f5f9ff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    }
+
+    #image-area {
+      width: 100%;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f6ff;
+      position: relative;
+    }
+
+    .emoji-big {
+      font-size: 110px;
+      line-height: 1;
+      display: block;
+    }
+
+    #answer-area {
+      padding: 1rem 1.25rem;
+      background: white;
+    }
+
+    #letter-slots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .letter-slot {
+      width: 42px;
+      height: 54px;
+      border-bottom: 3px solid #bbb;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 4px;
+      font-size: 26px;
+      font-weight: bold;
+      color: #222;
+      font-family: Arial, Helvetica, sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .letter-slot.active { border-color: #4a90d9; }
+    .letter-slot.correct { border-color: #5cb85c; color: #2d7a2d; }
+    .letter-slot.wrong {
+      border-color: #e24b4a;
+      color: #a32d2d;
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    #feedback {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      min-height: 24px;
+      margin-top: 4px;
+    }
+
+    #feedback.success { color: #2d7a2d; }
+    #feedback.error { color: #a32d2d; }
+
+    #keyboard {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0.5rem 0;
+    }
+
+    .key-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .key {
+      width: 42px;
+      height: 54px;
+      border-radius: 10px;
+      border: 1.5px solid #ccc;
+      background: white;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 20px;
+      font-weight: bold;
+      color: #222;
+      cursor: pointer;
+      transition: background 0.1s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      box-shadow: 0 3px 0 #ccc;
+    }
+
+    .key:active, .key.pressed {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #ccc;
+      background: #f0f0f0;
+    }
+
+    .key-delete {
+      width: 60px;
+      font-size: 15px;
+      color: #666;
+    }
+
+    #btn-next {
+      width: 100%;
+      max-width: 480px;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: #4a90d9;
+      color: white;
+      font-family: 'Baloo 2', cursive;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(74,144,217,0.35);
+    }
+
+    #btn-next:hover { background: #3a7bc8; }
+    #btn-next:active { transform: scale(0.98); }
+
+    #loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: #f0f6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #confetti-layer {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      pointer-events: none;
+      height: 100%;
+      z-index: 999;
+    }
+
+    #end-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 2rem;
+      text-align: center;
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    #end-screen h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #2c5f9e;
+    }
+
+    #end-screen p {
+      font-size: 17px;
+      color: #555;
+    }
+
+    #btn-restart {
+      padding: 14px 32px;
+      border-radius: 14px;
+      border: none;
+      background: #f5a623;
+      color: white;
+      font-family: 'Baloo 2', cursive;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      box-shadow: 0 4px 12px rgba(245,166,35,0.35);
+    }
+
+    #btn-restart:hover { background: #e09410; }
+
+    #hint-btn {
+      background: none;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #hint-btn:hover { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+
+  <h1>🔤 Jeu d'orthographe</h1>
+
+  <div id="score-bar">
+    <span>Mot <span id="word-num">1</span> / 10</span>
+    <span>⭐ <span id="score">0</span> pts</span>
+  </div>
+
+  <div id="image-card">
+    <div id="image-area">
+      <div id="loading-overlay"></div>
+    </div>
+    <div id="answer-area">
+      <div id="letter-slots"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+        <div id="feedback"></div>
+        <button id="hint-btn">💡 Indice</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="keyboard">
+    <div class="key-row" id="row1"></div>
+    <div class="key-row" id="row2"></div>
+    <div class="key-row" id="row3"></div>
+  </div>
+
+  <button id="btn-next">Mot suivant →</button>
+
+  <div id="end-screen">
+    <div style="font-size:80px;">🎉</div>
+    <h2>Bravo !</h2>
+    <p id="end-text"></p>
+    <button id="btn-restart">Rejouer</button>
+  </div>
+
+  <canvas id="confetti-layer"></canvas>
+
+  <script>
+    const WORDS = [
+      { word: "mygale",   emoji: "🕷️" },
+      { word: "guitare",  emoji: "🎸" },
+      { word: "escargot", emoji: "🐌" },
+      { word: "gant",     emoji: "🧤" },
+      { word: "vague",    emoji: "🌊" },
+      { word: "baguette", emoji: "🪄" },
+      { word: "portugal", emoji: "🇵🇹" },
+      { word: "elegant",  emoji: "🤵" },
+      { word: "fatigue",  emoji: "🥱" },
+      { word: "gare",     emoji: "🚉" },
+    ];
+
+    const KEYBOARD_ROWS = [
+      ['A','Z','E','R','T','Y','U','I','O','P'],
+      ['Q','S','D','F','G','H','J','K','L','M'],
+      ['W','X','C','V','B','N','⌫']
+    ];
+
+    let shuffled = [], currentIdx = 0, typedLetters = [], score = 0, hintUsed = false, answered = false;
+
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+    function buildKeyboard() {
+      KEYBOARD_ROWS.forEach((row, i) => {
+        const rowEl = document.getElementById(`row${i+1}`);
+        row.forEach(k => {
+          const btn = document.createElement('button');
+          btn.className = 'key' + (k === '⌫' ? ' key-delete' : '');
+          btn.textContent = k;
+          btn.addEventListener('click', () => handleKey(k));
+          btn.dataset.key = k;
+          rowEl.appendChild(btn);
+        });
+      });
+    }
+
+    function handleKey(k) {
+      if (answered) return;
+      const word = shuffled[currentIdx].word.toUpperCase();
+      if (k === '⌫') {
+        if (typedLetters.length > 0) typedLetters.pop();
+        renderSlots();
+        return;
+      }
+      if (typedLetters.length >= word.length) return;
+      typedLetters.push(k);
+      const btn = document.querySelector(`[data-key="${k}"]`);
+      if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 150); }
+      renderSlots();
+      if (typedLetters.length === word.length) checkAnswer();
+    }
+
+    function renderSlots() {
+      const word = shuffled[currentIdx].word.toUpperCase();
+      const slots = document.getElementById('letter-slots');
+      slots.innerHTML = '';
+      for (let i = 0; i < word.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'letter-slot' + (i === typedLetters.length && !answered ? ' active' : '');
+        if (typedLetters[i]) {
+          slot.textContent = typedLetters[i];
+          if (answered) slot.classList.add(typedLetters[i] === word[i] ? 'correct' : 'wrong');
+        }
+        slots.appendChild(slot);
+      }
+    }
+
+    function checkAnswer() {
+      const word = shuffled[currentIdx].word.toUpperCase();
+      const typed = typedLetters.join('');
+      answered = true;
+      renderSlots();
+      const fb = document.getElementById('feedback');
+      if (typed === word) {
+        const pts = hintUsed ? 5 : 10;
+        score += pts;
+        document.getElementById('score').textContent = score;
+        fb.textContent = '🎉 Bravo ! ' + (hintUsed ? '(+5 pts)' : '(+10 pts)');
+        fb.className = 'success';
+        launchConfetti();
+      } else {
+        fb.textContent = '❌ Le mot était : ' + shuffled[currentIdx].word;
+        fb.className = 'error';
+      }
+      document.getElementById('btn-next').style.display = 'block';
+      document.getElementById('hint-btn').style.display = 'none';
+    }
+
+    function nextWord() {
+      currentIdx++;
+      if (currentIdx >= shuffled.length) { showEnd(); return; }
+      typedLetters = [];
+      answered = false;
+      hintUsed = false;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = '';
+      document.getElementById('btn-next').style.display = 'none';
+      document.getElementById('hint-btn').style.display = 'inline-flex';
+      document.getElementById('word-num').textContent = currentIdx + 1;
+      loadWord(shuffled[currentIdx]);
+    }
+
+    function loadWord(item) {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `<span class="emoji-big">${item.emoji}</span>`;
+
+      const slots = document.getElementById('letter-slots');
+      slots.innerHTML = '';
+      for (let i = 0; i < item.word.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'letter-slot' + (i === 0 ? ' active' : '');
+        slots.appendChild(slot);
+      }
+    }
+
+    function showEnd() {
+      document.getElementById('image-card').style.display = 'none';
+      document.getElementById('keyboard').style.display = 'none';
+      document.getElementById('btn-next').style.display = 'none';
+      document.getElementById('score-bar').style.display = 'none';
+      const end = document.getElementById('end-screen');
+      end.style.display = 'flex';
+      const total = shuffled.length * 10;
+      document.getElementById('end-text').textContent =
+        `Tu as obtenu ${score} points sur ${total} possibles ! ` +
+        (score >= total * 0.8 ? '🌟 Excellent travail !' : score >= total * 0.5 ? '👍 Bon travail !' : '💪 Continue à t\'entraîner !');
+      launchConfetti();
+    }
+
+    function startGame() {
+      shuffled = shuffle(WORDS);
+      currentIdx = 0; score = 0; typedLetters = []; answered = false; hintUsed = false;
+      document.getElementById('score').textContent = '0';
+      document.getElementById('word-num').textContent = '1';
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = '';
+      document.getElementById('btn-next').style.display = 'none';
+      document.getElementById('hint-btn').style.display = 'inline-flex';
+      document.getElementById('image-card').style.display = 'block';
+      document.getElementById('keyboard').style.display = 'flex';
+      document.getElementById('score-bar').style.display = 'flex';
+      document.getElementById('end-screen').style.display = 'none';
+      loadWord(shuffled[0]);
+    }
+
+    document.getElementById('btn-next').addEventListener('click', nextWord);
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+    document.getElementById('hint-btn').addEventListener('click', () => {
+      if (answered || hintUsed) return;
+      const word = shuffled[currentIdx].word.toUpperCase();
+      if (typedLetters.length === 0) {
+        typedLetters.push(word[0]);
+        hintUsed = true;
+        renderSlots();
+        document.getElementById('feedback').textContent = '💡 Première lettre révélée !';
+        document.getElementById('feedback').className = '';
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      const k = e.key.toUpperCase();
+      if (k === 'BACKSPACE') handleKey('⌫');
+      else if (/^[A-Z]$/.test(k)) handleKey(k);
+    });
+
+    buildKeyboard();
+    startGame();
+
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti-layer');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const pieces = Array.from({length: 80}, () => ({
+        x: Math.random() * canvas.width, y: -10,
+        r: Math.random() * 6 + 4,
+        color: ['#f5a623','#4a90d9','#7ed321','#e24b4a','#bd10e0','#50e3c2'][Math.floor(Math.random()*6)],
+        vx: (Math.random()-0.5) * 4, vy: Math.random() * 4 + 2,
+        rot: Math.random() * 360, rspeed: (Math.random()-0.5) * 10,
+      }));
+      let frame = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.rot += p.rspeed;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color; ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r); ctx.restore();
+        });
+        frame++;
+        if (frame < 120) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+  </script>
+</body>
+</html>

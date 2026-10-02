@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictée de Nombres</title>
+  <style>
+    :root {
+      --ink: #15355b;
+      --paper: #fffdf5;
+      --sun: #ffd75e;
+      --coral: #ff6b5f;
+      --mint: #40cbb6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(160deg, #12315a 0%, #1d4a7a 55%, #123a63 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .app-shell { width: 100%; min-height: 100vh; position: relative; overflow: hidden; padding: 1.5rem; }
+    .shape { position: absolute; border-radius: 999px; pointer-events: none; opacity: 0.55; }
+    .shape-one { width: 180px; height: 180px; background: #ffcc55; top: -70px; left: -55px; transform: rotate(20deg); }
+    .shape-two { width: 230px; height: 230px; background: #3dc9b8; right: -95px; top: 22%; border-radius: 40px; transform: rotate(28deg); }
+    .shape-three { width: 125px; height: 125px; background: #ff7a6f; bottom: -45px; left: 8%; }
+    .content-frame { position: relative; z-index: 1; width: 100%; max-width: 1000px; margin: 0 auto; }
+    header { padding-top: .5rem; padding-bottom: 1.6rem; text-align: center; }
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.15); border-radius: 999px;
+      padding: .5rem 1rem; color: #fff; font-size: .85rem; font-weight: 600;
+    }
+    h1 { margin-top: .75rem; font-size: 2rem; font-weight: 700; color: #fff; }
+    .subtitle { margin: .5rem auto 0; max-width: 36rem; color: rgba(255,255,255,.9); font-size: 1rem; }
+    .card {
+      margin: 0 auto; max-width: 42rem; border-radius: 2rem;
+      background: var(--paper); padding: 2rem;
+      box-shadow: 0 20px 0 rgba(7,31,61,.18), 0 24px 48px rgba(3,19,43,.35);
+    }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .round-label { font-weight: 600; color: #54708b; font-size: .95rem; }
+    #round-counter { margin-top: .25rem; font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+    .sound-icon {
+      display: flex; height: 3.5rem; width: 3.5rem; align-items: center; justify-content: center;
+      border-radius: 1rem; background: var(--sun); color: var(--ink); flex-shrink: 0;
+    }
+    .progress-track { margin-top: 1.2rem; height: .7rem; border-radius: 999px; background: #dce8ee; overflow: hidden; }
+    #progress-bar { height: 100%; border-radius: 999px; background: var(--mint); transition: width .3s ease; }
+    .listen-zone { margin-top: 1.8rem; text-align: center; }
+    .listen-zone h2 { font-size: 1.3rem; font-weight: 700; color: var(--ink); }
+    .listen-helper { margin-top: .4rem; color: #54708b; font-size: .95rem; }
+    button { font-family: inherit; cursor: pointer; }
+    .action-button {
+      transition: transform .15s ease, filter .15s ease;
+      border: 0; border-radius: 1rem; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .action-button:hover { filter: brightness(1.05); }
+    .action-button:active { transform: translateY(2px); }
+    .action-button:disabled { opacity: .5; cursor: not-allowed; }
+    #listen-button { margin-top: 1.2rem; padding: .85rem 1.5rem; background: var(--sun); color: var(--ink); font-size: 1.05rem; box-shadow: 0 3px 0 rgba(7,31,61,.2); }
+    .answer-zone { margin-top: 1.8rem; text-align: center; }
+    .answer-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--ink); }
+    #number-answer {
+      min-height: 76px; display: flex; align-items: center; justify-content: center;
+      border-radius: 1rem; border: 4px dashed #b9cede; background: #f3f8fa;
+      padding: .5rem 1rem; font-size: 2.4rem; font-weight: 700; color: var(--ink);
+      letter-spacing: .08em; font-variant-numeric: tabular-nums;
+      transition: border-color .2s ease;
+    }
+    #number-answer.empty { color: #9ab0c1; }
+    .keypad { margin: 1.2rem auto 0; max-width: 24rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+    .key-button {
+      min-height: 52px; border: 0; border-bottom: 5px solid #c9d8e4; border-radius: 1rem;
+      background: #fff; color: var(--ink); font-size: 1.5rem; font-weight: 700;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .key-button:hover { filter: brightness(.98); }
+    .key-button:active { transform: translateY(3px); border-bottom-width: 2px; }
+    .key-button.utility { font-size: .85rem; padding: 0 .5rem; }
+    #clear-button { background: #ffe8b4; }
+    #delete-button { background: #ffdcd7; }
+    #validate-button { margin-top: 1.4rem; width: 100%; padding: 1rem 1.5rem; background: var(--mint); color: #0d3a33; font-size: 1.1rem; box-shadow: 0 4px 0 rgba(7,31,61,.2); }
+    @media (min-width: 640px) { #validate-button { width: auto; padding: 1rem 2.2rem; } }
+    #feedback-area { margin-top: 1.2rem; text-align: center; }
+    .feedback-panel { border-radius: 1rem; padding: 1rem; animation: rise .26s ease-out; }
+    #correct-feedback { background: #e0f7f0; border: 2px solid var(--mint); }
+    #incorrect-feedback { background: #ffe9e7; border: 2px solid var(--coral); }
+    .feedback-title { font-weight: 700; font-size: 1.05rem; }
+    .feedback-text { margin-top: .25rem; color: #54708b; }
+    .auto-next { margin-top: .8rem; font-size: .85rem; color: #54708b; }
+    footer { padding-top: 1.4rem; text-align: center; }
+    footer p { font-size: .85rem; color: rgba(255,255,255,.85); }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .pop-in { animation: pop .4s cubic-bezier(.2,.9,.3,1.2) both; }
+    @keyframes pop { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: scale(1); } }
+    .hidden { display: none; }
+    button:focus-visible { outline: 4px solid #173d70; outline-offset: 3px; }
+    .result-card { text-align: center; padding: 2.5rem; }
+    .trophy {
+      margin: 0 auto; height: 5rem; width: 5rem; display: flex; align-items: center; justify-content: center;
+      border-radius: 999px; background: var(--sun); color: var(--ink);
+    }
+    #result-screen h2 { margin-top: 1.2rem; font-size: 1.6rem; font-weight: 700; }
+    .result-message { margin: .8rem auto 0; max-width: 28rem; color: #54708b; }
+    .score-box { margin: 1.8rem auto 0; max-width: 18rem; border-radius: 1.5rem; background: #edf8f6; padding: 1.3rem 1.5rem; }
+    .score-label { font-weight: 600; color: #23796e; }
+    #final-score { margin-top: .25rem; font-size: 3rem; font-weight: 700; color: var(--ink); }
+    #restart-button { margin-top: 2rem; padding: 1rem 2rem; background: var(--sun); color: var(--ink); font-size: 1.05rem; box-shadow: 0 4px 0 rgba(7,31,61,.2); }
+    @media (max-width: 640px) {
+      .app-shell { padding: 1rem; }
+      .card { padding: 1.3rem; border-radius: 1.5rem; }
+      #number-answer { min-height: 64px; font-size: 2rem; }
+      .key-button { min-height: 48px; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="shape shape-one"></div>
+    <div class="shape shape-two"></div>
+    <div class="shape shape-three"></div>
+
+    <header class="content-frame">
+      <div class="badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.597a6.06 6.06 0 0 0 6.937-6.937 6.06 6.06 0 0 0-6.937 6.937z"/><path d="M12 3v1M5.6 5.6l.7.7M3 12h1M18 12h1M17.7 6.3l-.7.7M7.5 16.5 3 21M12.5 12.5 21 3"/></svg>
+        <span>Atelier de numération</span>
+      </div>
+      <h1>Dictée de Nombres</h1>
+      <p class="subtitle">Écoute bien chaque nombre, puis écris-le avec le clavier. 10 nombres par partie !</p>
+    </header>
+
+    <main class="content-frame">
+      <section id="game-screen">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <p class="round-label">Manche</p>
+              <p id="round-counter">1 / 10</p>
+            </div>
+            <div class="sound-icon" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.411 7.367a.93.93 0 0 1-.704.325H3a1 1 0 0 0-1 1V15a1 1 0 0 0 1 1h2.707a.93.93 0 0 1 .704.325l3.386 3.163A.705.705 0 0 0 11 18.998z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg>
+            </div>
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-label="Progression">
+            <div id="progress-bar" style="width: 10%;"></div>
+          </div>
+
+          <div class="listen-zone">
+            <h2>Écoute le nombre</h2>
+            <p class="listen-helper">Clique sur le bouton pour l'écouter autant de fois que tu veux.</p>
+            <button id="listen-button" class="action-button" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+              <span>Écouter le nombre</span>
+            </button>
+          </div>
+
+          <div class="answer-zone">
+            <label class="answer-label" for="number-answer">Écris le nombre que tu as entendu</label>
+            <div id="number-answer" class="empty" role="textbox" aria-readonly="true" aria-label="Votre réponse">—</div>
+          </div>
+
+          <div class="keypad" aria-label="Clavier numérique">
+            <button class="key-button" type="button" data-key="1">1</button>
+            <button class="key-button" type="button" data-key="2">2</button>
+            <button class="key-button" type="button" data-key="3">3</button>
+            <button class="key-button" type="button" data-key="4">4</button>
+            <button class="key-button" type="button" data-key="5">5</button>
+            <button class="key-button" type="button" data-key="6">6</button>
+            <button class="key-button" type="button" data-key="7">7</button>
+            <button class="key-button" type="button" data-key="8">8</button>
+            <button class="key-button" type="button" data-key="9">9</button>
+            <button id="clear-button" class="key-button utility" type="button">Effacer tout</button>
+            <button class="key-button" type="button" data-key="0">0</button>
+            <button id="delete-button" class="key-button utility" type="button">⌫ Retour</button>
+          </div>
+
+          <div style="text-align:center;">
+            <button id="validate-button" class="action-button" type="button">Valider ma réponse</button>
+          </div>
+
+          <div id="feedback-area" class="hidden">
+            <div id="correct-feedback" class="feedback-panel hidden">
+              <p class="feedback-title">Bravo ! 🎉</p>
+              <p class="feedback-text">C'est exactement le bon nombre !</p>
+            </div>
+            <div id="incorrect-feedback" class="feedback-panel hidden">
+              <p class="feedback-title">Presque !</p>
+              <p id="incorrect-text" class="feedback-text"></p>
+            </div>
+            <p class="auto-next">On passe au nombre suivant…</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="result-screen" class="hidden">
+        <article class="card result-card pop-in">
+          <div class="trophy" aria-hidden="true">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v5a6 6 0 0 1-12 0z"/><path d="M6 6H4a2 2 0 0 0-2 2a4 4 0 0 0 4 4h1"/><path d="M18 6h2a2 2 0 0 1 2 2a4 4 0 0 1-4 4h-1"/><path d="M9 15v3"/><path d="M15 15v3"/><path d="M7 21h10"/></svg>
+          </div>
+          <h2>Partie terminée !</h2>
+          <p class="result-message">Félicitations pour ta concentration ! Tu peux rejouer pour améliorer ton score.</p>
+          <div class="score-box">
+            <p class="score-label">Ton score</p>
+            <p id="final-score">0 / 10</p>
+          </div>
+          <button id="restart-button" class="action-button" type="button">Rejouer</button>
+        </article>
+      </section>
+    </main>
+
+    <footer class="content-frame">
+      <p>Astuce : tu peux aussi utiliser le clavier de l'ordinateur (chiffres, Retour, Échap et Entrée).</p>
+    </footer>
+  </div>
+
+  <script>
+    let currentNumber = 0;
+    let currentRound = 1;
+    let score = 0;
+    let answer = "";
+    let answered = false;
+
+    const answerDisplay = document.getElementById("number-answer");
+    const roundCounter = document.getElementById("round-counter");
+    const progressBar = document.getElementById("progress-bar");
+    const feedbackArea = document.getElementById("feedback-area");
+    const correctFeedback = document.getElementById("correct-feedback");
+    const incorrectFeedback = document.getElementById("incorrect-feedback");
+    const incorrectText = document.getElementById("incorrect-text");
+    const validateButton = document.getElementById("validate-button");
+    let nextRoundTimer;
+    const gameScreen = document.getElementById("game-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    function generateNumber() {
+      return Math.floor(Math.random() * 9999) + 1;
+    }
+
+    function updateAnswerDisplay() {
+      answerDisplay.textContent = answer || "—";
+      answerDisplay.classList.toggle("empty", answer.length === 0);
+    }
+
+    function updateRoundDisplay() {
+      roundCounter.textContent = currentRound + " / 10";
+      progressBar.style.width = (currentRound * 10) + "%";
+    }
+
+    function speakNumber() {
+      if (!("speechSynthesis" in window)) {
+        alert("La synthèse vocale n'est pas disponible sur ce navigateur.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(String(currentNumber));
+      utterance.lang = "fr-FR";
+      utterance.rate = 0.82;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function startRound() {
+      currentNumber = generateNumber();
+      answer = "";
+      answered = false;
+      updateAnswerDisplay();
+      updateRoundDisplay();
+      feedbackArea.classList.add("hidden");
+      correctFeedback.classList.add("hidden");
+      incorrectFeedback.classList.add("hidden");
+      validateButton.disabled = false;
+    }
+
+    function addDigit(digit) {
+      if (answered || answer.length >= 4) return;
+      if (answer === "0") answer = "";
+      answer += digit;
+      updateAnswerDisplay();
+    }
+
+    function deleteDigit() {
+      if (answered) return;
+      answer = answer.slice(0, -1);
+      updateAnswerDisplay();
+    }
+
+    function clearAnswer() {
+      if (answered) return;
+      answer = "";
+      updateAnswerDisplay();
+    }
+
+    function validateAnswer() {
+      if (answered || answer.length === 0) {
+        answerDisplay.style.borderColor = "#ff6b5f";
+        setTimeout(() => { answerDisplay.style.borderColor = ""; }, 450);
+        return;
+      }
+      answered = true;
+      validateButton.disabled = true;
+      feedbackArea.classList.remove("hidden");
+      if (Number(answer) === currentNumber) {
+        score++;
+        correctFeedback.classList.remove("hidden");
+        incorrectFeedback.classList.add("hidden");
+      } else {
+        incorrectFeedback.classList.remove("hidden");
+        correctFeedback.classList.add("hidden");
+        incorrectText.textContent = "Le bon nombre était " + currentNumber + ". Tu as écrit " + answer + ".";
+      }
+      nextRoundTimer = window.setTimeout(nextRound, 2200);
+    }
+
+    function nextRound() {
+      window.clearTimeout(nextRoundTimer);
+      if (currentRound >= 10) {
+        showResults();
+        return;
+      }
+      currentRound++;
+      startRound();
+    }
+
+    function showResults() {
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+      document.getElementById("final-score").textContent = score + " / 10";
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    }
+
+    function restartGame() {
+      currentRound = 1;
+      score = 0;
+      resultScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+      startRound();
+    }
+
+    document.querySelectorAll("[data-key]").forEach((button) => {
+      button.addEventListener("click", () => addDigit(button.dataset.key));
+    });
+
+    document.getElementById("listen-button").addEventListener("click", speakNumber);
+    document.getElementById("delete-button").addEventListener("click", deleteDigit);
+    document.getElementById("clear-button").addEventListener("click", clearAnswer);
+    validateButton.addEventListener("click", validateAnswer);
+    document.getElementById("restart-button").addEventListener("click", restartGame);
+
+    document.addEventListener("keydown", (event) => {
+      if (!resultScreen.classList.contains("hidden")) {
+        if (event.key === "Enter") restartGame();
+        return;
+      }
+      if (/^[0-9]$/.test(event.key)) {
+        addDigit(event.key);
+      } else if (event.key === "Backspace") {
+        event.preventDefault();
+        deleteDigit();
+      } else if (event.key === "Escape") {
+        clearAnswer();
+      } else if (event.key === "Enter") {
+        if (!answered) validateAnswer();
+      }
+    });
+
+    startRound();
+  </script>
+</body>
+</html>

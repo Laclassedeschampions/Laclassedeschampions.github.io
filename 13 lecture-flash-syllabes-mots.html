@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture flash : syllabes et mots</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --ink: #17324d;
+      --mint: #9de6c7;
+      --pink: #ffb6c8;
+      --page-bg: linear-gradient(135deg, #bcecff 0%, #e9f8ff 46%, #fff4ba 100%);
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0; width: 100%;
+      font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--page-bg);
+    }
+    button { font-family: inherit; }
+
+    .game-shell { width: 100%; max-width: 900px; margin: 0 auto; padding: 28px 20px 36px; }
+
+    .hero-shape { position: absolute; border-radius: 999px; opacity: .72; pointer-events: none; }
+    .hero-shape-one { width: 110px; height: 110px; background: #ffd866; top: -45px; left: 8%; }
+    .hero-shape-two { width: 76px; height: 76px; background: #9de6c7; bottom: -30px; right: 14%; }
+    .hero-shape-three { width: 42px; height: 42px; background: #ff9fbd; top: 32px; right: 8%; }
+
+    .hero-panel {
+      position: relative; overflow: hidden;
+      border: 4px solid rgba(255,255,255,.9);
+      box-shadow: 0 14px 0 rgba(32, 96, 139, .14);
+      animation: rise-in .55s ease both;
+      background: linear-gradient(135deg, #5cbcf5 0%, #8bdded 100%);
+    }
+
+    .mascot {
+      width: 92px; height: 92px; display: grid; place-items: center;
+      border-radius: 28px; background: #ffffff;
+      box-shadow: 0 8px 0 rgba(30, 117, 156, .16);
+      transform: rotate(5deg); font-size: 50px; flex-shrink: 0;
+    }
+
+    .game-card {
+      box-shadow: 0 16px 0 rgba(32, 96, 139, .13);
+      animation: rise-in .6s .08s ease both;
+      background: #fffdf7;
+    }
+
+    .phase-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 16px; border-radius: 999px;
+      font-weight: 700; font-size: .95rem;
+    }
+    .phase-pill.syllables { background: #eaf3ff; color: #1d4ed8; }
+    .phase-pill.words { background: #fff0dd; color: #b45309; }
+
+    .flash-card {
+      margin-top: 22px;
+      border-radius: 28px;
+      border: 4px solid #ffffff;
+      background: #eef7ff;
+      box-shadow: inset 0 0 0 3px rgba(59,130,246,.12);
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      text-align: center;
+      transition: transform .15s ease;
+    }
+    .flash-card.words { background: #fff8ec; box-shadow: inset 0 0 0 3px rgba(234,140,26,.14); }
+
+    .flash-word {
+      font-size: 4.4rem;
+      font-weight: 700;
+      color: #17324d;
+      line-height: 1;
+      word-break: break-word;
+    }
+
+    .listen-icon-button {
+      border: none;
+      background: #ffffff;
+      color: #2563eb;
+      width: 52px; height: 52px;
+      border-radius: 999px;
+      display: grid; place-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #cfe2ff;
+      transition: transform .12s ease, box-shadow .12s ease;
+      touch-action: manipulation;
+    }
+    .listen-icon-button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #cfe2ff; }
+    .listen-icon-button:active { transform: translateY(2px); box-shadow: 0 1px 0 #cfe2ff; }
+
+    .judge-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 22px; }
+    .judge-button {
+      flex: 1 1 200px;
+      max-width: 260px;
+      border: none;
+      border-radius: 20px;
+      padding: 16px 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .13s ease, box-shadow .13s ease;
+      touch-action: manipulation;
+    }
+    .judge-button.good { background: #9de6c7; color: #0e3a28; box-shadow: 0 6px 0 #45b984; }
+    .judge-button.retry { background: #ffd0a8; color: #7a3a05; box-shadow: 0 6px 0 #e8942a; }
+    .judge-button:hover { transform: translateY(-2px); }
+    .judge-button:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2) !important; }
+
+    .score-chip { border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: .95rem; }
+
+    .result-panel { animation: rise-in .38s ease both; background: linear-gradient(135deg, #d7f8e5 0%, #fff1a9 100%); }
+    .result-panel.perfect { background: linear-gradient(135deg, #ffe08a 0%, #ffb6c8 100%); }
+    .confetti-dot { position: absolute; width: 13px; height: 13px; border-radius: 999px; }
+
+    @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes card-pop { 0% { transform: scale(.96); } 100% { transform: scale(1); } }
+    .flash-card.pop { animation: card-pop .22s ease; }
+
+    #confetti-overlay { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 999; }
+    .confetti-fall {
+      position: absolute; top: -40px; border-radius: 3px; opacity: .95;
+      animation: confetti-drop linear forwards;
+    }
+    @keyframes confetti-drop {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(var(--spin)); opacity: .9; }
+    }
+
+    @media (max-width: 640px) {
+      .game-shell { padding: 18px 12px 26px; }
+      .mascot { width: 70px; height: 70px; font-size: 38px; border-radius: 22px; }
+      .hero-panel h1 { font-size: 26px !important; }
+      .flash-word { font-size: 3rem; }
+      .flash-card { min-height: 170px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="confetti-overlay" aria-hidden="true"></div>
+
+  <header class="w-full">
+    <div class="game-shell">
+      <section class="hero-panel rounded-[32px] px-6 py-7 sm:px-10 sm:py-9">
+        <span class="hero-shape hero-shape-one"></span>
+        <span class="hero-shape hero-shape-two"></span>
+        <span class="hero-shape hero-shape-three"></span>
+        <div class="relative flex items-center justify-between gap-5">
+          <div>
+            <p class="mb-2 font-bold uppercase" style="color:#17496f; font-size:14px; letter-spacing:.08rem;">Lecture flash • Sons simples</p>
+            <h1 class="leading-tight" style="color:#17324d; font-weight:700; font-size:34px;">Lis vite la syllabe ou le mot !</h1>
+            <p class="mt-2 max-w-xl" style="color:#17496f; font-weight:500; font-size:17px;">Lis à voix haute ce qui est affiché, puis clique pour dire si c'était réussi.</p>
+          </div>
+          <div class="mascot" aria-hidden="true">📖</div>
+        </div>
+      </section>
+    </div>
+  </header>
+
+  <main class="w-full">
+    <div class="game-shell pt-0">
+      <section class="game-card rounded-[30px] border-4 border-white p-5 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span id="phase-pill" class="phase-pill syllables">
+            <i data-lucide="type" width="16" height="16" aria-hidden="true"></i>
+            <span id="phase-label">Étape 1 : syllabes</span>
+          </span>
+          <div class="flex flex-wrap gap-2">
+            <span class="score-chip bg-sky-100" style="color:#17496f;">Carte <span id="progress-value">1 / 12</span></span>
+            <span class="score-chip bg-amber-100" style="color:#855210;">Réussites <span id="score-value">0</span></span>
+          </div>
+        </div>
+
+        <div id="flash-card" class="flash-card">
+          <p id="flash-word" class="flash-word">…</p>
+          <button id="listen-button" type="button" class="listen-icon-button" aria-label="Entendre la prononciation">
+            <i data-lucide="volume-2" width="24" height="24" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <p class="mt-4 text-center" style="color:#47708c; font-weight:500; font-size:15px;">L'enseignant (ou l'élève) écoute la lecture à voix haute, puis clique sur le bon bouton.</p>
+
+        <div class="judge-row">
+          <button id="good-button" type="button" class="judge-button good">
+            <i data-lucide="check-circle-2" width="22" height="22" aria-hidden="true"></i>
+            Bien lu !
+          </button>
+          <button id="retry-button" type="button" class="judge-button retry">
+            <i data-lucide="repeat" width="22" height="22" aria-hidden="true"></i>
+            À revoir
+          </button>
+        </div>
+
+        <section id="results-panel" class="result-panel relative mt-7 hidden overflow-hidden rounded-[25px] p-7 text-center">
+          <span class="confetti-dot left-[10%] top-5 bg-[#ff8dae]"></span>
+          <span class="confetti-dot right-[13%] top-9 bg-[#57c99a]"></span>
+          <span class="confetti-dot bottom-5 left-[20%] bg-[#ffd866]"></span>
+          <span class="confetti-dot bottom-5 right-[22%] bg-[#6fb8ff]"></span>
+          <div class="relative">
+            <div id="results-emoji" class="mb-3 text-5xl" aria-hidden="true">🏆</div>
+            <h2 id="results-title" style="color:#17452f; font-weight:700; font-size:26px;">Séance terminée !</h2>
+            <p id="score-syllables" class="mt-3 text-lg font-bold"></p>
+            <p id="score-words" class="text-lg font-bold"></p>
+            <p id="encouragement" class="mt-2 text-lg font-semibold"></p>
+            <button id="restart-button" type="button" class="restart-button mt-6 inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold" style="background:#ff9f48; color:#5e3105; border:none; cursor:pointer; box-shadow:0 5px 0 rgba(132,77,12,.3);">
+              <i data-lucide="rotate-ccw" width="20" height="20" aria-hidden="true"></i>
+              <span style="font-size:18px;">Recommencer une séance</span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="w-full">
+    <div class="game-shell pt-0 text-center">
+      <p style="color:#35607c; font-weight:500; font-size:16px;">On commence par des syllabes simples, puis on enchaîne sur des mots courts avec les mêmes sons.</p>
+    </div>
+  </footer>
+
+  <script>
+    const SYLLABLES_PER_ROUND = 12;
+    const WORDS_PER_ROUND = 12;
+
+    // Sons simples : consonnes courantes + voyelles simples (a, e, i, o, u, é, ou)
+    const SYLLABLES = [
+      "ba","be","bi","bo","bu","bou",
+      "ma","me","mi","mo","mu","mou",
+      "ra","re","ri","ro","ru","rou",
+      "la","le","li","lo","lu","lou",
+      "fa","fe","fi","fo","fu","fou",
+      "sa","se","si","so","su","sou",
+      "ta","te","ti","to","tu","tou",
+      "pa","pe","pi","po","pu","pou",
+      "na","ne","ni","no","nu","nou",
+      "da","de","di","do","du","dou",
+      "va","ve","vi","vo","vu","vou",
+    ];
+
+    // Mots courts, construits avec les mêmes sons simples (sans sons complexes)
+    const WORDS = [
+      "papa","mamie","vélo","lune","moto","robot","radio","piano",
+      "tomate","salade","banane","pirate","domino","tulipe","valise",
+      "carotte","fusée","cactus","animal","minute","tortue","cravate",
+      "patate","cinéma","cerise","limonade","cabane","panda","souris","farine",
+    ];
+
+    function pickRandomSubset(list, count) {
+      const copy = [...list];
+      const result = [];
+      const total = Math.min(count, copy.length);
+      for (let i = 0; i < total; i++) {
+        const index = Math.floor(Math.random() * copy.length);
+        result.push(copy[index]);
+        copy.splice(index, 1);
+      }
+      return result;
+    }
+
+    const flashCard = document.getElementById("flash-card");
+    const flashWord = document.getElementById("flash-word");
+    const listenButton = document.getElementById("listen-button");
+    const goodButton = document.getElementById("good-button");
+    const retryButton = document.getElementById("retry-button");
+    const phasePill = document.getElementById("phase-pill");
+    const phaseLabel = document.getElementById("phase-label");
+    const progressValue = document.getElementById("progress-value");
+    const scoreValue = document.getElementById("score-value");
+    const resultsPanel = document.getElementById("results-panel");
+    const resultsEmoji = document.getElementById("results-emoji");
+    const resultsTitle = document.getElementById("results-title");
+    const scoreSyllablesEl = document.getElementById("score-syllables");
+    const scoreWordsEl = document.getElementById("score-words");
+    const encouragement = document.getElementById("encouragement");
+    const confettiOverlay = document.getElementById("confetti-overlay");
+
+    let deck = [];
+    let currentIndex = 0;
+    let currentPhase = "syllables"; // "syllables" puis "words"
+    let syllablesGood = 0;
+    let wordsGood = 0;
+    let frenchVoice = null;
+
+    function pickFrenchVoice() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      frenchVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("fr")) || null;
+    }
+    if ("speechSynthesis" in window) {
+      pickFrenchVoice();
+      window.speechSynthesis.addEventListener("voiceschanged", pickFrenchVoice);
+    }
+
+    function speak(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "fr-FR";
+      if (frenchVoice) utterance.voice = frenchVoice;
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function buildSyllablesDeck() {
+      deck = pickRandomSubset(SYLLABLES, SYLLABLES_PER_ROUND);
+      currentPhase = "syllables";
+      currentIndex = 0;
+      updatePhaseUi();
+      showCurrentCard();
+    }
+
+    function buildWordsDeck() {
+      deck = pickRandomSubset(WORDS, WORDS_PER_ROUND);
+      currentPhase = "words";
+      currentIndex = 0;
+      updatePhaseUi();
+      showCurrentCard();
+    }
+
+    function updatePhaseUi() {
+      if (currentPhase === "syllables") {
+        phasePill.className = "phase-pill syllables";
+        phaseLabel.textContent = "Étape 1 : syllabes";
+        flashCard.classList.remove("words");
+      } else {
+        phasePill.className = "phase-pill words";
+        phaseLabel.textContent = "Étape 2 : mots";
+        flashCard.classList.add("words");
+      }
+    }
+
+    function totalGood() {
+      return syllablesGood + wordsGood;
+    }
+
+    function showCurrentCard() {
+      const total = currentPhase === "syllables" ? SYLLABLES_PER_ROUND : WORDS_PER_ROUND;
+      progressValue.textContent = (currentIndex + 1) + " / " + total;
+      scoreValue.textContent = totalGood();
+
+      flashWord.textContent = deck[currentIndex];
+      flashCard.classList.remove("pop");
+      void flashCard.offsetWidth; // relance l'animation
+      flashCard.classList.add("pop");
+    }
+
+    function goToNextCard() {
+      currentIndex += 1;
+      const totalInPhase = currentPhase === "syllables" ? SYLLABLES_PER_ROUND : WORDS_PER_ROUND;
+
+      if (currentIndex >= totalInPhase) {
+        if (currentPhase === "syllables") {
+          buildWordsDeck();
+        } else {
+          finishSession();
+        }
+      } else {
+        showCurrentCard();
+      }
+    }
+
+    function launchBigConfetti() {
+      const colors = ["#ff8dae", "#57c99a", "#ffd866", "#6fb8ff", "#c084fc"];
+      for (let i = 0; i < 90; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-fall";
+        const size = 6 + Math.random() * 8;
+        piece.style.width = size + "px";
+        piece.style.height = (size * 0.4) + "px";
+        piece.style.left = (Math.random() * 100) + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.setProperty("--spin", (Math.random() * 720 - 360) + "deg");
+        piece.style.animationDuration = (2.2 + Math.random() * 1.6) + "s";
+        piece.style.animationDelay = (Math.random() * 0.8) + "s";
+        confettiOverlay.appendChild(piece);
+        window.setTimeout(() => piece.remove(), 4600);
+      }
+    }
+
+    function finishSession() {
+      document.querySelector(".flex.flex-wrap.items-center.justify-between").classList.add("hidden");
+      flashCard.classList.add("hidden");
+      document.querySelector("main p.text-center").classList.add("hidden");
+      document.querySelector(".judge-row").classList.add("hidden");
+
+      resultsPanel.classList.remove("hidden");
+      scoreSyllablesEl.textContent = "Syllabes : " + syllablesGood + " / " + SYLLABLES_PER_ROUND;
+      scoreWordsEl.textContent = "Mots : " + wordsGood + " / " + WORDS_PER_ROUND;
+
+      const isPerfect = syllablesGood === SYLLABLES_PER_ROUND && wordsGood === WORDS_PER_ROUND;
+      resultsPanel.classList.toggle("perfect", isPerfect);
+
+      if (isPerfect) {
+        resultsEmoji.textContent = "🎉";
+        resultsTitle.textContent = "Séance parfaite !";
+        encouragement.textContent = "Bravo, tu as tout bien lu ! Quelle réussite !";
+        launchBigConfetti();
+      } else if (totalGood() >= (SYLLABLES_PER_ROUND + WORDS_PER_ROUND) * 0.6) {
+        resultsEmoji.textContent = "🏆";
+        resultsTitle.textContent = "Belle séance !";
+        encouragement.textContent = "Tu progresses bien, continue à t'entraîner chaque jour !";
+      } else {
+        resultsEmoji.textContent = "💪";
+        resultsTitle.textContent = "Séance terminée !";
+        encouragement.textContent = "C'est en s'entraînant qu'on devient un champion de lecture !";
+      }
+
+      resultsPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function judge(isGood) {
+      if (isGood) {
+        if (currentPhase === "syllables") syllablesGood += 1;
+        else wordsGood += 1;
+      }
+      scoreValue.textContent = totalGood();
+      goToNextCard();
+    }
+
+    goodButton.addEventListener("click", () => judge(true));
+    retryButton.addEventListener("click", () => judge(false));
+    listenButton.addEventListener("click", () => speak(deck[currentIndex]));
+
+    function restartSession() {
+      syllablesGood = 0;
+      wordsGood = 0;
+
+      resultsPanel.classList.add("hidden");
+      resultsPanel.classList.remove("perfect");
+      document.querySelector(".flex.flex-wrap.items-center.justify-between").classList.remove("hidden");
+      flashCard.classList.remove("hidden");
+      document.querySelector("main p.text-center").classList.remove("hidden");
+      document.querySelector(".judge-row").classList.remove("hidden");
+
+      buildSyllablesDeck();
+    }
+
+    document.getElementById("restart-button").addEventListener("click", restartSession);
+
+    if (window.lucide) lucide.createIcons();
+    buildSyllablesDeck();
+  </script>
+</body>
+</html>
