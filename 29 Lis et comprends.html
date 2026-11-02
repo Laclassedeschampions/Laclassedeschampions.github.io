@@ -1,0 +1,487 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lis et comprends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+/* Layout: une page de cahier à lignes (Seyès) avec le texte, puis la question et trois réponses en dessous. */
+:root{
+  --bg:#E4EBF6;
+  --paper:#FCFDFF;
+  --rule:#BCCDF0;
+  --margin:#E27A84;
+  --ink:#1B2744;
+  --muted:#58658A;
+  --accent:#2D55D6;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E7EDFD;
+  --good:#17784D;
+  --good-soft:#DDF3E8;
+  --bad:#B8322A;
+  --bad-soft:#FBE3E0;
+  --line:#C6D3EE;
+  --shadow:0 1px 0 rgba(27,39,68,.06),0 8px 24px rgba(27,39,68,.08);
+  --f-display:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:"Andika",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --lh:2.15rem;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101626;
+    --paper:#1A2238;
+    --rule:#2D3B63;
+    --margin:#C05A66;
+    --ink:#E9EEFB;
+    --muted:#A3AFCF;
+    --accent:#8FA9FF;
+    --accent-ink:#0F1730;
+    --accent-soft:#24315A;
+    --good:#62D69C;
+    --good-soft:#173A2E;
+    --bad:#FF8E84;
+    --bad-soft:#44201F;
+    --line:#2F3C63;
+    --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101626;
+  --paper:#1A2238;
+  --rule:#2D3B63;
+  --margin:#C05A66;
+  --ink:#E9EEFB;
+  --muted:#A3AFCF;
+  --accent:#8FA9FF;
+  --accent-ink:#0F1730;
+  --accent-soft:#24315A;
+  --good:#62D69C;
+  --good-soft:#173A2E;
+  --bad:#FF8E84;
+  --bad-soft:#44201F;
+  --line:#2F3C63;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:1.05rem;
+  line-height:1.5;
+  padding-inline:16px;
+  padding-block:1.25rem 3rem;
+}
+.wrap{max-width:44rem;margin-inline:auto;display:flex;flex-direction:column;gap:1.1rem}
+h1,h2,h3,p{margin:0}
+
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem 1rem;flex-wrap:wrap}
+.top h1{font-family:var(--f-display);font-weight:600;font-size:1.6rem;letter-spacing:.01em}
+.top .sub{color:var(--muted);font-size:.95rem}
+
+.progress{display:flex;flex-direction:column;gap:.5rem}
+.counter{font-family:var(--f-display);font-weight:500;font-size:1.05rem;color:var(--muted)}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(10,1fr);gap:.3rem}
+.steps li{height:.55rem;border-radius:999px;background:var(--line)}
+.steps li.current{background:var(--accent)}
+.steps li.good{background:var(--good)}
+.steps li.bad{background:var(--bad)}
+
+/* La feuille à lignes */
+.sheet{
+  position:relative;
+  background-color:var(--paper);
+  background-image:linear-gradient(to bottom,transparent calc(var(--lh) - 1.5px),var(--rule) calc(var(--lh) - 1.5px));
+  background-size:100% var(--lh);
+  background-position:0 -.55rem;
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+  padding:0 1rem var(--lh) 3.1rem;
+  overflow:hidden;
+}
+.sheet::before{
+  content:"";position:absolute;top:0;bottom:0;left:2.3rem;width:2px;background:var(--margin);opacity:.8;
+}
+.theme{
+  line-height:var(--lh);
+  font-family:var(--f-display);font-weight:500;font-size:1rem;
+  color:var(--accent);
+  letter-spacing:.02em;
+}
+.text{
+  font-size:1.2rem;
+  line-height:var(--lh);
+  hyphens:manual;
+  overflow-wrap:break-word;
+}
+
+.question{
+  font-family:var(--f-display);
+  font-weight:600;
+  font-size:1.35rem;
+  line-height:1.3;
+  text-wrap:balance;
+  margin-top:.4rem;
+}
+
+.answers{display:flex;flex-direction:column;gap:.7rem}
+.answer{
+  appearance:none;
+  display:flex;align-items:center;gap:.9rem;
+  width:100%;
+  text-align:left;
+  font:inherit;font-size:1.1rem;line-height:1.35;
+  color:var(--ink);
+  background:var(--paper);
+  border:2px solid var(--line);
+  border-radius:14px;
+  padding:.8rem 1rem;
+  cursor:pointer;
+  min-width:0;
+  transition:border-color .12s,background-color .12s,transform .12s;
+}
+.answer .key{
+  flex:none;
+  display:grid;place-items:center;
+  width:2.1rem;height:2.1rem;border-radius:50%;
+  font-family:var(--f-display);font-weight:600;font-size:1.05rem;
+  background:var(--accent-soft);color:var(--accent);
+}
+.answer .label{flex:1;min-width:0;overflow-wrap:break-word}
+.answer .mark{flex:none;font-weight:700;font-size:.9rem}
+.answer:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.answer:active:not(:disabled){transform:scale(.99)}
+.answer:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.answer:disabled{cursor:default}
+.answer.correct{border-color:var(--good);background:var(--good-soft)}
+.answer.correct .key{background:var(--good);color:var(--paper)}
+.answer.correct .mark{color:var(--good)}
+.answer.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.answer.wrong .key{background:var(--bad);color:var(--paper)}
+.answer.wrong .mark{color:var(--bad)}
+.answer.dim{opacity:.55}
+
+.feedback{
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem 1.2rem;flex-wrap:wrap;
+  border-radius:14px;padding:.9rem 1rem;
+  border:2px solid var(--line);background:var(--paper);
+}
+.feedback.good{border-color:var(--good);background:var(--good-soft)}
+.feedback.bad{border-color:var(--bad);background:var(--bad-soft)}
+.feedback .msg{flex:1 1 14rem;min-width:0}
+.feedback .msg strong{display:block;font-family:var(--f-display);font-weight:600;font-size:1.2rem}
+.feedback.good strong{color:var(--good)}
+.feedback.bad strong{color:var(--bad)}
+
+.btn{
+  appearance:none;border:0;cursor:pointer;
+  font-family:var(--f-display);font-weight:600;font-size:1.1rem;
+  background:var(--accent);color:var(--accent-ink);
+  padding:.75rem 1.4rem;border-radius:999px;
+}
+.btn:hover{filter:brightness(1.08)}
+
+/* Résultat */
+.end{display:flex;flex-direction:column;gap:1.1rem}
+.score-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);
+  padding:1.4rem 1.2rem 1.4rem 3.1rem;position:relative;overflow:hidden;
+}
+.score-card::before{content:"";position:absolute;top:0;bottom:0;left:2.3rem;width:2px;background:var(--margin);opacity:.8}
+.score-card .lbl{font-family:var(--f-display);font-weight:500;color:var(--muted)}
+.score-card .big{font-family:var(--f-display);font-weight:600;font-size:4.2rem;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+.score-card .big small{font-size:2rem;color:var(--muted);font-weight:500}
+.score-card .verdict{font-family:var(--f-display);font-weight:600;font-size:1.35rem;margin-top:.3rem;text-wrap:balance}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.7rem}
+.split div{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;min-width:0}
+.split b{font-family:var(--f-display);font-weight:600;font-size:1.5rem;font-variant-numeric:tabular-nums;display:block}
+.split span{color:var(--muted);font-size:.95rem}
+.actions{display:flex}
+
+@media (prefers-reduced-motion:reduce){.answer{transition:none}}
+@media (max-width:480px){
+  .text{font-size:1.12rem}
+  .sheet{padding-left:2.7rem}
+  .sheet::before{left:2rem}
+  .score-card{padding-left:2.7rem}
+  .score-card::before{left:2rem}
+  .question{font-size:1.25rem}
+}
+</style>
+
+<main class="wrap">
+  <header class="top">
+    <h1>Lis et comprends</h1>
+    <p class="sub">CM2 · une série de 10 questions</p>
+  </header>
+
+  <div id="game" class="wrap" style="gap:1.1rem">
+    <div class="progress">
+      <p class="counter" id="counter"></p>
+      <ol class="steps" id="steps" aria-hidden="true"></ol>
+    </div>
+
+    <section class="sheet" aria-labelledby="theme">
+      <p class="theme" id="theme"></p>
+      <p class="text" id="text"></p>
+    </section>
+
+    <h2 class="question" id="question"></h2>
+    <div class="answers" id="answers" role="group" aria-labelledby="question"></div>
+
+    <div class="feedback" id="feedback" aria-live="polite" hidden>
+      <div class="msg"><strong id="fb-title"></strong><span id="fb-text"></span></div>
+      <button class="btn" id="next" type="button">Question suivante</button>
+    </div>
+  </div>
+
+  <section class="end" id="end" hidden aria-live="polite">
+    <div class="score-card">
+      <p class="lbl">Ton score</p>
+      <p class="big"><span id="score">0</span><small> / 10</small></p>
+      <p class="verdict" id="verdict"></p>
+    </div>
+    <div class="split">
+      <div><b id="score-e">0 / 5</b><span>Réponses écrites dans le texte</span></div>
+      <div><b id="score-i">0 / 5</b><span>Réponses à deviner avec des indices</span></div>
+    </div>
+    <div class="actions"><button class="btn" id="restart" type="button">Recommencer une série</button></div>
+  </section>
+</main>
+
+<script>
+/* Banque de 50 textes : "E" = compréhension explicite, "I" = compréhension implicite.
+   Format : [type, thème, texte, question, bonne réponse, mauvaise réponse, mauvaise réponse]
+   La bonne réponse est toujours remise à une place au hasard au moment d’afficher la question. */
+const BANK = [
+/* ---------- Compréhension explicite (25) ---------- */
+["E","À l’école","Lundi matin, Léa arrive à l’école avec son cartable rouge. Dans la cour, elle retrouve son amie Inès. La cloche sonne et les élèves se rangent devant la porte. La maîtresse, Madame Roux, ouvre la classe en souriant. Chacun accroche son manteau au portemanteau. Puis la classe commence par une dictée.","De quelle couleur est le cartable de Léa ?","Rouge","Bleu","Vert"],
+["E","La journée","Tom se réveille à sept heures. Il s’habille, puis il prend son petit-déjeuner avec sa sœur. À huit heures, son père l’emmène à l’école en voiture. À midi, Tom mange à la cantine avec ses copains. L’après-midi, il fait du dessin et de la lecture. À seize heures trente, sa mère vient le chercher.","À quelle heure Tom se réveille-t-il ?","À sept heures","À huit heures","À midi"],
+["E","À la ferme","À la ferme de Monsieur Martin, il y a douze vaches. Chaque matin, il les trait avec une machine. Le lait est ensuite versé dans un grand bidon. Les poules, elles, pondent des œufs dans le poulailler. La petite Camille ramasse les œufs avec un panier en osier. Elle en trouve souvent huit ou neuf.","Combien de vaches y a-t-il à la ferme ?","Douze","Huit","Neuf"],
+["E","Les repas","Ce midi, la cantine sert du poulet avec des haricots verts. En entrée, il y a une salade de tomates. Pour le dessert, les enfants ont le choix entre un yaourt et une pomme. Lucas prend la pomme car il adore les fruits croquants. Sa voisine Zoé préfère le yaourt à la vanille. Tout le monde boit de l’eau fraîche.","Que mange-t-on en entrée ?","Une salade de tomates","Des haricots verts","Un yaourt"],
+["E","Fruits et légumes","Dans le jardin de Papi, il y a un potager. Il y plante des carottes, des radis et des courgettes. Au printemps, il sème les graines et il arrose chaque soir. En été, les fraises deviennent rouges et sucrées. Mamie les cueille dans une petite corbeille. Avec elles, elle prépare une délicieuse tarte.","Que prépare Mamie avec les fraises ?","Une tarte","Une confiture","Un gâteau au chocolat"],
+["E","Les saisons","En automne, les feuilles des arbres changent de couleur. Elles deviennent jaunes, orange ou rouges. Puis elles tombent et forment un tapis sur le sol. Les jours raccourcissent et il fait plus frais. Les enfants sortent leurs bottes pour sauter dans les flaques. Les écureuils, eux, cherchent des noisettes.","Que cherchent les écureuils en automne ?","Des noisettes","Des fraises","Des carottes"],
+["E","Les vêtements","Il neige ce matin, alors Yanis s’habille chaudement. Il enfile un gros pull en laine bleu et un pantalon épais. Sa mère lui tend un bonnet, une écharpe et des gants. Il met aussi ses bottes fourrées au fond de l’entrée. Dehors, le vent est glacial. Yanis est prêt pour faire un bonhomme de neige.","Que va faire Yanis dehors ?","Un bonhomme de neige","Une bataille de boules de neige","Du patin à glace"],
+["E","La forêt","Dans la forêt, le renard sort de son terrier à la tombée de la nuit. Il marche sans bruit entre les grands chênes. Il chasse les souris et les campagnols. Le jour, il se repose dans son abri, bien caché. Son pelage roux l’aide à se confondre avec les feuilles mortes. Sa queue touffue lui sert à garder l’équilibre.","Quand le renard sort-il de son terrier ?","À la tombée de la nuit","Au lever du soleil","À midi"],
+["E","La savane","Dans la savane africaine, les girafes vivent en troupeau. Avec leur très long cou, elles mangent les feuilles au sommet des acacias. Une girafe adulte peut mesurer cinq mètres de haut. Elle boit rarement, car elle trouve de l’eau dans les feuilles. Son pelage tacheté est unique, comme une empreinte digitale. Les bébés girafes mesurent déjà presque deux mètres à la naissance.","Que mangent les girafes ?","Des feuilles d’acacias","De l’herbe des plaines","Des racines"],
+["E","La récréation","À la récréation, les élèves se précipitent dans la cour. Certains jouent aux billes près du grand platane. D’autres sautent à la corde ou tracent une marelle à la craie. Dans un coin, Hugo et Sam jouent au ballon. Soudain, la cloche sonne la fin de la récréation. Tout le monde court se ranger.","À quel jeu jouent Hugo et Sam ?","Au ballon","Aux billes","À la corde"],
+["E","Le sport","Le mercredi, Clara va à la piscine avec son club de natation. L’entraîneur leur demande de faire dix longueurs de bassin. Clara nage le crawl, sa nage préférée. Avant de plonger, elle met son bonnet et ses lunettes. À la fin de la séance, elle est fatiguée mais contente. Elle prend ensuite une douche chaude.","Quelle est la nage préférée de Clara ?","Le crawl","La brasse","Le dos crawlé"],
+["E","La classe","Dans la classe de CM2, il y a vingt-quatre élèves. Le mardi, c’est Nina la responsable des cahiers. Elle les distribue avant la leçon de mathématiques. Mathis, lui, est chargé d’effacer le tableau. Sur le mur du fond, les enfants ont affiché leurs poésies. La maîtresse vérifie que chacun a bien son stylo.","Combien y a-t-il d’élèves dans la classe ?","Vingt-quatre","Vingt-deux","Trente"],
+["E","À la ferme","Le coq de la ferme chante dès que le soleil se lève. Les moutons sortent alors du hangar et partent brouter l’herbe du pré. Le berger les surveille avec son chien Max. Max court autour du troupeau pour les garder ensemble. À midi, tout le monde se repose à l’ombre d’un grand noyer. Le soir, les moutons rentrent à la bergerie.","Comment s’appelle le chien du berger ?","Max","Rex","Milou"],
+["E","Les repas","Pour son anniversaire, Emma invite six amis à goûter. Sa maman a préparé un gâteau au chocolat avec des bougies. Il y a aussi des jus de fruits, des biscuits et des bonbons. Les enfants chantent « Joyeux anniversaire » avant de souffler les bougies. Emma reçoit un livre et un puzzle en cadeau. Elle remercie tous ses invités.","Combien d’amis Emma invite-t-elle ?","Six","Sept","Dix"],
+["E","Fruits et légumes","Le citron est un fruit jaune au goût très acide. Il pousse sur un arbre, le citronnier, dans les pays chauds. On presse son jus pour faire de la citronnade. On peut aussi râper son zeste pour parfumer un gâteau. Le citron contient beaucoup de vitamine C. Cette vitamine aide notre corps à rester en forme.","Quelle vitamine le citron contient-il en grande quantité ?","La vitamine C","La vitamine A","La vitamine D"],
+["E","Les saisons","L’été commence fin juin. Les journées sont longues et chaudes, et la nuit tombe tard. Les enfants sont en vacances et vont à la plage ou à la montagne. Dans les champs, les agriculteurs récoltent le blé. Les cigales chantent dans le sud de la France. On mange beaucoup de glaces pour se rafraîchir.","Quel animal chante dans le sud de la France ?","La cigale","Le coq","Le hibou"],
+["E","Les vêtements","Pour aller à l’école, Zoé porte une jupe grise et un gilet jaune. Aujourd’hui, elle a aussi mis des collants car il fait frais. Ses chaussures sont des baskets blanches avec des lacets roses. Elle a oublié son manteau sur la chaise de sa chambre. Sa mère le lui apporte en courant. Zoé la remercie avec un grand sourire.","De quelle couleur sont les lacets de Zoé ?","Roses","Blancs","Jaunes"],
+["E","La forêt","Le hérisson vit dans les haies et les bois. Son dos est couvert de milliers de piquants. Quand il a peur, il se roule en boule. Il se nourrit d’escargots, de vers et d’insectes. En hiver, il dort dans un tas de feuilles : c’est l’hibernation. Il se réveille au printemps, quand il fait plus doux.","Comment s’appelle le long sommeil du hérisson en hiver ?","L’hibernation","La migration","La mue"],
+["E","La savane","Le lion est le roi de la savane. Il vit en groupe, appelé une troupe ou une fierté. Ce sont surtout les lionnes qui partent chasser. Elles s’attaquent aux zèbres et aux gazelles. Le mâle, reconnaissable à sa crinière, protège le territoire. Il rugit si fort qu’on l’entend à plusieurs kilomètres.","Qui chasse surtout dans le groupe de lions ?","Les lionnes","Le mâle","Les lionceaux"],
+["E","Le sport","Ce samedi, l’équipe de football de l’école joue un match. Elle porte des maillots verts et des shorts blancs. L’arbitre siffle le début de la partie à quatorze heures. Après dix minutes, Noé marque un superbe but de la tête. Les supporters crient de joie dans les gradins. À la fin, l’équipe gagne trois buts à un.","Qui marque un but après dix minutes ?","Noé","Hugo","Léo"],
+["E","La classe","Chaque vendredi, la classe de Madame Roux va à la bibliothèque. Les élèves rendent leurs livres et en choisissent de nouveaux. Karim emprunte une bande dessinée sur les pirates. Léa préfère un roman d’aventures qui se passe dans la jungle. La bibliothécaire note les titres sur son ordinateur. Chacun peut garder son livre pendant trois semaines.","Pendant combien de temps peut-on garder son livre ?","Trois semaines","Deux jours","Un mois"],
+["E","La journée","Le soir, Maé rentre chez elle à dix-sept heures. Elle goûte une tartine de confiture avec un verre de lait. Ensuite, elle fait ses devoirs sur la table de la cuisine. À dix-neuf heures, la famille dîne ensemble. Après le repas, Maé lit une histoire dans son lit. À vingt heures trente, elle éteint la lumière.","Que fait Maé après le repas ?","Elle lit une histoire","Elle fait ses devoirs","Elle regarde un dessin animé"],
+["E","À la ferme","Le cochon est un animal de la ferme qui vit dans une porcherie. Il adore se rouler dans la boue pour se rafraîchir. Sa peau est rose et ne transpire pas. Il mange des céréales, des légumes et des restes de cuisine. La truie donne naissance à plusieurs porcelets à la fois. Les porcelets boivent le lait de leur mère.","Comment s’appelle le petit du cochon ?","Le porcelet","Le poussin","L’agneau"],
+["E","Les repas","Pour le petit-déjeuner, Adam mange des céréales avec du lait froid. Sa sœur Lina préfère des tartines beurrées. Papa boit un café noir pendant que maman prend du thé. Tout le monde mange vite car l’heure tourne. Adam avale un jus d’orange et attrape son sac. Dans la rue, il retrouve son copain Paul.","Que boit papa au petit-déjeuner ?","Un café noir","Du thé","Du jus d’orange"],
+["E","Fruits et légumes","La carotte est un légume racine qui pousse sous la terre. Elle est orange, longue et croquante. On peut la manger crue, râpée en salade. On peut aussi la cuire dans une soupe ou un pot-au-feu. Elle contient de la vitamine A, bonne pour les yeux. Les lapins en raffolent.","Où pousse la carotte ?","Sous la terre","Sur un arbre","Dans l’eau"],
+
+/* ---------- Compréhension implicite (25) ---------- */
+["I","À l’école","Ce matin, Malo arrive en retard à l’école. Il court dans le couloir, le souffle court. Quand il ouvre la porte de la classe, tout le monde se tourne vers lui. Madame Roux a déjà commencé la leçon. Malo rougit et file s’asseoir à sa place sans un mot. Il sort ses affaires en baissant la tête.","Comment se sent Malo quand il entre dans la classe ?","Gêné","Joyeux","En colère"],
+["I","La journée","Il est vingt heures. Dehors, il fait nuit noire. Jules a pris sa douche et mis son pyjama. Il se brosse les dents, puis il se glisse sous sa couette. Sa maman éteint la grande lumière et laisse seulement la veilleuse. Jules bâille et ferme les yeux.","Pourquoi Jules bâille-t-il ?","Parce qu’il a sommeil","Parce qu’il a faim","Parce qu’il s’ennuie"],
+["I","À la ferme","Cet après-midi, le fermier se dépêche de rentrer les vaches. Le ciel est devenu tout noir et le vent se lève. On entend au loin un grand grondement. Les poules courent vers le poulailler en caquetant. Quelques gouttes lourdes tombent déjà sur le toit de la grange. Le fermier ferme vite les portes.","Quel temps va-t-il faire ?","Il va y avoir un orage","Il va faire grand soleil","Il va neiger"],
+["I","Les repas","Théo regarde le plat que sa grand-mère pose sur la table. Une bonne odeur de fromage fondu et de pommes de terre remplit la pièce. Il se frotte le ventre et sourit largement. Il a déjà pris sa fourchette. Il ne veut pas attendre que tout le monde soit servi. « Vite, j’ai tellement faim ! » pense-t-il.","Que pense Théo du plat ?","Il a hâte de le goûter","Il trouve qu’il sent mauvais","Il préfère manger autre chose"],
+["I","Fruits et légumes","Sarah regarde son assiette avec une grimace. Il y a des brocolis verts à côté de ses pâtes. Elle les pousse du bout de sa fourchette contre le bord. Elle espère que sa mère ne verra rien. Quand celle-ci se retourne, Sarah cache vite un brocoli sous sa serviette. Elle prend un air innocent.","Que pense Sarah des brocolis ?","Elle ne les aime pas","Elle les adore","Elle les trouve trop salés"],
+["I","Les saisons","Dans le jardin, les arbres n’ont plus une seule feuille. Une fine couche de givre recouvre l’herbe. Les enfants soufflent et voient de la buée sortir de leur bouche. Les oiseaux viennent picorer les graines que Mamie a posées sur le rebord. Le ruisseau est à moitié gelé. Tout le monde est pressé de rentrer près de la cheminée.","Quelle saison est-on ?","L’hiver","L’été","Le printemps"],
+["I","Les saisons","Les bourgeons éclatent sur les branches. Les premières fleurs sortent de terre : des perce-neige et des jonquilles. Les oiseaux construisent leurs nids dans les haies. Les jours rallongent et le soleil est plus doux. Les agneaux naissent dans les prés. Les enfants enlèvent peu à peu leur gros manteau.","Pourquoi les enfants enlèvent-ils peu à peu leur gros manteau ?","Parce qu’il fait moins froid","Parce qu’ils sont en retard","Parce qu’ils ont des habits neufs"],
+["I","Les vêtements","Maya prépare son sac. Elle y glisse un maillot de bain, une serviette et un bonnet. Elle n’oublie pas ses lunettes de natation. Elle enroule ses affaires dans la serviette pour qu’elles tiennent bien. Sa mère l’attend déjà dans la voiture. Maya ferme la fermeture éclair et court la rejoindre.","Où Maya va-t-elle aller ?","À la piscine","À la montagne","À la bibliothèque"],
+["I","La forêt","Dans la forêt, Lili aperçoit de petites traces dans la boue. Elles ressemblent à de minuscules mains avec quatre doigts. Plus loin, elle voit des noisettes dont l’écorce est rongée. Un peu plus haut, quelque chose bouge dans les branches d’un chêne. Une queue touffue et rousse disparaît dans le feuillage. Lili sourit, elle a deviné l’animal.","Quel animal Lili a-t-elle deviné ?","Un écureuil","Un renard","Un hérisson"],
+["I","La savane","Dans la savane, les zèbres boivent près du point d’eau. Soudain, l’un d’eux relève la tête et dresse les oreilles. Il pousse un cri aigu et tous les zèbres cessent de boire. Dans les hautes herbes, quelque chose a bougé. Le troupeau s’enfuit au galop dans un nuage de poussière. Un lion apparaît à l’endroit où ils se trouvaient.","Pourquoi les zèbres s’enfuient-ils ?","Ils ont senti un danger","Ils ont fini de boire","Ils cherchent un endroit pour dormir"],
+["I","La récréation","Pendant la récréation, Paul court dans la cour et ne regarde pas devant lui. Il se cogne contre Clémence, qui laisse tomber ses billes. Elles roulent dans toute la cour. Paul s’arrête, ramasse les billes une à une et les lui rend. « Excuse-moi, je ne l’ai pas fait exprès », dit-il. Clémence sourit et lui répond que ce n’est pas grave.","Comment Paul se comporte-t-il après l’accident ?","Il s’excuse et répare sa maladresse","Il se moque de Clémence","Il part en courant"],
+["I","La récréation","Un groupe d’élèves joue à chat dans la cour. Anna est « le chat » et doit attraper les autres. Elle court de plus en plus vite mais n’arrive pas à toucher Hugo. Hugo se faufile entre les bancs en riant. Anna s’arrête, hors d’haleine, les mains sur les genoux. Elle se redresse et repart de plus belle.","Que montre l’attitude d’Anna à la fin du texte ?","Elle ne renonce pas","Elle est fâchée contre Hugo","Elle a gagné la partie"],
+["I","Le sport","Léo a couru le cross de l’école pendant vingt minutes. À l’arrivée, il se laisse tomber sur l’herbe. Son visage est rouge et son t-shirt est trempé. Il boit une grande gorgée d’eau et respire fort. Le professeur lui tend une serviette. Léo lève le pouce en souriant.","Comment Léo se sent-il à la fin de la course ?","Fatigué mais content","Très en colère","Complètement endormi"],
+["I","Le sport","Dans le gymnase, Inès attend son tour devant la poutre. Elle serre les poings et regarde ses pieds. Son cœur bat très vite. Le professeur lui dit doucement : « Respire, tu es prête. » Inès inspire profondément, puis monte sur la poutre. Elle avance lentement, un pas après l’autre.","Que ressent Inès avant de monter sur la poutre ?","Elle est inquiète","Elle est très en colère","Elle s’ennuie"],
+["I","La classe","Madame Roux pose les cahiers corrigés sur le bureau. Elle appelle Nina et lui tend le sien. Nina regarde la page, puis ses yeux brillent. Elle a eu un grand « Très bien » écrit en rouge. Elle montre le cahier à sa voisine avec un grand sourire. Elle se dit que ses efforts ont payé.","Pourquoi Nina est-elle contente ?","Elle a reçu une très bonne appréciation","Elle a perdu son cahier","Elle va sortir en récréation"],
+["I","La classe","Le calme règne dans la classe. Chacun a la tête penchée sur sa feuille. On entend seulement le bruit des stylos qui grattent. La maîtresse se promène entre les rangs sans parler. Sur le tableau, il est écrit : « Mathématiques – 30 minutes ». Quand la pendule marque l’heure, elle demande de poser les stylos.","Pourquoi la classe est-elle si silencieuse ?","Parce que les élèves passent un contrôle","Parce que la maîtresse est absente","Parce que c’est la récréation"],
+["I","À la ferme","Dans la grange, Marie découvre la poule Rousse assise sur un tas de paille. Elle ne bouge pas, même quand Marie s’approche. La poule ne quitte pas sa place depuis trois semaines. Un matin, Marie entend de petits piaillements. Sous les plumes de la poule, de minuscules têtes jaunes apparaissent. Marie comprend enfin pourquoi la poule restait si longtemps immobile.","Pourquoi la poule restait-elle immobile ?","Elle couvait ses œufs","Elle était malade","Elle avait peur de Marie"],
+["I","À la ferme","Chaque soir, le fermier remplit de foin le râtelier de l’étable. Les vaches s’approchent une à une. Dehors, la neige recouvre complètement le pré. Il n’y a plus un brin d’herbe à brouter. Le fermier ferme la porte pour garder la chaleur. Il sait que le foin suffira jusqu’au retour du beau temps.","Pourquoi les vaches mangent-elles du foin ?","Il n’y a plus d’herbe dehors","Elles préfèrent le goût du foin","Elles sont malades"],
+["I","Les repas","Le serveur apporte trois assiettes à la table. Mamie a commandé une soupe, car elle a un peu froid. Papa a choisi une grande salade avec du poulet. Quant à Lucie, elle attend impatiemment sa pizza. Elle regarde la porte de la cuisine toutes les dix secondes. Autour d’eux, des gens parlent et les verres tintent.","Où cette famille se trouve-t-elle ?","Dans un restaurant","À l’école","Dans un jardin"],
+["I","Fruits et légumes","Léa tient une banane dans la main. La peau est devenue toute brune avec des taches noires. Elle la presse doucement et la trouve très molle. Elle hésite en sentant le fruit. « Je ne peux plus la manger comme ça », dit-elle. Mais elle a une idée : elle va faire un gâteau.","Pourquoi Léa veut-elle faire un gâteau ?","La banane est trop mûre pour être mangée telle quelle","La banane est trop verte","Elle déteste les bananes"],
+["I","Les vêtements","Quand Adam ouvre la porte, un vent glacial s’engouffre dans l’entrée. Il fait un pas dehors en t-shirt et revient aussitôt. Il frissonne et ses dents claquent. « Brrr, j’ai oublié quelque chose ! » dit-il. Il attrape son blouson et sa grosse écharpe. Puis il referme la porte derrière lui.","Qu’a oublié Adam ?","De s’habiller chaudement","Son cartable","Ses clés"],
+["I","La forêt","Il fait presque nuit dans la forêt. Un oiseau aux grands yeux ronds se pose sans bruit sur une branche. Il tourne la tête presque entièrement pour regarder autour de lui. Au sol, une petite souris sort de sa cachette. L’oiseau déploie ses ailes silencieuses et plonge vers elle. Le lendemain, on ne retrouvera qu’une petite pelote de poils.","Quel oiseau est décrit dans ce texte ?","Un hibou","Un moineau","Un canard"],
+["I","La savane","Dans la savane, l’éléphant arrive au bord de la rivière. Il plonge sa trompe dans l’eau et aspire. Puis il l’envoie sur son dos pour s’arroser. Le soleil de midi brûle et le sol est brûlant. Le petit éléphant l’imite et lance de l’eau sur sa mère. Ils semblent s’amuser beaucoup.","Pourquoi l’éléphant s’arrose-t-il le dos ?","Pour se rafraîchir","Pour laver ses défenses","Pour effrayer un lion"],
+["I","La journée","Samedi matin, Chloé saute du lit sans qu’on l’appelle. Elle n’a pas de cartable à préparer et elle prend son temps. Dans la cuisine, elle prépare des crêpes avec son père. L’après-midi, elle ira au parc avec ses cousins. Elle ne regarde même pas l’heure. Elle sait qu’elle n’a rien d’obligatoire à faire.","Pourquoi Chloé n’a-t-elle pas de cartable à préparer ?","Il n’y a pas école ce jour-là","Elle a perdu son cartable","Elle est malade"],
+["I","À l’école","Jade a oublié son cahier de textes à la maison. La maîtresse lui demande de le montrer, mais Jade rougit. Elle cherche dans son cartable, puis tout au fond. Elle ne le trouve pas. Elle baisse les yeux et dit qu’elle l’apportera demain. Madame Roux lui rappelle qu’il faut vérifier son cartable chaque soir.","Que veut dire la maîtresse à Jade ?","Qu’il faut bien préparer son cartable","Que Jade est punie","Que le cahier de textes est inutile"]
+];
+
+const ICONS = { good: "✓ Bonne réponse", bad: "✗" };
+const LETTERS = ["A", "B", "C"];
+
+const $ = (id) => document.getElementById(id);
+const el = {
+  game: $("game"), end: $("end"), counter: $("counter"), steps: $("steps"),
+  theme: $("theme"), text: $("text"), question: $("question"), answers: $("answers"),
+  feedback: $("feedback"), fbTitle: $("fb-title"), fbText: $("fb-text"), next: $("next"),
+  score: $("score"), scoreE: $("score-e"), scoreI: $("score-i"), verdict: $("verdict"),
+  restart: $("restart")
+};
+
+let series = [];
+let current = 0;
+let answered = false;
+
+function shuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Une série : 5 textes explicites + 5 textes implicites tirés au hasard dans la banque,
+   présentés dans un ordre mélangé. */
+function buildSeries() {
+  const explicit = shuffle(BANK.filter((b) => b[0] === "E")).slice(0, 5);
+  const implicit = shuffle(BANK.filter((b) => b[0] === "I")).slice(0, 5);
+  return shuffle(explicit.concat(implicit)).map((b) => ({
+    type: b[0],
+    theme: b[1],
+    text: b[2],
+    question: b[3],
+    /* La bonne réponse tombe en 1re, 2e ou 3e position au hasard. */
+    choices: shuffle([
+      { label: b[4], ok: true },
+      { label: b[5], ok: false },
+      { label: b[6], ok: false }
+    ]),
+    result: null
+  }));
+}
+
+function renderSteps() {
+  el.steps.textContent = "";
+  series.forEach((q, i) => {
+    const li = document.createElement("li");
+    if (q.result === true) li.className = "good";
+    else if (q.result === false) li.className = "bad";
+    else if (i === current) li.className = "current";
+    el.steps.appendChild(li);
+  });
+}
+
+function showQuestion() {
+  const q = series[current];
+  answered = false;
+  el.counter.textContent = "Question " + (current + 1) + " sur 10";
+  el.theme.textContent = q.theme;
+  el.text.textContent = q.text;
+  el.question.textContent = q.question;
+  el.feedback.hidden = true;
+  el.feedback.className = "feedback";
+  el.answers.textContent = "";
+
+  q.choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "answer";
+    b.id = "answer-" + i;
+    const key = document.createElement("span");
+    key.className = "key";
+    key.textContent = LETTERS[i];
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = c.label;
+    const mark = document.createElement("span");
+    mark.className = "mark";
+    b.append(key, label, mark);
+    b.addEventListener("click", () => choose(i));
+    el.answers.appendChild(b);
+  });
+  renderSteps();
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  const q = series[current];
+  const picked = q.choices[i];
+  q.result = picked.ok;
+
+  Array.from(el.answers.children).forEach((b, k) => {
+    b.disabled = true;
+    const mark = b.querySelector(".mark");
+    if (q.choices[k].ok) {
+      b.classList.add("correct");
+      mark.textContent = ICONS.good;
+    } else if (k === i) {
+      b.classList.add("wrong");
+      mark.textContent = "✗ Pas la bonne";
+    } else {
+      b.classList.add("dim");
+    }
+  });
+
+  const right = q.choices.find((c) => c.ok).label;
+  el.feedback.hidden = false;
+  if (picked.ok) {
+    el.feedback.classList.add("good");
+    el.fbTitle.textContent = "Bravo !";
+    el.fbText.textContent = "C’est la bonne réponse.";
+  } else {
+    el.feedback.classList.add("bad");
+    el.fbTitle.textContent = "Pas tout à fait.";
+    el.fbText.textContent = "La bonne réponse est : « " + right + " ». " +
+      (q.type === "E"
+        ? "Elle est écrite dans le texte : relis-le bien."
+        : "Elle n’est pas écrite mot pour mot : cherche les indices dans le texte.");
+  }
+  el.next.textContent = current === 9 ? "Voir mon score" : "Question suivante";
+  renderSteps();
+  el.next.focus();
+}
+
+function showEnd() {
+  const total = series.filter((q) => q.result).length;
+  const e = series.filter((q) => q.type === "E" && q.result).length;
+  const im = series.filter((q) => q.type === "I" && q.result).length;
+  el.score.textContent = String(total);
+  el.scoreE.textContent = e + " / 5";
+  el.scoreI.textContent = im + " / 5";
+  let msg;
+  if (total === 10) msg = "Parfait, aucune erreur !";
+  else if (total >= 8) msg = "Excellent lecteur !";
+  else if (total >= 6) msg = "Très bien, continue comme ça !";
+  else if (total >= 4) msg = "C’est un bon début. Relis bien chaque texte.";
+  else msg = "Courage ! Avec une nouvelle série, tu vas progresser.";
+  el.verdict.textContent = msg;
+  el.game.hidden = true;
+  el.end.hidden = false;
+  el.restart.focus();
+  window.scrollTo(0, 0);
+}
+
+function start() {
+  series = buildSeries();
+  current = 0;
+  el.end.hidden = true;
+  el.game.hidden = false;
+  showQuestion();
+}
+
+el.next.addEventListener("click", () => {
+  if (current < 9) {
+    current += 1;
+    showQuestion();
+    el.counter.scrollIntoView({ block: "start" });
+  } else {
+    showEnd();
+  }
+});
+el.restart.addEventListener("click", () => {
+  start();
+  window.scrollTo(0, 0);
+});
+
+start();
+</script>
+
+</body></html>
