@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz des compléments circonstanciels</title>
+<style>
+  :root{
+    --ink:#2b2d42;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh;
+    font-family:"Baloo 2","Fredoka","Comic Sans MS","Chalkboard SE","Trebuchet MS",Verdana,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(135deg,#ffe29f 0%,#ffa99f 35%,#a18cd1 70%,#6dd5ed 100%);
+    background-attachment:fixed;
+  }
+  #app{max-width:880px;margin:0 auto;padding:14px 14px 40px}
+  header{text-align:center;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.18);margin-bottom:10px}
+  header h1{margin:6px 0 2px;font-size:clamp(24px,5vw,38px);letter-spacing:.5px}
+  header p{margin:0;font-size:clamp(14px,2.6vw,18px);opacity:.95}
+  .memo{max-width:640px;margin:10px auto 0;text-align:left;color:var(--ink);text-shadow:none}
+  .memo summary{cursor:pointer;display:inline-block;background:#fff;border-radius:999px;padding:6px 16px;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.15);list-style:none}
+  .memo summary::-webkit-details-marker{display:none}
+  .memo .memo-body{background:#fff;border-radius:20px;padding:12px 14px;margin-top:10px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+  .card{background:var(--card);border-radius:28px;padding:22px;box-shadow:0 10px 0 rgba(0,0,0,.12),0 20px 40px rgba(0,0,0,.15)}
+  .center{text-align:center}
+  .big{font-size:56px;line-height:1.1}
+  h2{margin:8px 0 6px;font-size:clamp(22px,4.5vw,32px)}
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin:14px 0 18px;text-align:left}
+  .lg{display:flex;align-items:center;gap:10px;background:#f7f7ff;border-radius:14px;padding:8px 10px}
+  .tag{display:inline-block;min-width:76px;text-align:center;color:#fff;font-weight:800;border-radius:12px;padding:4px 8px;font-size:15px}
+  .lg span.q{font-size:15px}
+  .btn{
+    font:inherit;font-weight:800;font-size:clamp(16px,3vw,20px);border:0;border-radius:18px;
+    padding:14px 22px;cursor:pointer;color:#fff;background:#4d96ff;
+    box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .08s, box-shadow .08s, filter .15s;
+  }
+  .btn:hover:not(:disabled){filter:brightness(1.08)}
+  .btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .btn:disabled{cursor:default}
+  .btn.go{background:linear-gradient(135deg,#ff6b6b,#ff9f43);font-size:24px;padding:16px 34px}
+  .btn.next{background:#4d96ff;margin-top:16px}
+  .btn.ok{background:#2ecc71;margin-top:16px}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .chip{color:#fff;font-weight:800;border-radius:999px;padding:6px 16px;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+  .score{font-weight:800;background:#fff7d6;border-radius:999px;padding:6px 14px;box-shadow:0 3px 0 rgba(0,0,0,.1)}
+  .progress{display:flex;gap:4px;margin-bottom:14px}
+  .progress i{flex:1;height:14px;border-radius:8px;background:#e6e8f5;border:2px solid transparent;transition:background .3s}
+  .progress i.cur{border-color:var(--ink);transform:scaleY(1.25)}
+  .progress i.good{background:#2ecc71}
+  .progress i.bad{background:#e74c3c}
+  .prompt{font-size:clamp(17px,3vw,21px);margin:4px 0 14px}
+  .sentence{
+    background:#f7f9ff;border:3px dashed #c9d1ff;border-radius:20px;
+    padding:18px 16px;margin-bottom:18px;
+    font-size:clamp(22px,4.6vw,34px);line-height:2.1;font-weight:600;text-align:center;
+  }
+  .cc{text-decoration:underline;text-decoration-thickness:5px;text-decoration-color:#ff4d6d;text-underline-offset:7px;font-weight:800}
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .opts.three{grid-template-columns:1fr}
+  .opt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 10px}
+  .opt small{font-weight:600;font-size:14px;opacity:.95}
+  .opts.three .opt{font-size:clamp(18px,3.4vw,24px)}
+  .opt.good{background:#2ecc71 !important}
+  .opt.bad{background:#e74c3c !important}
+  .opt.dim{opacity:.4}
+  .w{
+    font:inherit;font-size:inherit;font-weight:700;color:var(--ink);
+    background:#fff;border:3px solid #c9d1ff;border-radius:14px;padding:0 10px;margin:3px 1px;cursor:pointer;
+    box-shadow:0 4px 0 #c9d1ff;transition:transform .08s;
+  }
+  .w:hover:not(:disabled){transform:translateY(-2px)}
+  .w.sel{background:#ffd93d;border-color:#f5a300;box-shadow:0 4px 0 #f5a300}
+  .w.good{background:#2ecc71;border-color:#1e9d52;color:#fff;box-shadow:0 4px 0 #1e9d52}
+  .w.bad{background:#e74c3c;border-color:#b5301f;color:#fff;box-shadow:0 4px 0 #b5301f}
+  .w.miss{background:#eafff1;border:3px dashed #2ecc71;box-shadow:none}
+  .w:disabled{cursor:default}
+  .punct{margin-left:-2px}
+  .blank{display:inline-block;min-width:150px;border-bottom:5px dashed #4d96ff;padding:0 8px;color:#4d96ff;font-weight:800}
+  .blank.good{border-bottom:5px solid #2ecc71;color:#1e9d52}
+  .feedback{min-height:28px;margin-top:16px;padding:12px 16px;border-radius:16px;font-size:clamp(16px,2.8vw,19px);display:none}
+  .feedback.show{display:block}
+  .feedback.good{background:#e6fbee;color:#146c3a;border:2px solid #2ecc71}
+  .feedback.bad{background:#fdecea;color:#8f2418;border:2px solid #e74c3c}
+  .hint{font-size:15px;opacity:.8;margin-top:12px;text-align:center}
+  .stars{font-size:54px;letter-spacing:6px;margin:6px 0}
+  .result-score{font-size:clamp(48px,12vw,88px);font-weight:900;line-height:1;color:#ff6b6b;text-shadow:0 4px 0 #ffd6d6}
+  .result-score span{font-size:.5em;color:#8d99ae}
+  .parts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:14px 0}
+  .part{border-radius:16px;padding:8px 14px;color:#fff;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+  .msg{font-size:clamp(18px,3.4vw,24px);margin:10px 0 18px}
+  .confetti{position:fixed;top:-40px;font-size:28px;pointer-events:none;z-index:50;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(115vh) rotate(720deg);opacity:.9}}
+  @keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+  .card{animation:pop .25s ease-out}
+  @media (prefers-reduced-motion:reduce){.card{animation:none}.confetti{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div style="font-size:42px">🌈✏️📚</div>
+    <h1>Les compléments circonstanciels</h1>
+    <p>Un quiz pour devenir un as de la grammaire !</p>
+    <details class="memo">
+      <summary>📘 Voir le mémo</summary>
+      <div class="memo-body" id="memoBody"></div>
+    </details>
+  </header>
+  <main id="screen"></main>
+</div>
+
+<script>
+/* ============ DONNÉES ============ */
+const TYPES = {
+  CCL:     {n:"lieu",   q:"Où ?",                       c:"#2e9e5b"},
+  CCT:     {n:"temps",  q:"Quand ?",                    c:"#2f7de1"},
+  CCM:     {n:"manière",q:"Comment ?",                  c:"#8e44ad"},
+  CCB:     {n:"but",    q:"Pour quoi faire ?",          c:"#e67e00"},
+  CCC:     {n:"cause",  q:"Pourquoi ?",                 c:"#e0457b"},
+  CCMoyen: {n:"moyen",  q:"Avec quoi ? Par quel moyen ?",c:"#008f86"}
+};
+const SECT = [
+  {t:"Partie 1", d:"Quel est son type ?",        c:"#ff6b6b", e:"🔍"},
+  {t:"Partie 2", d:"Trouve le complément",       c:"#4d96ff", e:"👆"},
+  {t:"Partie 3", d:"Complète la phrase",         c:"#3fae52", e:"✏️"}
+];
+
+/* Partie 1 : [phrase avec {complément}, type] */
+const S1 = [
+  ["Les élèves jouent {dans la cour}.","CCL"],
+  ["{Le matin}, Léa se lave les dents.","CCT"],
+  ["Le chat marche {sans bruit}.","CCM"],
+  ["Maëlys porte un manteau {pour avoir chaud}.","CCB"],
+  ["Les enfants ouvrent leurs parapluies {à cause de la pluie}.","CCC"],
+  ["Papa coupe le pain {avec un couteau}.","CCMoyen"],
+  ["La vache broute l'herbe {dans le pré}.","CCL"],
+  ["{En hiver}, les marmottes dorment.","CCT"],
+  ["Le renard avance {prudemment}.","CCM"],
+  ["Nous mettons nos bottes {pour sauter dans les flaques}.","CCB"],
+  ["Le match est annulé {à cause de l'orage}.","CCC"],
+  ["Tom écrit son exercice {avec un stylo bleu}.","CCMoyen"],
+  ["Les enfants mangent {à la cantine}.","CCL"],
+  ["{Après la récréation}, la classe reprend.","CCT"],
+  ["Les girafes courent {avec élégance}.","CCM"],
+  ["Le lion rugit {pour effrayer ses ennemis}.","CCB"],
+  ["Les tomates ont grandi {grâce au soleil}.","CCC"],
+  ["Maman repasse la chemise {avec un fer}.","CCMoyen"],
+  ["Les enfants arrivent {en bus}.","CCMoyen"],
+  ["Nous partons {en été}.","CCT"]
+];
+
+/* Partie 2 : [phrase avec {complément à retrouver}, type] */
+const S2 = [
+  ["Les élèves rangent leurs cahiers {dans leur cartable}.","CCL"],
+  ["{Chaque matin}, le coq chante.","CCT"],
+  ["Léo court {très vite}.","CCM"],
+  ["Le fermier nourrit les poules {avec du grain}.","CCMoyen"],
+  ["Les feuilles tombent {en automne}.","CCT"],
+  ["Sarah dessine un soleil {pour décorer sa classe}.","CCB"],
+  ["{Le mercredi après-midi}, nous faisons du sport.","CCT"],
+  ["Les canards nagent {dans la mare}.","CCL"],
+  ["Maman prépare le dîner {dans la cuisine}.","CCL"],
+  ["Le maître explique la leçon {avec patience}.","CCM"],
+  ["{À midi}, les enfants mangent des fruits.","CCT"],
+  ["Nous cueillons des pommes {avec une échelle}.","CCMoyen"],
+  ["Les écureuils cachent des noisettes {pour passer l'hiver}.","CCB"],
+  ["Le zèbre se cache {dans les hautes herbes}.","CCL"],
+  ["Nous portons des gants {à cause du froid}.","CCC"],
+  ["Les élèves chantent {avec joie}.","CCM"],
+  ["Le hérisson se déplace {lentement}.","CCM"],
+  ["Nous traversons la rue {sur le passage piéton}.","CCL"],
+  ["Les enfants nettoient le tableau {avec une éponge}.","CCMoyen"],
+  ["{Après le repas}, les enfants se brossent les dents.","CCT"]
+];
+
+/* Partie 3 : [phrase avec ___, type attendu, bonne réponse, mauvaise 1, mauvaise 2] */
+const S3 = [
+  ["Les enfants jouent ___.","CCL","dans la cour","tous les jours","avec joie"],
+  ["___, les élèves font de la gymnastique.","CCT","le jeudi matin","dans la salle de sport","avec courage"],
+  ["Le petit chat boit son lait ___.","CCM","avec gourmandise","dans la cuisine","ce soir"],
+  ["Les élèves lèvent la main ___.","CCB","pour poser une question","dans la classe","très vite"],
+  ["Les enfants portent des bottes ___.","CCC","à cause de la pluie","dans le jardin","avec soin"],
+  ["Papa ouvre la porte ___.","CCMoyen","avec une clé","ce matin","dans le couloir"],
+  ["Les vaches dorment ___.","CCL","dans l'étable","la nuit","paisiblement"],
+  ["___, les arbres perdent leurs feuilles.","CCT","en automne","dans la forêt","à cause du vent"],
+  ["Le lion chasse ___.","CCB","pour nourrir ses petits","dans la savane","silencieusement"],
+  ["Les élèves se rangent ___.","CCC","à cause de la sonnerie","dans la cour","avec calme"],
+  ["Léa mange sa soupe ___.","CCM","doucement","à la cantine","avec une cuillère"],
+  ["Nous voyageons ___.","CCMoyen","en train","en été","à la montagne"],
+  ["Les écureuils sautent ___.","CCL","de branche en branche","le matin","avec agilité"],
+  ["Maman lave les légumes ___.","CCMoyen","avec de l'eau","dans l'évier","avant le repas"],
+  ["Les enfants font la queue ___.","CCM","en silence","devant la cantine","à midi"],
+  ["Les oiseaux construisent un nid ___.","CCB","pour protéger leurs œufs","dans un arbre","avec des brindilles"],
+  ["Nous plantons des radis ___.","CCT","au printemps","dans le potager","avec une pelle"],
+  ["Zoé pleure ___.","CCC","à cause de sa chute","dans l'infirmerie","doucement"],
+  ["Les poissons nagent ___.","CCM","gracieusement","dans la rivière","le matin"],
+  ["Nous nous levons ___.","CCT","à sept heures","dans notre chambre","avec difficulté"]
+];
+const DATA = [S1,S2,S3];
+
+/* ============ OUTILS ============ */
+const $ = id => document.getElementById(id);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+function render(html){ $("screen").innerHTML = html; window.scrollTo({top:0,behavior:"smooth"}); }
+
+/* Tirage sans répétition tant que possible entre deux quiz */
+const pools = [[],[],[]];
+function draw(k,n){
+  if(pools[k].length < n){
+    const left = pools[k];
+    const fresh = shuffle([...Array(DATA[k].length).keys()].filter(i=>!left.includes(i)));
+    pools[k] = left.concat(fresh);
+  }
+  return pools[k].splice(0,n);
+}
+
+/* ============ MÉMO ============ */
+function legendHTML(){
+  return Object.entries(TYPES).map(([k,v]) =>
+    `<div class="lg"><span class="tag" style="background:${v.c}">${k}</span><span>${v.n} → <span class="q"><b>${v.q}</b></span></span></div>`
+  ).join("");
+}
+$("memoBody").innerHTML =
+  `<p style="margin:0 0 8px">Un <b>complément circonstanciel</b> donne des précisions sur l'action. On peut le <b>supprimer</b> ou le <b>déplacer</b> dans la phrase.</p>
+   <div class="legend" style="margin:0">${legendHTML()}</div>`;
+
+/* ============ ÉTAT ============ */
+let Q = [], step = 0, results = [], answered = false;
+
+function startQuiz(){
+  Q = [];
+  for(let k=0;k<3;k++) draw(k,5).forEach(i => Q.push({k,i}));
+  step = 0; results = [];
+  showQuestion();
+}
+
+function topHTML(){
+  const q = Q[step], s = SECT[q.k];
+  const score = results.filter(Boolean).length;
+  let bars = "";
+  for(let n=0;n<15;n++){
+    const cls = n<results.length ? (results[n]?"good":"bad") : (n===step?"cur":"");
+    bars += `<i class="${cls}"></i>`;
+  }
+  return `<div class="topbar">
+      <span class="chip" style="background:${s.c}">${s.e} ${s.t} · ${s.d}</span>
+      <span class="score">Question ${step+1}/15 &nbsp;⭐ ${score}</span>
+    </div>
+    <div class="progress">${bars}</div>`;
+}
+
+function showQuestion(){
+  answered = false;
+  const q = Q[step];
+  if(q.k===0) renderS1(q.i);
+  else if(q.k===1) renderS2(q.i);
+  else renderS3(q.i);
+}
+
+function record(ok){
+  results.push(ok);
+  answered = true;
+}
+function nextBtnHTML(){
+  const last = step===14;
+  return `<div class="center"><button class="btn next" id="next">${last?"Voir mon résultat 🏆":"Suivant ➡️"}</button></div>`;
+}
+function bindNext(){
+  $("next").onclick = () => { step++; if(step>=15) showEnd(); else showQuestion(); };
+  $("next").focus({preventScroll:true});
+}
+function feedback(ok, html){
+  const f = $("fb");
+  f.className = "feedback show " + (ok?"good":"bad");
+  f.innerHTML = html;
+}
+function explain(t){
+  const v = TYPES[t];
+  return `C'est un <b>${t}</b> (complément circonstanciel de ${v.n}) : il répond à la question « ${v.q} »`;
+}
+const GOOD_WORDS = ["Bravo !","Super !","Excellent !","Génial !","Bien joué !","Chapeau !"];
+const BAD_WORDS  = ["Oups !","Pas tout à fait…","Presque !","Raté, mais tu vas y arriver !"];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ============ PARTIE 1 ============ */
+function renderS1(i){
+  const [s,t] = S1[i];
+  const sentence = s.replace(/\{([^}]*)\}/,'<span class="cc">$1</span>');
+  const opts = shuffle(Object.keys(TYPES)).map(k =>
+    `<button class="btn opt" data-t="${k}" style="background:${TYPES[k].c}"><b>${k}</b><small>${TYPES[k].n}</small></button>`
+  ).join("");
+  render(`<div class="card">${topHTML()}
+    <p class="prompt">Quel est le type du complément circonstanciel <b>souligné</b> ?</p>
+    <div class="sentence">${sentence}</div>
+    <div class="opts">${opts}</div>
+    <div class="feedback" id="fb"></div>
+    <div id="nx"></div></div>`);
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    if(answered) return;
+    const ok = b.dataset.t === t;
+    record(ok);
+    document.querySelectorAll(".opt").forEach(x => {
+      x.disabled = true;
+      if(x.dataset.t===t) x.classList.add("good");
+      else if(x===b) x.classList.add("bad");
+      else x.classList.add("dim");
+    });
+    feedback(ok, (ok?pick(GOOD_WORDS):pick(BAD_WORDS)) + " " + explain(t));
+    $("nx").innerHTML = nextBtnHTML(); bindNext();
+  });
+}
+
+/* ============ PARTIE 2 ============ */
+function parseTokens(s){
+  const tokens = [];
+  const re = /\{([^}]*)\}|([^{]+)/g;
+  let m;
+  while((m = re.exec(s))){
+    const isCC = m[1] !== undefined;
+    const txt = isCC ? m[1] : m[2];
+    txt.split(/(\s+)/).forEach(p => {
+      if(!p) return;
+      if(/^\s+$/.test(p)) tokens.push({sp:true});
+      else tokens.push({w:p, cc:isCC});
+    });
+  }
+  return tokens;
+}
+function renderS2(i){
+  const [s,t] = S2[i];
+  const tokens = parseTokens(s);
+  let html = "";
+  tokens.forEach((tk,idx) => {
+    if(tk.sp) html += " ";
+    else if(/^[.,;:!?…]+$/.test(tk.w)) html += `<span class="punct">${tk.w}</span>`;
+    else html += `<button class="w" data-i="${idx}">${tk.w}</button>`;
+  });
+  render(`<div class="card">${topHTML()}
+    <p class="prompt">Clique sur <b>tous les mots</b> du complément circonstanciel, puis appuie sur « Valider ».</p>
+    <div class="sentence" style="font-weight:600">${html}</div>
+    <div class="center"><button class="btn ok" id="val">Valider ✅</button></div>
+    <p class="hint">Astuce : tu peux cliquer à nouveau sur un mot pour le désélectionner.</p>
+    <div class="feedback" id="fb"></div>
+    <div id="nx"></div></div>`);
+  const sel = new Set();
+  document.querySelectorAll(".w").forEach(b => b.onclick = () => {
+    if(answered) return;
+    const n = +b.dataset.i;
+    if(sel.has(n)){ sel.delete(n); b.classList.remove("sel"); }
+    else { sel.add(n); b.classList.add("sel"); }
+  });
+  $("val").onclick = () => {
+    if(answered) return;
+    if(sel.size===0){ feedback(false, "Clique d'abord sur les mots du complément circonstanciel 😉"); return; }
+    let ok = true;
+    document.querySelectorAll(".w").forEach(b => {
+      const n = +b.dataset.i, isCC = tokens[n].cc, chosen = sel.has(n);
+      b.disabled = true; b.classList.remove("sel");
+      if(isCC && chosen) b.classList.add("good");
+      else if(!isCC && chosen){ b.classList.add("bad"); ok = false; }
+      else if(isCC && !chosen){ b.classList.add("miss"); ok = false; }
+    });
+    record(ok);
+    $("val").style.display = "none";
+    document.querySelector(".hint").style.display = "none";
+    feedback(ok, ok
+      ? pick(GOOD_WORDS) + " Tu as trouvé tout le complément. " + explain(t)
+      : pick(BAD_WORDS) + " Les mots verts sont corrects, les rouges sont en trop et ceux entourés en vert pointillé étaient à trouver. " + explain(t));
+    $("nx").innerHTML = nextBtnHTML(); bindNext();
+  };
+}
+
+/* ============ PARTIE 3 ============ */
+function renderS3(i){
+  const [s,t,good,b1,b2] = S3[i];
+  const atStart = s.startsWith("___");
+  const fmt = x => atStart ? cap(x) : x;
+  const sentence = s.replace("___", '<span class="blank" id="blank">&nbsp;&nbsp;&nbsp;?&nbsp;&nbsp;&nbsp;</span>');
+  const palette = ["#ff6b6b","#4d96ff","#3fae52"];
+  const opts = shuffle([good,b1,b2]).map((o,n) =>
+    `<button class="btn opt" data-v="${o}" style="background:${palette[n]}">${fmt(o)}</button>`
+  ).join("");
+  const v = TYPES[t];
+  render(`<div class="card">${topHTML()}
+    <p class="prompt">Choisis le complément circonstanciel de <b style="color:${v.c}">${v.n}</b> (${t}) qui complète la phrase.</p>
+    <div class="sentence">${sentence}</div>
+    <div class="opts three">${opts}</div>
+    <div class="feedback" id="fb"></div>
+    <div id="nx"></div></div>`);
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+    if(answered) return;
+    const ok = b.dataset.v === good;
+    record(ok);
+    const blank = $("blank");
+    blank.textContent = fmt(good);
+    blank.classList.add("good");
+    document.querySelectorAll(".opt").forEach(x => {
+      x.disabled = true;
+      if(x.dataset.v===good) x.classList.add("good");
+      else if(x===b) x.classList.add("bad");
+      else x.classList.add("dim");
+    });
+    feedback(ok, (ok?pick(GOOD_WORDS):pick(BAD_WORDS)) + " Ici, il fallait un " + t + " (" + v.n + ") : « " + v.q + " »");
+    $("nx").innerHTML = nextBtnHTML(); bindNext();
+  });
+}
+
+/* ============ ÉCRANS DÉBUT / FIN ============ */
+function showStart(){
+  render(`<div class="card center">
+    <div class="big">🎒📚🌈</div>
+    <h2>Prêt(e) pour le défi ?</h2>
+    <p style="font-size:18px;margin:6px 0">15 questions · 3 parties · une note sur 15</p>
+    <p style="margin:4px 0">
+      <b style="color:${SECT[0].c}">${SECT[0].e} Partie 1</b> : reconnaître le type d'un complément<br>
+      <b style="color:${SECT[1].c}">${SECT[1].e} Partie 2</b> : trouver le complément dans la phrase<br>
+      <b style="color:${SECT[2].c}">${SECT[2].e} Partie 3</b> : compléter la phrase
+    </p>
+    <div class="legend">${legendHTML()}</div>
+    <button class="btn go" id="go">C'est parti ! 🚀</button>
+  </div>`);
+  $("go").onclick = startQuiz;
+}
+
+function confetti(){
+  const em = ["🎉","⭐","🌟","🎊","✨","🏆","🌈"];
+  for(let n=0;n<45;n++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = em[Math.floor(Math.random()*em.length)];
+    c.style.left = Math.random()*100 + "vw";
+    c.style.animationDuration = (2.5 + Math.random()*2.5) + "s";
+    c.style.animationDelay = (Math.random()*1.2) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 7000);
+  }
+}
+
+function showEnd(){
+  const score = results.filter(Boolean).length;
+  const part = k => results.slice(k*5,k*5+5).filter(Boolean).length;
+  let stars, emoji, msg;
+  if(score===15){ stars="⭐⭐⭐"; emoji="🏆"; msg="PARFAIT ! Tu es un champion des compléments circonstanciels !"; }
+  else if(score>=13){ stars="⭐⭐⭐"; emoji="🎉"; msg="Bravo, c'est excellent ! Encore un tout petit effort pour le sans-faute !"; }
+  else if(score>=10){ stars="⭐⭐"; emoji="👏"; msg="Très bien ! Tu maîtrises bien. Avec un nouvel essai, tu peux faire encore mieux !"; }
+  else if(score>=6){ stars="⭐"; emoji="💪"; msg="C'est un bon début ! Relis le mémo et retente ta chance, tu vas progresser."; }
+  else { stars="🌱"; emoji="🌈"; msg="Ne te décourage pas : on apprend en s'entraînant ! Regarde le mémo et réessaie."; }
+  render(`<div class="card center">
+    <div class="big">${emoji}</div>
+    <h2>Ton résultat</h2>
+    <div class="result-score">${score}<span> / 15</span></div>
+    <div class="stars">${stars}</div>
+    <p class="msg">${msg}</p>
+    <div class="parts">
+      ${SECT.map((s,k)=>`<span class="part" style="background:${s.c}">${s.e} ${s.t} : ${part(k)}/5</span>`).join("")}
+    </div>
+    <p>De nouvelles questions t'attendent à chaque quiz : recommence pour t'entraîner ! 🔁</p>
+    <button class="btn go" id="again">Recommencer 🔁</button>
+  </div>`);
+  $("again").onclick = startQuiz;
+  if(score>=10) confetti();
+}
+
+showStart();
+</script>
+</body>
+</html>
