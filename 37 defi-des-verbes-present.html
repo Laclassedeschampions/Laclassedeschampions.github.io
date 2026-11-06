@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Défi des Verbes – Présent de l'indicatif</title>
+<style>
+  :root{
+    --violet:#7c4dff; --rose:#ff4f9a; --orange:#ff9f1c; --jaune:#ffd93d;
+    --vert:#2ec27e; --bleu:#2d9cff; --rouge:#ff5d5d; --nuit:#2b2d42;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:"Trebuchet MS","Comic Sans MS","Segoe UI",Verdana,sans-serif;
+    color:var(--nuit);
+    background:linear-gradient(135deg,#ffe29f 0%,#ffa99f 35%,#c2a9ff 70%,#8fd3f4 100%);
+    background-attachment:fixed;
+    display:flex;justify-content:center;padding:14px;
+  }
+  .app{width:100%;max-width:860px}
+  .screen{display:none}
+  .screen.active{display:block;animation:pop .4s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+
+  .card{
+    background:#fff;border-radius:28px;padding:22px;
+    box-shadow:0 10px 0 rgba(0,0,0,.08),0 20px 40px rgba(0,0,0,.12);
+  }
+  h1{margin:0 0 6px;font-size:clamp(28px,6vw,46px);line-height:1.1;
+     background:linear-gradient(90deg,var(--violet),var(--rose),var(--orange));
+     -webkit-background-clip:text;background-clip:text;color:transparent}
+  .mascotte{font-size:72px;line-height:1;display:inline-block;animation:bounce 1.6s infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  .btn{
+    border:none;cursor:pointer;font:inherit;font-weight:800;color:#fff;
+    padding:14px 28px;border-radius:999px;font-size:20px;
+    background:linear-gradient(180deg,var(--vert),#1f9d62);
+    box-shadow:0 6px 0 #167a4c;transition:transform .08s,box-shadow .08s;
+  }
+  .btn:active{transform:translateY(5px);box-shadow:0 1px 0 #167a4c}
+  .btn.violet{background:linear-gradient(180deg,var(--violet),#5a32d6);box-shadow:0 6px 0 #4222a8}
+  .btn.violet:active{box-shadow:0 1px 0 #4222a8}
+
+  /* Accueil */
+  .accueil{text-align:center}
+  .accueil p{font-size:19px;line-height:1.5;margin:10px 0}
+  .exemple{background:#fff7d6;border:3px dashed var(--orange);border-radius:20px;padding:14px;margin:16px 0;font-size:19px}
+  .exemple b{color:var(--violet)}
+
+  /* En-tête de jeu */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .badge{background:#fff;border-radius:999px;padding:6px 14px;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.08)}
+  .progress{flex:1;min-width:140px;height:20px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden;border:3px solid #fff}
+  .progress div{height:100%;width:0;background:linear-gradient(90deg,var(--bleu),var(--vert),var(--jaune),var(--orange),var(--rose));transition:width .5s}
+
+  .consigne{font-size:17px;margin:0 0 8px;color:#555}
+  .phrase{
+    font-size:clamp(22px,4.6vw,32px);font-weight:800;line-height:1.35;
+    background:#eef4ff;border-radius:20px;padding:14px 18px;margin:0 0 14px;
+  }
+  .phrase .sujet{background:var(--jaune);border-radius:10px;padding:0 8px}
+  .mission{font-size:clamp(18px,3.6vw,22px);margin:0 0 10px;line-height:1.5}
+  .mission .nouveau{background:var(--rose);color:#fff;border-radius:10px;padding:2px 10px;font-weight:800;white-space:nowrap}
+  .mission .inf{background:var(--bleu);color:#fff;border-radius:10px;padding:2px 10px;font-weight:800;white-space:nowrap}
+  .indice{font-size:15px;color:#7a5200;background:#fff3cd;border-radius:12px;padding:6px 12px;display:inline-block;margin-bottom:8px}
+
+  .ligne{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:clamp(22px,4.6vw,32px);font-weight:800;margin:6px 0 12px}
+  .saisie{
+    min-width:230px;min-height:58px;padding:8px 16px;border-radius:16px;
+    border:4px solid var(--violet);background:#faf7ff;color:var(--violet);
+    display:flex;align-items:center;flex:0 1 auto;
+  }
+  .saisie{cursor:text}
+  .saisie .txt{display:inline-block;white-space:pre}
+  .caret{display:inline-block;width:3px;height:1.1em;background:var(--violet);margin:0 1px;vertical-align:middle;animation:blink 1s steps(1) infinite}
+  .touche.nav{background:#8d99ae;flex:1.4 1 0;max-width:none}
+  @keyframes blink{50%{opacity:0}}
+  .saisie.ok{border-color:var(--vert);background:#e9fff4;color:#14804f}
+  .saisie.ko{border-color:var(--rouge);background:#fff0f0;color:#c0392b;animation:shake .4s}
+  @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+  .feedback{min-height:56px;font-size:19px;font-weight:700;margin:4px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .feedback.bon{color:#14804f}
+  .feedback.mauvais{color:#c0392b}
+  .feedback.info{color:#8a5a00}
+  .feedback .rep{background:#e9fff4;border:3px solid var(--vert);border-radius:12px;padding:2px 12px;color:#14804f}
+
+  /* Clavier */
+  .clavier{background:#2b2d42;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:7px;user-select:none}
+  .rang{display:flex;justify-content:center;gap:6px;flex-wrap:nowrap}
+  .touche{
+    flex:1 1 0;max-width:62px;min-width:0;height:50px;border:none;border-radius:12px;cursor:pointer;
+    font:inherit;font-size:clamp(18px,4.2vw,24px);font-weight:800;color:#fff;
+    box-shadow:0 4px 0 rgba(0,0,0,.35);transition:transform .06s,box-shadow .06s;
+  }
+  .touche:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .touche.acc{background:var(--orange)}
+  .touche.large{max-width:none;flex:2 1 0}
+  .touche.espace{background:var(--bleu);flex:5 1 0;max-width:none}
+  .touche.eff{background:var(--rouge)}
+  .touche.val{background:var(--vert);flex:3 1 0;max-width:none}
+  .touche:disabled{opacity:.45;cursor:default}
+
+  .suite{text-align:center;margin-top:12px;min-height:60px}
+
+  /* Résultat */
+  .resultat{text-align:center}
+  .etoiles{font-size:clamp(34px,8vw,56px);letter-spacing:6px;margin:6px 0}
+  .score-gros{font-size:clamp(44px,10vw,76px);font-weight:900;color:var(--violet);margin:0}
+  .resultat p{font-size:20px;line-height:1.5}
+  .recap{text-align:left;max-width:520px;margin:12px auto;font-size:17px}
+  .recap div{padding:6px 12px;border-radius:12px;margin:4px 0}
+  .recap .r-ok{background:#e9fff4}
+  .recap .r-ko{background:#fff4e0}
+
+  /* Confettis */
+  .confetti{position:fixed;top:-20px;width:10px;height:16px;z-index:50;pointer-events:none;animation:chute linear forwards}
+  @keyframes chute{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+  @media (max-width:520px){
+    .card{padding:14px;border-radius:22px}
+    .touche{height:44px;border-radius:10px}
+    .rang{gap:4px}
+    .saisie{min-width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .mascotte,.caret{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ACCUEIL -->
+  <section id="accueil" class="screen active">
+    <div class="card accueil">
+      <div class="mascotte">🦊</div>
+      <h1>Le Défi des Verbes</h1>
+      <p><b>Le présent de l'indicatif</b> – 10 questions pour devenir un champion de la conjugaison !</p>
+      <div class="exemple">
+        <div>Phrase : « <b>L'escargot</b> traverse la route. »</div>
+        <div>On change le sujet par <b>les tortues</b> ➜ tu écris :</div>
+        <div style="margin-top:6px;font-size:22px"><b>Les tortues traversent</b> la route.</div>
+      </div>
+      <p>Tu n'écris que <b>le sujet</b> et <b>le verbe bien conjugué</b>.<br>Attention aux accents ! 😉</p>
+      <button class="btn" id="btnStart">🚀 C'est parti !</button>
+    </div>
+  </section>
+
+  <!-- JEU -->
+  <section id="jeu" class="screen">
+    <div class="top">
+      <span class="badge" id="numQ">Question 1 / 10</span>
+      <div class="progress"><div id="barre"></div></div>
+      <span class="badge" id="scoreBadge">⭐ 0</span>
+    </div>
+    <div class="card">
+      <p class="consigne">📖 Phrase de départ :</p>
+      <div class="phrase" id="phrase"></div>
+      <p class="mission" id="mission"></p>
+      <div id="indice"></div>
+      <div class="ligne">
+        <div class="saisie" id="saisie" title="Touche une lettre pour placer le curseur"><span class="txt" id="txt"></span></div>
+        <span id="complement"></span>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="clavier" id="clavier"></div>
+      <div class="suite"><button class="btn violet" id="btnNext" style="display:none">Question suivante ➜</button></div>
+    </div>
+  </section>
+
+  <!-- RÉSULTAT -->
+  <section id="resultat" class="screen">
+    <div class="card resultat">
+      <div class="mascotte" id="mascRes">🏆</div>
+      <h1 id="titreRes">Bravo !</h1>
+      <p class="score-gros" id="scoreRes"></p>
+      <div class="etoiles" id="etoiles"></div>
+      <p id="msgRes"></p>
+      <div class="recap" id="recap"></div>
+      <button class="btn" id="btnRestart">🔄 Recommencer avec de nouvelles questions</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* Chaque entrée : [phrase, sujet de départ, infinitif, complément, [[nouveau sujet, sujet + verbe attendus], ...]] */
+const BANQUE = [
+ /* Vie de classe */
+ ["L'élève ouvre le cahier.","L'élève","ouvrir","le cahier.",[["Les élèves","ouvrent"],["Nous","ouvrons"],["Tu","ouvres"]]],
+ ["La maîtresse écrit la date au tableau.","La maîtresse","écrire","la date au tableau.",[["Les élèves","écrivent"],["Nous","écrivons"],["Vous","écrivez"]]],
+ ["Le garçon range la trousse.","Le garçon","ranger","la trousse.",[["Les garçons","rangent"],["Nous","rangeons"],["Je","range"]]],
+ ["Tu lis une histoire en classe.","Tu","lire","une histoire en classe.",[["Les élèves","lisent"],["Nous","lisons"],["Elle","lit"]]],
+ ["Les élèves écoutent la maîtresse.","Les élèves","écouter","la maîtresse.",[["Tu","écoutes"],["Nous","écoutons"],["Lola","écoute"]]],
+ ["Je compte les crayons.","Je","compter","les crayons.",[["Tu","comptes"],["Nous","comptons"],["Les enfants","comptent"]]],
+ ["La classe chante une chanson.","La classe","chanter","une chanson.",[["Les élèves","chantent"],["Nous","chantons"],["Tu","chantes"]]],
+ ["L'élève lève la main.","L'élève","lever","la main.",[["Les élèves","lèvent"],["Nous","levons"],["Tu","lèves"]]],
+ ["Vous prenez les livres.","Vous","prendre","les livres.",[["Nous","prenons"],["Les élèves","prennent"],["Tu","prends"]]],
+ ["Je colle l'image.","Je","coller","l'image.",[["Tu","colles"],["Nous","collons"],["Les élèves","collent"]]],
+ ["Les enfants entrent dans la classe.","Les enfants","entrer","dans la classe.",[["Tu","entres"],["Nous","entrons"],["Le maître","entre"]]],
+ ["Je finis l'exercice.","Je","finir","l'exercice.",[["Tu","finis"],["Nous","finissons"],["Les élèves","finissent"]]],
+ ["Le maître distribue les feuilles.","Le maître","distribuer","les feuilles.",[["Les maîtres","distribuent"],["Nous","distribuons"],["Je","distribue"]]],
+ ["Nous dessinons une carte.","Nous","dessiner","une carte.",[["Je","dessine"],["Les élèves","dessinent"],["Tu","dessines"]]],
+ /* Journée et maison */
+ ["Je me lève à sept heures.","Je","se lever","à sept heures.",[["Nous","nous levons"],["Tu","te lèves"],["Les enfants","se lèvent"]]],
+ ["Tu te laves dans la salle de bains.","Tu","se laver","dans la salle de bains.",[["Nous","nous lavons"],["Les enfants","se lavent"],["Je","me lave"]]],
+ ["Papa prépare le repas dans la cuisine.","Papa","préparer","le repas dans la cuisine.",[["Les parents","préparent"],["Nous","préparons"],["Je","prépare"]]],
+ ["Je mange à la cantine.","Je","manger","à la cantine.",[["Les élèves","mangent"],["Nous","mangeons"],["Tu","manges"]]],
+ ["Papa met la table.","Papa","mettre","la table.",[["Les enfants","mettent"],["Nous","mettons"],["Tu","mets"]]],
+ ["Tu fais les devoirs.","Tu","faire","les devoirs.",[["Nous","faisons"],["Les élèves","font"],["Vous","faites"]]],
+ ["Les enfants regardent un dessin animé.","Les enfants","regarder","un dessin animé.",[["Je","regarde"],["Nous","regardons"],["Tu","regardes"]]],
+ ["Je me couche à neuf heures.","Je","se coucher","à neuf heures.",[["Tu","te couches"],["Nous","nous couchons"],["Les enfants","se couchent"]]],
+ ["L'enfant dort dans la chambre.","L'enfant","dormir","dans la chambre.",[["Les enfants","dorment"],["Nous","dormons"],["Tu","dors"]]],
+ ["Nous allons à l'école à pied.","Nous","aller","à l'école à pied.",[["Je","vais"],["Les élèves","vont"],["Tu","vas"]]],
+ /* Animaux de la ferme */
+ ["La vache mange de l'herbe.","La vache","manger","de l'herbe.",[["Les vaches","mangent"],["Les moutons","mangent"],["Tu","manges"]]],
+ ["Le coq chante le matin.","Le coq","chanter","le matin.",[["Les coqs","chantent"],["Nous","chantons"],["Tu","chantes"]]],
+ ["Les poules picorent le grain.","Les poules","picorer","le grain.",[["La poule","picore"],["Les oiseaux","picorent"],["Le coq","picore"]]],
+ ["Le fermier nourrit les animaux.","Le fermier","nourrir","les animaux.",[["Les fermiers","nourrissent"],["Nous","nourrissons"],["Tu","nourris"]]],
+ ["Le cheval court dans le pré.","Le cheval","courir","dans le pré.",[["Les chevaux","courent"],["Nous","courons"],["Tu","cours"]]],
+ ["Le canard nage dans la mare.","Le canard","nager","dans la mare.",[["Les canards","nagent"],["Nous","nageons"],["Tu","nages"]]],
+ /* Repas, fruits et légumes */
+ ["Je coupe les carottes.","Je","couper","les carottes.",[["Tu","coupes"],["Nous","coupons"],["Les cuisiniers","coupent"]]],
+ ["Le cuisinier épluche les pommes de terre.","Le cuisinier","éplucher","les pommes de terre.",[["Les cuisiniers","épluchent"],["Nous","épluchons"],["Tu","épluches"]]],
+ ["Nous cueillons des fraises.","Nous","cueillir","des fraises.",[["Je","cueille"],["Les enfants","cueillent"],["Tu","cueilles"]]],
+ ["Tu goûtes la soupe.","Tu","goûter","la soupe.",[["Nous","goûtons"],["Les enfants","goûtent"],["Je","goûte"]]],
+ ["Les enfants choisissent un fruit.","Les enfants","choisir","un fruit.",[["Tu","choisis"],["Nous","choisissons"],["Léa","choisit"]]],
+ ["Je bois de l'eau.","Je","boire","de l'eau.",[["Tu","bois"],["Nous","buvons"],["Les enfants","boivent"]]],
+ /* Saisons et vêtements */
+ ["Les feuilles tombent en automne.","Les feuilles","tomber","en automne.",[["La feuille","tombe"],["Les marrons","tombent"]]],
+ ["Les fleurs poussent au printemps.","Les fleurs","pousser","au printemps.",[["La fleur","pousse"],["Les arbres","poussent"]]],
+ ["Les enfants jouent dans la neige.","Les enfants","jouer","dans la neige.",[["Je","joue"],["Nous","jouons"],["Tu","joues"]]],
+ ["L'hirondelle revient au printemps.","L'hirondelle","revenir","au printemps.",[["Les hirondelles","reviennent"],["Nous","revenons"],["Tu","reviens"]]],
+ ["Le soleil brille en été.","Le soleil","briller","en été.",[["Les étoiles","brillent"],["Les lumières","brillent"]]],
+ ["Je mets un manteau en hiver.","Je","mettre","un manteau en hiver.",[["Tu","mets"],["Nous","mettons"],["Les enfants","mettent"]]],
+ ["L'enfant enfile les bottes.","L'enfant","enfiler","les bottes.",[["Les enfants","enfilent"],["Nous","enfilons"],["Tu","enfiles"]]],
+ ["Tu portes un bonnet.","Tu","porter","un bonnet.",[["Nous","portons"],["Les enfants","portent"],["Je","porte"]]],
+ ["Léa attache les lacets.","Léa","attacher","les lacets.",[["Les enfants","attachent"],["Nous","attachons"],["Tu","attaches"]]],
+ /* Forêt et savane */
+ ["Le renard guette une proie.","Le renard","guetter","une proie.",[["Les renards","guettent"],["Les lions","guettent"],["Nous","guettons"]]],
+ ["L'écureuil cache des noisettes.","L'écureuil","cacher","des noisettes.",[["Les écureuils","cachent"],["Nous","cachons"],["Tu","caches"]]],
+ ["Le lion rugit dans la savane.","Le lion","rugir","dans la savane.",[["Les lions","rugissent"],["La lionne","rugit"]]],
+ ["L'éléphant boit à la rivière.","L'éléphant","boire","à la rivière.",[["Les éléphants","boivent"],["Le zèbre","boit"]]],
+ ["Le singe grimpe aux arbres.","Le singe","grimper","aux arbres.",[["Les singes","grimpent"],["Nous","grimpons"],["Tu","grimpes"]]],
+ ["Le hibou voit dans la nuit.","Le hibou","voir","dans la nuit.",[["Les hiboux","voient"],["Nous","voyons"],["Tu","vois"]]],
+ /* Récréation et sport */
+ ["Je saute à la corde.","Je","sauter","à la corde.",[["Tu","sautes"],["Nous","sautons"],["Les filles","sautent"]]],
+ ["Nous courons dans la cour.","Nous","courir","dans la cour.",[["Je","cours"],["Les enfants","courent"],["Tu","cours"]]],
+ ["Tu lances le ballon.","Tu","lancer","le ballon.",[["Nous","lançons"],["Les joueurs","lancent"],["Je","lance"]]],
+ ["Les joueurs marquent un but.","Les joueurs","marquer","un but.",[["Le joueur","marque"],["Nous","marquons"],["Tu","marques"]]],
+ ["Le nageur plonge dans la piscine.","Le nageur","plonger","dans la piscine.",[["Les nageurs","plongent"],["Nous","plongeons"],["Je","plonge"]]],
+ ["Les enfants attrapent le ballon.","Les enfants","attraper","le ballon.",[["Tu","attrapes"],["Nous","attrapons"],["Léa","attrape"]]],
+ ["Vous faites du vélo.","Vous","faire","du vélo.",[["Je","fais"],["Les enfants","font"],["Nous","faisons"]]]
+];
+
+const NB_QUESTIONS = 10;
+const BRAVO = ["Bravo ! 🎉","Super ! 🌟","Excellent ! 🚀","Génial ! 🥳","Bien joué ! 👏","Parfait ! 💪","Magnifique ! ✨"];
+
+const LIGNES = [
+  "azertyuiop".split(""),
+  "qsdfghjklm".split(""),
+  ["w","x","c","v","b","n","'"]
+];
+const ACCENTS = ["é","è","ê","à","â","ç","ù","û","î","ï","ô","œ"];
+const COULEURS = ["#7c4dff","#ff4f9a","#2d9cff","#2ec27e","#ff7a45","#14b8a6","#a855f7","#f43f5e","#0ea5e9","#84cc16"];
+
+const $ = id => document.getElementById(id);
+let questions = [], idx = 0, score = 0, essais = 0, saisie = "", pos = 0, verrouille = false, resultats = [];
+
+function melanger(t){
+  const a = t.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function norm(s){ return s.toLowerCase().replace(/[’‘`´]/g,"'").replace(/\s+/g," ").trim(); }
+function sansAccents(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/œ/g,"oe"); }
+function echapper(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function montrer(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo({top:0}); }
+
+/* ---------- Clavier ---------- */
+function construireClavier(){
+  const k = $("clavier"); k.innerHTML = "";
+  let c = 0;
+  const rang = () => { const d = document.createElement("div"); d.className="rang"; k.appendChild(d); return d; };
+  const touche = (parent, label, cls, action) => {
+    const b = document.createElement("button");
+    b.type="button"; b.textContent=label; b.className="touche "+(cls||"");
+    if(!cls || cls==="") b.style.background = COULEURS[c++ % COULEURS.length];
+    b.addEventListener("click", action);
+    parent.appendChild(b); return b;
+  };
+  LIGNES.forEach((ligne,i)=>{
+    const r = rang();
+    ligne.forEach(ch=>touche(r,ch,"",()=>saisir(ch)));
+    if(i===2) touche(r,"⌫","large eff",effacer);
+  });
+  const ra = rang();
+  ACCENTS.forEach(ch=>touche(ra,ch,"acc",()=>saisir(ch)));
+  const rb = rang();
+  touche(rb,"◀","nav",()=>deplacer(-1)).title = "Curseur d'une lettre vers la gauche";
+  touche(rb,"▶","nav",()=>deplacer(1)).title = "Curseur d'une lettre vers la droite";
+  touche(rb,"⏭","nav",()=>{ if(!verrouille){ pos = saisie.length; afficherSaisie(); } }).title = "Curseur à la fin";
+  touche(rb,"espace","espace",()=>saisir(" "));
+  touche(rb,"Valider ✔","val",valider);
+}
+function boutonsActifs(on){ document.querySelectorAll("#clavier .touche").forEach(b=>b.disabled=!on); }
+
+function afficherSaisie(){
+  const t = $("txt"); t.innerHTML = "";
+  const caret = () => { const c = document.createElement("span"); c.className = "caret"; return c; };
+  for(let i=0;i<saisie.length;i++){
+    if(i===pos) t.appendChild(caret());
+    const s = document.createElement("span");
+    s.textContent = i===0 ? saisie[i].toUpperCase() : saisie[i];
+    s.addEventListener("click",e=>{
+      e.stopPropagation();
+      if(verrouille) return;
+      const r = s.getBoundingClientRect();
+      pos = i + (e.clientX > r.left + r.width/2 ? 1 : 0);
+      afficherSaisie();
+    });
+    t.appendChild(s);
+  }
+  if(pos>=saisie.length) t.appendChild(caret());
+}
+function saisir(ch){
+  if(verrouille) return;
+  if(saisie.length>=40) return;
+  if(ch===" " && (pos===0 || saisie[pos-1]===" " || saisie[pos]===" ")) return;
+  saisie = saisie.slice(0,pos)+ch+saisie.slice(pos); pos++;
+  afficherSaisie();
+  $("saisie").classList.remove("ko");
+}
+function effacer(){
+  if(verrouille || pos===0) return;
+  saisie = saisie.slice(0,pos-1)+saisie.slice(pos); pos--;
+  afficherSaisie();
+}
+function deplacer(d){
+  if(verrouille) return;
+  pos = Math.max(0, Math.min(saisie.length, pos+d));
+  afficherSaisie();
+}
+$("saisie").addEventListener("click",()=>{ if(!verrouille){ pos = saisie.length; afficherSaisie(); } });
+
+/* ---------- Déroulement ---------- */
+function demarrer(){
+  const tirage = melanger(BANQUE).slice(0,NB_QUESTIONS);
+  questions = tirage.map(q=>{
+    const v = q[4][Math.floor(Math.random()*q[4].length)];
+    const attendu = v[0]+" "+v[1];
+    return { phrase:q[0], sujet:q[1], inf:q[2], comp:q[3], nouveau:v[0], attendu:attendu, pronominal:q[2].startsWith("se ") };
+  });
+  idx = 0; score = 0; resultats = [];
+  construireClavier();
+  montrer("jeu");
+  poser();
+}
+
+function poser(){
+  const q = questions[idx];
+  essais = 0; saisie = ""; pos = 0; verrouille = false;
+  afficherSaisie();
+  $("saisie").className = "saisie";
+  $("numQ").textContent = "Question "+(idx+1)+" / "+NB_QUESTIONS;
+  $("barre").style.width = (idx/NB_QUESTIONS*100)+"%";
+  $("scoreBadge").textContent = "⭐ "+score;
+
+  let p = echapper(q.phrase);
+  if(q.phrase.startsWith(q.sujet)){
+    p = '<span class="sujet">'+echapper(q.sujet)+'</span>'+echapper(q.phrase.slice(q.sujet.length));
+  }
+  $("phrase").innerHTML = p;
+  $("mission").innerHTML = 'Remplace <b>'+echapper(q.sujet)+'</b> par <span class="nouveau">'+echapper(q.nouveau)+'</span> et conjugue le verbe <span class="inf">'+echapper(q.inf)+'</span> au présent.';
+  $("indice").innerHTML = q.pronominal
+    ? '<span class="indice">💡 Verbe pronominal : écris aussi le petit mot (me, te, se, nous, vous) !</span>'
+    : '<span class="indice">💡 Écris le sujet puis le verbe, sans la fin de la phrase.</span>';
+  $("complement").textContent = q.comp;
+  $("feedback").className = "feedback"; $("feedback").innerHTML = "";
+  $("btnNext").style.display = "none";
+  boutonsActifs(true);
+}
+
+function valider(){
+  if(verrouille) return;
+  const q = questions[idx];
+  if(!saisie.trim()){
+    msg("info","✏️ Écris d'abord ta réponse avec le clavier !");
+    return;
+  }
+  essais++;
+  const rep = norm(saisie), bon = norm(q.attendu);
+  if(rep===bon){
+    verrouille = true;
+    $("saisie").classList.add("ok");
+    let pts = 0;
+    if(essais===1){ score++; pts = 1; }
+    resultats.push({q, ok: essais===1, rep: q.attendu});
+    msg("bon", BRAVO[Math.floor(Math.random()*BRAVO.length)] + (essais===1 ? " +1 point" : " (tu as corrigé tout seul !)"));
+    if(essais===1) confettis(35);
+    fin();
+  } else {
+    $("saisie").classList.remove("ko"); void $("saisie").offsetWidth; $("saisie").classList.add("ko");
+    if(essais===1){
+      let conseil = "🤔 Presque ! Relis bien le sujet et la terminaison du verbe, puis essaie encore.";
+      if(sansAccents(rep)===sansAccents(bon)) conseil = "🤏 Tu y es presque : attention aux accents !";
+      else if(rep.split(" ")[0] !== bon.split(" ")[0] && !q.pronominal) conseil = "🤔 Vérifie le sujet : il doit être « "+q.nouveau+" ».";
+      msg("mauvais", conseil);
+    } else {
+      verrouille = true;
+      resultats.push({q, ok:false, rep:q.attendu});
+      $("feedback").className = "feedback mauvais";
+      $("feedback").innerHTML = 'Ce n\'est pas grave, on apprend ! La bonne réponse : <span class="rep">'+echapper(q.attendu.charAt(0).toUpperCase()+q.attendu.slice(1))+'</span>';
+      fin();
+    }
+  }
+}
+function msg(type,texte){ const f=$("feedback"); f.className="feedback "+(type==="bon"?"bon":type==="mauvais"?"mauvais":"info"); f.textContent=texte; }
+function fin(){
+  boutonsActifs(false);
+  $("scoreBadge").textContent = "⭐ "+score;
+  $("barre").style.width = ((idx+1)/NB_QUESTIONS*100)+"%";
+  const b = $("btnNext");
+  b.textContent = idx===NB_QUESTIONS-1 ? "Voir mon résultat 🏆" : "Question suivante ➜";
+  b.style.display = "inline-block";
+  b.focus();
+}
+function suivante(){
+  if(idx>=NB_QUESTIONS-1){ resultat(); return; }
+  idx++; poser();
+}
+
+/* ---------- Résultat ---------- */
+function resultat(){
+  montrer("resultat");
+  $("scoreRes").textContent = score+" / "+NB_QUESTIONS;
+  let etoiles = score>=9 ? 3 : score>=6 ? 2 : score>=3 ? 1 : 0;
+  $("etoiles").textContent = "⭐".repeat(etoiles) + "☆".repeat(3-etoiles);
+  let titre, texte, mas;
+  if(score===10){ titre="Parfait ! Tu es un champion ! 🏆"; texte="10 sur 10 ! Tu maîtrises le présent de l'indicatif comme un vrai pro. Félicitations !"; mas="🏆"; }
+  else if(score>=8){ titre="Excellent travail ! 🎉"; texte="Tu as très bien réussi. Encore un petit effort et tu feras un sans-faute !"; mas="🦊"; }
+  else if(score>=5){ titre="Bien joué ! 👏"; texte="Tu es sur la bonne voie. Chaque partie te rend plus fort : continue, tu progresses !"; mas="😄"; }
+  else { titre="Bravo d'avoir essayé ! 💪"; texte="Les erreurs font partie de l'apprentissage. Relis les réponses ci-dessous et retente ta chance : tu vas y arriver !"; mas="🌱"; }
+  $("titreRes").textContent = titre; $("msgRes").textContent = texte; $("mascRes").textContent = mas;
+
+  const rec = $("recap"); rec.innerHTML = "<b>Récapitulatif :</b>";
+  resultats.forEach(r=>{
+    const d = document.createElement("div");
+    d.className = r.ok ? "r-ok" : "r-ko";
+    const rep = r.rep.charAt(0).toUpperCase()+r.rep.slice(1);
+    d.textContent = (r.ok?"✅ ":"📝 ") + rep + " " + r.q.comp;
+    rec.appendChild(d);
+  });
+  if(score>=5) confettis(score===10 ? 120 : 70);
+}
+
+/* ---------- Confettis ---------- */
+function confettis(n){
+  const cols = ["#ff4f9a","#ffd93d","#2ec27e","#2d9cff","#7c4dff","#ff9f1c"];
+  for(let i=0;i<n;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random()*100+"vw";
+    c.style.background = cols[Math.floor(Math.random()*cols.length)];
+    c.style.animationDuration = (1.8+Math.random()*2)+"s";
+    c.style.animationDelay = (Math.random()*0.5)+"s";
+    c.style.borderRadius = Math.random()>.5 ? "50%" : "2px";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4500);
+  }
+}
+
+/* ---------- Événements ---------- */
+$("btnStart").addEventListener("click",demarrer);
+$("btnRestart").addEventListener("click",demarrer);
+$("btnNext").addEventListener("click",suivante);
+
+/* Clavier physique (en plus du clavier à l'écran) */
+document.addEventListener("keydown",e=>{
+  if(!$("jeu").classList.contains("active")) return;
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(e.key==="Enter"){ e.preventDefault(); verrouille ? suivante() : valider(); return; }
+  if(verrouille) return;
+  if(e.key==="Backspace"){ e.preventDefault(); effacer(); return; }
+  if(e.key==="ArrowLeft"){ e.preventDefault(); deplacer(-1); return; }
+  if(e.key==="ArrowRight"){ e.preventDefault(); deplacer(1); return; }
+  if(e.key==="End"){ e.preventDefault(); pos = saisie.length; afficherSaisie(); return; }
+  if(e.key==="Home"){ e.preventDefault(); pos = 0; afficherSaisie(); return; }
+  if(e.key===" "){ e.preventDefault(); saisir(" "); return; }
+  if(e.key.length===1 && /[a-zA-ZÀ-ÿœŒ'’-]/.test(e.key)){ e.preventDefault(); saisir(e.key==="’"?"'":e.key); }
+});
+</script>
+</body>
+</html>

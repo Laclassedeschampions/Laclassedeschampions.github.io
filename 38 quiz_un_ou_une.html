@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un ou une ? — Le défi des déterminants</title>
+<style>
+:root{--ink:#26324b;--blue:#4778e8;--pink:#ef6b9a;--yellow:#ffd66b;--green:#35ad83;--paper:#fffdf7}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Trebuchet MS",Arial,sans-serif;color:var(--ink);
+ background:linear-gradient(135deg,#dff5ff 0%,#f9e8ff 48%,#fff3d5 100%);padding:22px}
+.wrap{max-width:820px;margin:0 auto}
+header{text-align:center;margin:10px 0 20px}
+h1{font-size:clamp(2rem,5vw,3.2rem);margin:0;color:#344f9b;letter-spacing:-1px}
+.subtitle{font-size:1.08rem;margin:8px 0;color:#52617b}
+.card{background:rgba(255,255,255,.94);border:3px solid #fff;border-radius:28px;padding:clamp(18px,4vw,34px);box-shadow:0 12px 35px #465b8720}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;font-weight:700;color:#53617a}
+.pill{background:#eef2ff;border-radius:30px;padding:9px 15px}
+.progress{height:13px;background:#edf0f7;border-radius:20px;overflow:hidden;margin:17px 0 24px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#49c6a5,#65a0ff);border-radius:20px;transition:width .25s}
+.prompt{text-align:center;padding:12px 0 22px}
+.instruction{font-size:1.12rem;color:#66718a;margin-bottom:15px}
+.word{display:inline-flex;min-width:190px;min-height:150px;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:18px 28px;border-radius:25px;background:linear-gradient(145deg,#fff3c9,#ffe4ed);box-shadow:inset 0 0 0 2px #fff}
+.symbol{font-size:clamp(3.8rem,10vw,5.5rem);line-height:1.1}
+.wordname{font-size:clamp(1.55rem,5vw,2.2rem);font-weight:800;color:#344f9b}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:520px;margin:0 auto}
+.choice{border:0;border-radius:20px;padding:19px 12px;font-size:clamp(1.7rem,5vw,2.3rem);font-weight:900;color:white;cursor:pointer;box-shadow:0 6px 0 #00000018;transition:transform .12s,filter .12s}
+.choice:hover{transform:translateY(-3px);filter:brightness(1.04)}
+.choice:active{transform:translateY(2px);box-shadow:0 2px 0 #00000018}
+.choice:disabled{cursor:default;opacity:.85}
+.un{background:var(--blue)} .une{background:var(--pink)}
+.feedback{min-height:54px;text-align:center;margin:20px 0 0;font-size:1.18rem;font-weight:800}
+.feedback.good{color:#16845f}.feedback.bad{color:#c34c65}
+.nextrow{text-align:center;margin-top:6px}
+.mainbtn{border:0;border-radius:30px;padding:14px 27px;background:#344f9b;color:white;font-size:1.08rem;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #24396f}
+.mainbtn:hover{filter:brightness(1.12)}
+.mainbtn:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+.result{text-align:center;padding:15px 0}
+.result .big{font-size:5rem;margin:4px}
+.result h2{font-size:2rem;color:#344f9b;margin:8px}
+.score{font-size:1.5rem;font-weight:900;margin:15px}
+.encourage{font-size:1.15rem;line-height:1.5;max-width:550px;margin:0 auto 24px}
+.small{font-size:.9rem;color:#73809a;text-align:center;margin-top:18px}
+@media(max-width:520px){body{padding:12px}.card{border-radius:22px}.choices{gap:10px}.choice{padding:17px 8px}.word{min-height:125px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🎯 Un ou une ?</h1>
+  <p class="subtitle">Le défi des déterminants — À toi de jouer !</p>
+</header>
+<main class="card">
+  <section id="game">
+    <div class="topline">
+      <span class="pill" id="counter">Question 1 / 15</span>
+      <span class="pill">⭐ Score : <span id="score">0</span></span>
+    </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="prompt">
+      <div class="instruction">Observe le mot ou l'image. Quel déterminant convient ?</div>
+      <div class="word">
+        <div class="symbol" id="symbol">🪑</div>
+        <div class="wordname" id="wordname"></div>
+      </div>
+    </div>
+    <div class="choices">
+      <button class="choice un" id="un" type="button">un</button>
+      <button class="choice une" id="une" type="button">une</button>
+    </div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="nextrow">
+      <button class="mainbtn" id="next" type="button" disabled>Question suivante ➜</button>
+    </div>
+  </section>
+  <section id="result" class="result hidden">
+    <div class="big" id="resultEmoji">🏆</div>
+    <h2 id="resultTitle">Bravo !</h2>
+    <div class="score" id="finalScore"></div>
+    <p class="encourage" id="message"></p>
+    <button class="mainbtn" id="restart" type="button">🔄 Recommencer</button>
+  </section>
+</main>
+<p class="small">Un nouveau tirage de 15 mots est proposé à chaque partie. Bonne chance ! 🍀</p>
+</div>
+<script>
+const bank = [
+  {w:"chaise",e:"🪑",g:"f"},{w:"cartable",e:"🎒",g:"m"},{w:"trousse",e:"🖍️",g:"f"},
+  {w:"crayon",e:"✏️",g:"m"},{w:"règle",e:"📏",g:"f"},{w:"cahier",e:"📒",g:"m"},
+  {w:"tableau",e:"🧑‍🏫",g:"m"},{w:"porte",e:"🚪",g:"f"},{w:"livre",e:"📚",g:"m"},
+  {w:"gomme",e:"",g:"f"},{w:"ordinateur",e:"💻",g:"m"},{w:"cour de récréation",e:"🛝",g:"f"},
+  {w:"maîtresse",e:"👩‍🏫",g:"f"},{w:"directeur",e:"👨‍💼",g:"m"},{w:"infirmier",e:"🧑‍⚕️",g:"m"},
+  {w:"boulangère",e:"👩‍🍳",g:"f"},{w:"pompier",e:"🧑‍🚒",g:"m"},{w:"factrice",e:"📮",g:"f"},
+  {w:"fermier",e:"👨‍🌾",g:"m"},{w:"docteur",e:"🩺",g:"m"},{w:"vétérinaire",e:"🐾",g:"m"},
+  {w:"vache",e:"🐄",g:"f"},{w:"cheval",e:"🐴",g:"m"},{w:"poule",e:"🐔",g:"f"},
+  {w:"cochon",e:"🐷",g:"m"},{w:"chèvre",e:"🐐",g:"f"},{w:"mouton",e:"🐑",g:"m"},
+  {w:"canard",e:"🦆",g:"m"},{w:"oie",e:"🪿",g:"f"},{w:"lapin",e:"🐇",g:"m"},
+  {w:"girafe",e:"🦒",g:"f"},{w:"singe",e:"🐒",g:"m"},{w:"lionne",e:"🦁",g:"f"},
+  {w:"éléphant",e:"🐘",g:"m"},{w:"zèbre",e:"🦓",g:"m"},{w:"panthère",e:"🐆",g:"f"},
+  {w:"renard",e:"🦊",g:"m"},{w:"biche",e:"🦌",g:"f"},{w:"écureuil",e:"🐿️",g:"m"},
+  {w:"hibou",e:"🦉",g:"m"},{w:"grenouille",e:"🐸",g:"f"},{w:"pomme",e:"🍎",g:"f"},
+  {w:"banane",e:"🍌",g:"f"},{w:"citron",e:"🍋",g:"m"},{w:"abricot",e:"🍑",g:"m"},
+  {w:"carotte",e:"🥕",g:"f"},{w:"tomate",e:"🍅",g:"f"},{w:"radis",e:"",g:"m"},
+  {w:"salade",e:"🥬",g:"f"},{w:"fromage",e:"🧀",g:"m"},{w:"yaourt",e:"🥣",g:"m"},
+  {w:"fourchette",e:"🍴",g:"f"},{w:"couteau",e:"🔪",g:"m"},{w:"assiette",e:"🍽️",g:"f"},
+  {w:"verre",e:"🥛",g:"m"},{w:"casserole",e:"🍲",g:"f"},{w:"lit",e:"🛏️",g:"m"},
+  {w:"serviette",e:"",g:"f"},{w:"savon",e:"🧼",g:"m"},{w:"brosse",e:"🪥",g:"f"},
+  {w:"pantalon",e:"👖",g:"m"},{w:"robe",e:"👗",g:"f"},{w:"manteau",e:"🧥",g:"m"},
+  {w:"chaussure",e:"👟",g:"f"},{w:"bonnet",e:"🧢",g:"m"},{w:"écharpe",e:"🧣",g:"f"},
+  {w:"ballon",e:"⚽",g:"m"},{w:"raquette",e:"🏸",g:"f"},{w:"vélo",e:"🚲",g:"m"},
+  {w:"piscine",e:"🏊",g:"f"},{w:"balle",e:"",g:"f"},{w:"trottinette",e:"🛴",g:"f"},
+  {w:"matinée",e:"🌅",g:"f"},{w:"soir",e:"🌙",g:"m"},{w:"hiver",e:"❄️",g:"m"},
+  {w:"automne",e:"🍂",g:"m"},{w:"fleur",e:"🌸",g:"f"},{w:"arbre",e:"🌳",g:"m"}
+];
+
+let questions=[], index=0, score=0, answered=false;
+const $ = id => document.getElementById(id);
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function start(){
+  questions=shuffle(bank).slice(0,15); index=0; score=0; answered=false;
+  $("game").classList.remove("hidden"); $("result").classList.add("hidden");
+  showQuestion();
+}
+function showQuestion(){
+  const q=questions[index]; answered=false;
+  $("counter").textContent=`Question ${index+1} / 15`;
+  $("score").textContent=score;
+  $("bar").style.width=`${index/15*100}%`;
+  $("symbol").textContent=q.e || "💡";
+  $("wordname").textContent=q.w;
+  $("feedback").textContent=""; $("feedback").className="feedback";
+  $("next").disabled=true;
+  $("next").textContent=index===14?"Voir mon résultat 🏁":"Question suivante ➜";
+  $("un").disabled=false; $("une").disabled=false;
+}
+function answer(g){
+  if(answered)return; answered=true;
+  const q=questions[index], correct=q.g===g;
+  if(correct){score++;$("feedback").textContent="✨ Bravo ! C'est la bonne réponse !";$("feedback").className="feedback good";}
+  else{$("feedback").textContent=`Presque ! On dit « ${q.g==="m"?"un":"une"} ${q.w} ». Continue tes efforts !`; $("feedback").className="feedback bad";}
+  $("score").textContent=score;
+  $("un").disabled=true;$("une").disabled=true;$("next").disabled=false;
+  $("bar").style.width=`${(index+1)/15*100}%`;
+}
+function finish(){
+  $("game").classList.add("hidden");$("result").classList.remove("hidden");
+  $("finalScore").textContent=`${score} bonne${score>1?"s":""} réponse${score>1?"s":""} sur 15`;
+  let emoji,title,msg;
+  if(score===15){emoji="🏆";title="Incroyable !";msg="Un sans-faute ! Tu connais très bien les déterminants un et une. Bravo !";}
+  else if(score>=11){emoji="🌟";title="Super travail !";msg="Tu as très bien réussi. Encore quelques essais et tu deviendras un champion ou une championne !";}
+  else if(score>=7){emoji="👏";title="Bravo pour tes efforts !";msg="Tu progresses ! Relis les mots et entraîne-toi encore : tu vas y arriver.";}
+  else{emoji="💪";title="On continue !";msg="Chaque essai te fait apprendre. Prends ton temps, écoute bien les mots et recommence : tu peux réussir !";}
+  $("resultEmoji").textContent=emoji;$("resultTitle").textContent=title;$("message").textContent=msg;
+}
+$("un").addEventListener("click",()=>answer("m"));
+$("une").addEventListener("click",()=>answer("f"));
+$("next").addEventListener("click",()=>{if(index<14){index++;showQuestion();}else finish();});
+$("restart").addEventListener("click",start);
+start();
+</script>
+</body>
+</html>
