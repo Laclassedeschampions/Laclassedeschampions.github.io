@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Quiz Masculin / Féminin</title>
+<style>
+  :root{
+    --rose:#ff5fa2; --bleu:#3ea6ff; --jaune:#ffd23f; --vert:#2ecc71; --rouge:#ff5a5f; --violet:#7b5cff; --orange:#ff9f1c;
+    --texte:#2b2a4c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; color:var(--texte);
+    font-family:"Trebuchet MS","Comic Sans MS","Segoe UI",system-ui,sans-serif;
+    background:linear-gradient(135deg,#ffe0f0 0%,#e0f0ff 50%,#fff6c9 100%);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .card{
+    width:100%; max-width:640px; background:#fff; border-radius:28px; padding:26px 22px;
+    box-shadow:0 14px 40px rgba(80,60,160,.22); border:5px solid var(--violet); position:relative; overflow:hidden;
+  }
+  .hidden{display:none !important}
+  h1{margin:0 0 6px; font-size:clamp(1.8rem,6vw,2.6rem); text-align:center; line-height:1.1}
+  h1 .m{color:var(--bleu)} h1 .f{color:var(--rose)}
+  .sub{text-align:center; font-size:1.1rem; margin:6px 0 18px}
+  .big-emoji{font-size:4.5rem; text-align:center; animation:bounce 1.8s infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .btn{
+    display:block; width:100%; border:none; border-radius:18px; padding:15px 18px; font-size:1.3rem; font-weight:800;
+    color:#fff; cursor:pointer; font-family:inherit; background:var(--violet); box-shadow:0 6px 0 #5238c9;
+    transition:transform .08s, box-shadow .08s; margin-top:12px;
+  }
+  .btn:active{transform:translateY(5px); box-shadow:0 1px 0 #5238c9}
+  .btn.vert{background:var(--vert); box-shadow:0 6px 0 #1f9a55}
+  .btn.vert:active{box-shadow:0 1px 0 #1f9a55}
+  .btn.orange{background:var(--orange); box-shadow:0 6px 0 #c97800}
+  .btn.orange:active{box-shadow:0 1px 0 #c97800}
+  .rules{background:#f4efff; border-radius:16px; padding:12px 16px; margin:14px 0; font-size:1.05rem}
+  .rules li{margin:5px 0}
+  .best{text-align:center; font-weight:700; margin-top:12px; color:var(--violet)}
+
+  .topbar{display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:800; font-size:1.05rem; flex-wrap:wrap}
+  .pill{background:#f4efff; border-radius:999px; padding:6px 14px}
+  .progress{height:18px; background:#eee; border-radius:999px; overflow:hidden; margin:12px 0 4px; border:3px solid #eee}
+  .progress > div{height:100%; width:0; background:linear-gradient(90deg,var(--rose),var(--orange),var(--jaune),var(--vert),var(--bleu)); transition:width .4s; border-radius:999px}
+  .chip{display:inline-block; padding:5px 14px; border-radius:999px; color:#fff; font-weight:800; font-size:.95rem}
+  .chip.metier{background:var(--orange)} .chip.animal{background:var(--vert)} .chip.adjectif{background:var(--violet)}
+  .qzone{text-align:center; margin-top:10px}
+  .emoji{font-size:5rem; line-height:1.1; margin:6px 0}
+  .word{font-size:clamp(2rem,8vw,3rem); font-weight:900; margin:4px 0}
+  .word.m{color:var(--bleu)} .word.f{color:var(--rose)}
+  .ask{font-size:1.2rem; font-weight:700; margin:6px 0 12px}
+  .ask b.f{color:var(--rose)} .ask b.m{color:var(--bleu)}
+  input[type=text]{
+    width:100%; font-size:1.6rem; text-align:center; padding:12px; border-radius:16px; border:4px solid #cfc6ff; outline:none;
+    font-family:inherit; color:var(--texte);
+  }
+  input[type=text]:focus{border-color:var(--violet); box-shadow:0 0 0 4px #e3dcff}
+  input.shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .accents{margin-top:12px; background:#f4efff; border-radius:18px; padding:8px 6px; user-select:none; -webkit-user-select:none}
+  .krow{display:flex; gap:5px; justify-content:center; margin:5px 0}
+  .key{
+    flex:1 1 0; max-width:52px; min-width:0; height:48px; border:none; border-radius:12px; font-size:1.35rem; font-weight:800;
+    cursor:pointer; font-family:inherit; color:var(--texte); background:#fff; box-shadow:0 4px 0 #cfc6ff; padding:0;
+    touch-action:manipulation; transition:transform .06s, box-shadow .06s;
+  }
+  .key:active{transform:translateY(3px); box-shadow:0 1px 0 #cfc6ff; background:#e9e2ff}
+  .key.acc{background:#ffe3f0; color:var(--rose); box-shadow:0 4px 0 #f5b5d2}
+  .key.acc:active{box-shadow:0 1px 0 #f5b5d2}
+  .key.back{background:var(--rouge); color:#fff; box-shadow:0 4px 0 #c13b40; max-width:80px; flex:1.5 1 0}
+  .key.back:active{box-shadow:0 1px 0 #c13b40}
+  .key.space{background:#e0f0ff; color:var(--bleu); box-shadow:0 4px 0 #b3d4f2; max-width:none; flex:4 1 0; font-size:1rem}
+  .key.space:active{box-shadow:0 1px 0 #b3d4f2}
+  @media (max-width:420px){ .key{height:44px; font-size:1.2rem; border-radius:10px} .krow{gap:4px} }
+  .feedback{margin-top:14px; border-radius:18px; padding:12px 14px; font-size:1.2rem; font-weight:700; text-align:center}
+  .feedback.ok{background:#e4fbee; color:#157a41}
+  .feedback.ko{background:#ffe9ea; color:#b3252b}
+  .feedback.almost{background:#fff6d6; color:#8a6400}
+  .feedback .good{font-size:1.5rem; display:block; margin-top:4px}
+  .mascotte{font-size:2.2rem}
+  .sound{border:none; background:#f4efff; border-radius:999px; font-size:1.2rem; padding:6px 12px; cursor:pointer}
+
+  .stars{font-size:3.4rem; text-align:center; letter-spacing:6px}
+  .score{font-size:3rem; font-weight:900; text-align:center; color:var(--violet)}
+  .msg{text-align:center; font-size:1.3rem; font-weight:700; margin:6px 0 12px}
+  .recap{background:#fff6f6; border-radius:16px; padding:10px 14px; margin-top:10px; font-size:1.05rem}
+  .recap h3{margin:0 0 6px}
+  .recap li{margin:4px 0}
+  .recap .a{color:var(--vert); font-weight:800}
+
+  .confetti{position:fixed; top:-40px; font-size:1.8rem; pointer-events:none; z-index:50; animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:.9}}
+  @media (max-width:420px){ .card{padding:20px 14px} .emoji{font-size:4rem} }
+</style>
+</head>
+<body>
+
+<main class="card">
+
+  <!-- ÉCRAN D'ACCUEIL -->
+  <section id="start">
+    <div class="big-emoji">🦁 👩‍🍳 🌟</div>
+    <h1>Le Quiz <span class="m">Masculin</span> / <span class="f">Féminin</span></h1>
+    <p class="sub">Métiers, animaux et adjectifs : écris le mot « inverse » !</p>
+    <ul class="rules">
+      <li>🎯 <b>15 questions</b> à chaque partie</li>
+      <li>👦 Si le mot est au masculin, écris le <b style="color:var(--rose)">féminin</b>.</li>
+      <li>👧 Si le mot est au féminin, écris le <b style="color:var(--bleu)">masculin</b>.</li>
+      <li>✏️ Exemples : <i>un lion → une lionne</i> · <i>vif → vive</i></li>
+      <li>💡 Tu peux écrire avec ou sans « un / une ».</li>
+    </ul>
+    <button class="btn vert" id="btnStart">🚀 C'est parti !</button>
+    <div class="best" id="best"></div>
+  </section>
+
+  <!-- ÉCRAN DE JEU -->
+  <section id="game" class="hidden">
+    <div class="topbar">
+      <span class="pill" id="qnum">Question 1 / 15</span>
+      <span class="pill" id="scoreTxt">⭐ 0</span>
+      <span class="pill" id="streak">🔥 0</span>
+      <button class="sound" id="btnSound" title="Son">🔊</button>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+
+    <div class="qzone">
+      <span class="chip" id="chip"></span>
+      <div class="emoji" id="emoji"></div>
+      <div class="word" id="word"></div>
+      <div class="ask" id="ask"></div>
+      <input type="text" id="answer" inputmode="none" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Écris ta réponse ici…">
+      <div class="accents" id="accents"></div>
+      <button class="btn" id="btnCheck">✅ Valider</button>
+      <div class="feedback hidden" id="feedback"></div>
+      <button class="btn orange hidden" id="btnNext">➡️ Question suivante</button>
+    </div>
+  </section>
+
+  <!-- ÉCRAN DE FIN -->
+  <section id="end" class="hidden">
+    <div class="stars" id="stars"></div>
+    <div class="score" id="finalScore"></div>
+    <div class="msg" id="finalMsg"></div>
+    <div class="recap hidden" id="recap"></div>
+    <button class="btn vert" id="btnReplay">🔄 Rejouer avec 15 nouveaux mots</button>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======== LISTE DES MOTS (54) : m = masculin, f = féminin ======== */
+  const W = (c,e,m,f)=>({c,e,m,f});
+  const DATA = [
+    // Métiers
+    W('metier','🥖','un boulanger','une boulangère'),
+    W('metier','💇','un coiffeur','une coiffeuse'),
+    W('metier','🧑‍🌾','un fermier','une fermière'),
+    W('metier','🧁','un pâtissier','une pâtissière'),
+    W('metier','🛍️','un vendeur','une vendeuse'),
+    W('metier','🎤','un chanteur','une chanteuse'),
+    W('metier','💃','un danseur','une danseuse'),
+    W('metier','🎭','un acteur','une actrice'),
+    W('metier','🏫','un directeur','une directrice'),
+    W('metier','🥩','un boucher','une bouchère'),
+    W('metier','🩺','un infirmier','une infirmière'),
+    W('metier','🍽️','un serveur','une serveuse'),
+    W('metier','🧵','un couturier','une couturière'),
+    W('metier','📮','un facteur','une factrice'),
+    W('metier','🎹','un musicien','une musicienne'),
+    W('metier','🍳','un cuisinier','une cuisinière'),
+    W('metier','💊','un pharmacien','une pharmacienne'),
+    W('metier','🍎','un épicier','une épicière'),
+    // Animaux
+    W('animal','🦁','un lion','une lionne'),
+    W('animal','🐯','un tigre','une tigresse'),
+    W('animal','🐱','un chat','une chatte'),
+    W('animal','🐶','un chien','une chienne'),
+    W('animal','🐴','un cheval','une jument'),
+    W('animal','🐓','un coq','une poule'),
+    W('animal','🐂','un taureau','une vache'),
+    W('animal','🦆','un canard','une cane'),
+    W('animal','🐺','un loup','une louve'),
+    W('animal','🐻','un ours','une ourse'),
+    W('animal','🐰','un lapin','une lapine'),
+    W('animal','🐑','un mouton','une brebis'),
+    W('animal','🐷','un cochon','une truie'),
+    W('animal','🐘','un éléphant','une éléphante'),
+    W('animal','🦊','un renard','une renarde'),
+    W('animal','🐐','un bouc','une chèvre'),
+    W('animal','🦌','un cerf','une biche'),
+    W('animal','🦃','un dindon','une dinde'),
+    // Adjectifs
+    W('adjectif','⚡','vif','vive'),
+    W('adjectif','😄','joyeux','joyeuse'),
+    W('adjectif','🥰','gentil','gentille'),
+    W('adjectif','😊','heureux','heureuse'),
+    W('adjectif','🐜','petit','petite'),
+    W('adjectif','⚪','blanc','blanche'),
+    W('adjectif','🧸','doux','douce'),
+    W('adjectif','🌟','beau','belle'),
+    W('adjectif','🆕','nouveau','nouvelle'),
+    W('adjectif','🦸','courageux','courageuse'),
+    W('adjectif','🏃','sportif','sportive'),
+    W('adjectif','🧠','malin','maligne'),
+    W('adjectif','📏','long','longue'),
+    W('adjectif','🔍','curieux','curieuse'),
+    W('adjectif','😒','jaloux','jalouse'),
+    W('adjectif','🎈','gros','grosse'),
+    W('adjectif','🦚','fier','fière'),
+    W('adjectif','🏛️','ancien','ancienne')
+  ];
+  const NB = 15;
+  const LABELS = {metier:'💼 Métier', animal:'🐾 Animal', adjectif:'✏️ Adjectif'};
+  const BRAVO = ['Bravo ! 🎉','Super ! 🌟','Génial ! 🥳','Excellent ! 💪','Bien joué ! 👏','Parfait ! ✨','Tu es fort(e) ! 🚀'];
+  const OUPS  = ['Oups ! 🙈','Pas tout à fait… 🤔','Courage ! 💪','Presque ! 😉','Ce sera pour la prochaine fois ! 🍀'];
+
+  /* ======== OUTILS ======== */
+  const $ = id => document.getElementById(id);
+  const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const stripArticle = s => s.replace(/^(un|une|le|la|l')\s*/i,'');
+  const norm = s => stripArticle(s.toLowerCase().replace(/[’`´]/g,"'").replace(/\s+/g,' ').trim()).trim();
+  const noAccent = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  /* ======== SON ======== */
+  let soundOn = true, ctx = null;
+  function beep(freqs, dur){
+    if(!soundOn) return;
+    try{
+      ctx = ctx || new (window.AudioContext||window.webkitAudioContext)();
+      let t = ctx.currentTime;
+      freqs.forEach(f=>{
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(.18,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+        o.start(t); o.stop(t+dur); t += dur*.8;
+      });
+    }catch(e){}
+  }
+
+  /* ======== CONFETTIS ======== */
+  function confetti(n){
+    const set = ['🎉','⭐','✨','🌈','💖','🎈','🌟'];
+    for(let i=0;i<n;i++){
+      const s = document.createElement('span');
+      s.className='confetti'; s.textContent=pick(set);
+      s.style.left=Math.random()*100+'vw';
+      s.style.animationDuration=(1.6+Math.random()*1.8)+'s';
+      s.style.animationDelay=(Math.random()*.4)+'s';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),4200);
+    }
+  }
+
+  /* ======== ÉTAT ======== */
+  let Q = [], idx = 0, score = 0, streak = 0, answered = false, errors = [];
+
+  function show(id){ ['start','game','end'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+
+  function bestScore(){
+    try{ const b = localStorage.getItem('quizMF_best'); return b===null?null:parseInt(b,10); }catch(e){ return null; }
+  }
+  function saveBest(v){
+    try{ const b = bestScore(); if(b===null || v>b) localStorage.setItem('quizMF_best', String(v)); }catch(e){}
+  }
+  function showBest(){
+    const b = bestScore();
+    $('best').textContent = b===null ? '' : '🏆 Ton meilleur score : '+b+' / '+NB;
+  }
+
+  function startGame(){
+    Q = shuffle(DATA).slice(0,NB).map(d=>{
+      const toF = Math.random()<.5;
+      return {d, toF, shown: toF?d.m:d.f, answer: toF?d.f:d.m};
+    });
+    idx=0; score=0; streak=0; errors=[];
+    show('game'); showQuestion();
+  }
+
+  function showQuestion(){
+    const q = Q[idx]; answered=false;
+    $('qnum').textContent = 'Question '+(idx+1)+' / '+NB;
+    $('scoreTxt').textContent = '⭐ '+score;
+    $('streak').textContent = '🔥 '+streak;
+    $('bar').style.width = (idx/NB*100)+'%';
+    const chip = $('chip'); chip.textContent = LABELS[q.d.c]; chip.className = 'chip '+q.d.c;
+    $('emoji').textContent = q.d.e;
+    const w = $('word'); w.textContent = q.shown; w.className = 'word '+(q.toF?'m':'f');
+    $('ask').innerHTML = q.toF
+      ? 'Écris le <b class="f">féminin</b> 💗'
+      : 'Écris le <b class="m">masculin</b> 💙';
+    const inp = $('answer'); inp.value=''; inp.disabled=false; inp.focus();
+    $('feedback').classList.add('hidden');
+    $('btnNext').classList.add('hidden');
+    $('btnCheck').classList.remove('hidden');
+    $('accents').classList.remove('hidden');
+  }
+
+  function check(){
+    if(answered) return;
+    const q = Q[idx], inp = $('answer'), user = norm(inp.value);
+    if(!user){ inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.focus(); return; }
+    answered = true; inp.disabled = true;
+    const target = norm(q.answer);
+    const fb = $('feedback');
+    let kind;
+    if(user === target){
+      kind='ok'; score++; streak++;
+      fb.innerHTML = '<span class="mascotte">🥳</span> '+pick(BRAVO)+'<span class="good">'+q.answer+'</span>';
+      beep([660,880,1100],.12); confetti(streak>=3?36:18);
+    } else if(noAccent(user) === noAccent(target)){
+      kind='almost'; score++; streak++;
+      fb.innerHTML = '<span class="mascotte">😉</span> Presque ! Attention à l\'accent :<span class="good">'+q.answer+'</span>';
+      beep([660,880],.12); confetti(10);
+    } else {
+      kind='ko'; streak=0;
+      errors.push({shown:q.shown, answer:q.answer, user:inp.value.trim(), e:q.d.e});
+      fb.innerHTML = '<span class="mascotte">🤗</span> '+pick(OUPS)+'<br>La bonne réponse était :<span class="good">'+q.answer+'</span>';
+      beep([330,260],.16);
+    }
+    fb.className = 'feedback '+kind;
+    $('scoreTxt').textContent = '⭐ '+score;
+    $('streak').textContent = '🔥 '+streak;
+    $('bar').style.width = ((idx+1)/NB*100)+'%';
+    $('btnCheck').classList.add('hidden');
+    $('accents').classList.add('hidden');
+    const nx = $('btnNext');
+    nx.textContent = idx===NB-1 ? '🏁 Voir mon résultat' : '➡️ Question suivante';
+    nx.classList.remove('hidden'); nx.focus();
+  }
+
+  function next(){
+    if(!answered) return;
+    idx++;
+    if(idx>=NB) finish(); else showQuestion();
+  }
+
+  function finish(){
+    saveBest(score);
+    show('end');
+    const stars = score>=13 ? 3 : score>=9 ? 2 : score>=5 ? 1 : 0;
+    $('stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+    $('finalScore').textContent = score+' / '+NB;
+    let m;
+    if(score===NB) m='🏆 PARFAIT ! Tu es un(e) champion(ne) du masculin et du féminin !';
+    else if(score>=13) m='🌟 Fantastique ! Presque parfait !';
+    else if(score>=9) m='👏 Très bien ! Continue comme ça !';
+    else if(score>=5) m='💪 C\'est un bon début, rejoue pour t\'améliorer !';
+    else m='🌱 Ne t\'inquiète pas, avec de l\'entraînement tu vas progresser !';
+    const b = bestScore();
+    if(b!==null) m += '\n🏆 Meilleur score : '+b+' / '+NB;
+    $('finalMsg').innerHTML = m.replace(/\n/g,'<br>');
+    const r = $('recap');
+    if(errors.length){
+      r.classList.remove('hidden');
+      r.innerHTML = '<h3>📚 À retenir :</h3><ul>' + errors.map(e =>
+        '<li>'+e.e+' '+e.shown+' → <span class="a">'+e.answer+'</span></li>').join('') + '</ul>';
+    } else r.classList.add('hidden');
+    if(score>=9) confetti(60);
+    beep(score>=9?[523,659,784,1046]:[392,440],.16);
+  }
+
+  /* ======== ACCENTS ======== */
+  /* ======== CLAVIER VIRTUEL (AZERTY) ======== */
+  const ROWS = [
+    'a z e r t y u i o p'.split(' '),
+    'q s d f g h j k l m'.split(' '),
+    'w x c v b n BACK'.split(' '),
+    'é è ê à â ç î ô û ë'.split(' '),
+    ["'", 'SPACE']
+  ];
+  function typeKey(k){
+    const i = $('answer'); if(i.disabled) return;
+    let s = i.selectionStart, e = i.selectionEnd;
+    if(s===null || s===undefined){ s = e = i.value.length; }
+    if(k==='BACK'){
+      if(s!==e){ i.value = i.value.slice(0,s)+i.value.slice(e); e = s; }
+      else if(s>0){ i.value = i.value.slice(0,s-1)+i.value.slice(e); s--; e = s; }
+    } else {
+      const ch = k==='SPACE' ? ' ' : k;
+      i.value = i.value.slice(0,s)+ch+i.value.slice(e);
+      s += ch.length; e = s;
+    }
+    i.focus(); try{ i.setSelectionRange(s,e); }catch(err){}
+  }
+  ROWS.forEach(row=>{
+    const r = document.createElement('div'); r.className='krow';
+    row.forEach(k=>{
+      const b = document.createElement('button'); b.type='button'; b.className='key';
+      if(k==='BACK'){ b.classList.add('back'); b.textContent='⌫'; b.setAttribute('aria-label','Effacer'); }
+      else if(k==='SPACE'){ b.classList.add('space'); b.textContent='espace'; }
+      else { b.textContent=k; if('éèêàâçîôûë'.includes(k)) b.classList.add('acc'); }
+      b.addEventListener('pointerdown', e=>e.preventDefault()); // garde le focus dans le champ
+      b.addEventListener('click', ()=>typeKey(k));
+      r.appendChild(b);
+    });
+    $('accents').appendChild(r);
+  });
+
+  /* ======== ÉVÉNEMENTS ======== */
+  $('btnStart').addEventListener('click', startGame);
+  $('btnReplay').addEventListener('click', startGame);
+  $('btnCheck').addEventListener('click', check);
+  $('btnNext').addEventListener('click', next);
+  $('btnSound').addEventListener('click', ()=>{ soundOn=!soundOn; $('btnSound').textContent = soundOn?'🔊':'🔇'; });
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='Enter') return;
+    if($('game').classList.contains('hidden')) return;
+    e.preventDefault();
+    if(answered) next(); else check();
+  });
+
+  showBest();
+})();
+</script>
+</body>
+</html>
