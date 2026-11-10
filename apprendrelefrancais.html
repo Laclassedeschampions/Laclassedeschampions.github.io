@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apprendre le français</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+        background: linear-gradient(160deg, #fff7d6 0%, #d4f1ff 50%, #ffe0f0 100%);
+        min-height: 100vh;
+        color: #2d3436;
+      }
+
+      header {
+        text-align: center;
+        padding: 40px 20px 20px;
+      }
+
+      header h1 {
+        font-size: 2.6rem;
+        color: #6c3fc9;
+        text-shadow: 3px 3px 0 #ffd93d;
+        letter-spacing: 1px;
+      }
+
+      header p {
+        margin-top: 10px;
+        font-size: 1.2rem;
+        color: #555;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px 20px 60px;
+      }
+
+      .etiquette {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 28px 16px;
+        border-radius: 22px;
+        text-decoration: none;
+        color: #fff;
+        font-size: 1.35rem;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        border: 4px solid #fff;
+      }
+
+      .etiquette .emoji {
+        font-size: 2.8rem;
+      }
+
+      .etiquette:hover {
+        transform: translateY(-6px) scale(1.03);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .etiquette:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+      }
+
+      .c1 { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+      .c2 { background: linear-gradient(135deg, #feca57, #f6b93b); }
+      .c3 { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+      .c4 { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+      .c5 { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+      .c6 { background: linear-gradient(135deg, #ff9ff3, #f368e0); }
+      .c7 { background: linear-gradient(135deg, #ff9f43, #ee5a24); }
+      .c8 { background: linear-gradient(135deg, #54a0ff, #2e86de); }
+      .c9 { background: linear-gradient(135deg, #00d2d3, #01a3a4); }
+      .c10 { background: linear-gradient(135deg, #f78fb3, #e15f99); }
+
+      footer {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🇫🇷 Apprendre le français 🎉</h1>
+      <p>Clique sur une étiquette pour commencer à apprendre !</p>
+    </header>
+
+    <main class="grid">
+      <a class="etiquette c1" href="https://ladigitale.dev/digiview/#/v/55a2a5a2efaf42b6" target="_blank" rel="noopener">
+        <span class="emoji">🎨</span> Les couleurs
+      </a>
+      <a class="etiquette c2" href="https://ladigitale.dev/digiview/#/v/efc42d1baf1c7b34" target="_blank" rel="noopener">
+        <span class="emoji">👋</span> Se présenter
+      </a>
+      <a class="etiquette c3" href="https://ladigitale.dev/digiview/#/v/e932a3647da16910" target="_blank" rel="noopener">
+        <span class="emoji">🏫</span> À l'école
+      </a>
+      <a class="etiquette c8" href="https://ladigitale.dev/digiview/#/v/d352f8db297eb4c9" target="_blank" rel="noopener">
+        <span class="emoji">📅</span> Les jours de la semaine
+      </a>
+      <a class="etiquette c9" href="https://ladigitale.dev/digiview/#/v/47a772f61501207a" target="_blank" rel="noopener">
+        <span class="emoji">🗓️</span> Les mois de l'année
+      </a>
+      <a class="etiquette c4" href="https://ladigitale.dev/digiview/#/v/4c6db2498ba8e764" target="_blank" rel="noopener">
+        <span class="emoji">⏰</span> Les moments de la journée
+      </a>
+      <a class="etiquette c5" href="https://ladigitale.dev/digiview/#/v/c8869acc15e9b2ca" target="_blank" rel="noopener">
+        <span class="emoji">✏️</span> Le matériel scolaire
+      </a>
+      <a class="etiquette c6" href="https://ladigitale.dev/digiview/#/v/95cbcaaae1ae87eb" target="_blank" rel="noopener">
+        <span class="emoji">👂</span> Les consignes
+      </a>
+      <a class="etiquette c10" href="https://ladigitale.dev/digiview/#/v/0e37fd94d41107ee" target="_blank" rel="noopener">
+        <span class="emoji">📍</span> Se repérer 1
+      </a>
+      <a class="etiquette c7" href="https://ladigitale.dev/digiview/#/v/f494a15505f61e40" target="_blank" rel="noopener">
+        <span class="emoji">🧭</span> Se repérer 2
+      </a>
+    </main>
+
+    <footer>Bonne découverte ! 🌟</footer>
+  </body>
+</html>
