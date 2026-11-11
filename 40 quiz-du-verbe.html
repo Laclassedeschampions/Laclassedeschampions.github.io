@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Quiz du Verbe</title>
+<style>
+  :root{
+    --violet:#7c4dff; --rose:#ff5fa2; --jaune:#ffd23f; --vert:#2ecc71; --rouge:#ff5252; --bleu:#38bdf8; --orange:#ff9f43;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh;
+    font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",Arial,sans-serif;
+    background:linear-gradient(135deg,#a1c4fd 0%,#c2e9fb 40%,#fbc2eb 100%);
+    display:flex; align-items:center; justify-content:center; padding:16px; color:#33285e;
+  }
+  .card{
+    width:100%; max-width:760px; background:#fff; border-radius:32px; padding:28px 24px 32px;
+    box-shadow:0 14px 40px rgba(80,60,160,.25); border:6px solid var(--jaune); position:relative; overflow:hidden;
+  }
+  h1{margin:0 0 6px; text-align:center; font-size:2.1rem; color:var(--violet)}
+  h1 span{display:inline-block}
+  .sub{text-align:center; margin:0 0 20px; font-size:1.15rem}
+  .screen{display:none}
+  .screen.active{display:block}
+  .big-emoji{font-size:5rem; text-align:center; animation:bounce 1.6s infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .btn{
+    display:block; margin:18px auto 0; border:none; cursor:pointer; color:#fff; font:inherit; font-weight:bold;
+    font-size:1.4rem; padding:14px 34px; border-radius:50px;
+    background:linear-gradient(135deg,var(--rose),var(--orange));
+    box-shadow:0 6px 0 #c2417a; transition:transform .1s, box-shadow .1s;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(4px); box-shadow:0 2px 0 #c2417a}
+  .btn.green{background:linear-gradient(135deg,var(--vert),#1abc9c); box-shadow:0 6px 0 #148f6f}
+  .btn.green:active{box-shadow:0 2px 0 #148f6f}
+  .rules{background:#fff8dc; border-radius:20px; padding:14px 18px; font-size:1.1rem; line-height:1.5; margin:0 auto; max-width:540px}
+  .top{display:flex; justify-content:space-between; align-items:center; font-weight:bold; font-size:1.1rem; margin-bottom:8px}
+  .progress{height:18px; background:#eee; border-radius:20px; overflow:hidden; margin-bottom:22px}
+  .progress div{height:100%; width:0; border-radius:20px; background:linear-gradient(90deg,var(--bleu),var(--violet),var(--rose)); transition:width .4s}
+  .consigne{text-align:center; font-size:1.25rem; margin-bottom:16px; color:var(--violet); font-weight:bold}
+  .sentence{
+    display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px 4px;
+    font-size:2rem; line-height:1.4; background:#f3f0ff; border-radius:24px; padding:26px 16px; min-height:140px;
+  }
+  .word{
+    font:inherit; font-size:inherit; color:#33285e; background:#fff; border:3px solid #d9d0ff; border-radius:16px;
+    padding:2px 12px; cursor:pointer; transition:transform .12s, background .12s;
+  }
+  .word:hover{transform:scale(1.1) rotate(-2deg); background:#ffe9a6; border-color:var(--jaune)}
+  .punct{font-size:2rem}
+  .word.correct{background:var(--vert); color:#fff; border-color:#1e9e55; animation:pop .5s}
+  .word.wrong{background:var(--rouge); color:#fff; border-color:#c0392b; animation:shake .45s}
+  .word.reveal{background:var(--vert); color:#fff; border-color:#1e9e55; animation:pop .6s .2s both}
+  .locked .word{cursor:default}
+  .locked .word:hover{transform:none}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1.1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .feedback{min-height:64px; text-align:center; font-size:1.4rem; font-weight:bold; margin-top:18px}
+  .feedback.ok{color:#1e9e55}
+  .feedback.ko{color:#d35400}
+  .hint{text-align:center; font-size:1rem; color:#7a6fb0; margin-top:6px}
+  .stars{font-size:2.6rem; text-align:center; letter-spacing:6px}
+  .score{font-size:3rem; text-align:center; font-weight:bold; color:var(--violet); margin:6px 0}
+  .message{text-align:center; font-size:1.4rem; line-height:1.5; margin:0 auto; max-width:560px}
+  .confetti{position:fixed; top:-40px; font-size:2rem; pointer-events:none; animation:fall linear forwards; z-index:50}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+  @media (max-width:520px){
+    h1{font-size:1.6rem} .sentence{font-size:1.45rem} .punct{font-size:1.45rem} .word{padding:2px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- ACCUEIL -->
+  <section id="accueil" class="screen active">
+    <div class="big-emoji">🦸</div>
+    <h1>Le Quiz du <span style="color:var(--rose)">V</span><span style="color:var(--orange)">e</span><span style="color:var(--vert)">r</span><span style="color:var(--bleu)">b</span><span style="color:var(--violet)">e</span> !</h1>
+    <p class="sub">Deviens un super détective des verbes !</p>
+    <div class="rules">
+      🔎 Je te montre une phrase.<br>
+      👆 Tu cliques sur le <b>verbe</b>, le mot qui dit <b>ce que l'on fait</b>.<br>
+      🎯 15 questions, choisies au hasard.<br>
+      ⭐ Essaie d'avoir le plus d'étoiles !
+    </div>
+    <button class="btn" id="btnStart">▶ C'est parti !</button>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="jeu" class="screen">
+    <div class="top">
+      <span id="numero">Question 1 / 15</span>
+      <span id="points">⭐ 0</span>
+    </div>
+    <div class="progress"><div id="barre"></div></div>
+    <div class="consigne">👆 Clique sur le verbe de la phrase !</div>
+    <div class="sentence" id="phrase"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="hint">Astuce : le verbe répond à « Que fait-il ? » ou « Que fait-elle ? »</div>
+    <button class="btn green" id="btnNext" style="display:none">Question suivante ➜</button>
+  </section>
+
+  <!-- FIN -->
+  <section id="fin" class="screen">
+    <div class="big-emoji" id="finEmoji">🏆</div>
+    <h1>Quiz terminé !</h1>
+    <div class="stars" id="finStars"></div>
+    <div class="score" id="finScore"></div>
+    <p class="message" id="finMessage"></p>
+    <button class="btn" id="btnRestart">🔄 Recommencer avec de nouvelles phrases</button>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   BANQUE DE 60 PHRASES
+   Le verbe à trouver est entouré de crochets [ ].
+   Pour ajouter ou modifier une phrase, il suffit de respecter
+   ce format (un seul verbe conjugué par phrase).
+   ============================================================ */
+const PHRASES = [
+  // La vie à l'école
+  "Les élèves [entrent] dans l'école.",
+  "La maîtresse [écrit] la date au tableau.",
+  "Nous [rangeons] nos cartables dans le couloir.",
+  "Les enfants [dessinent] un grand soleil.",
+  "Le directeur [salue] les parents devant le portail.",
+  // Le déroulement de la journée
+  "Le matin, le réveil [sonne] à sept heures.",
+  "Mon papa [conduit] ma sœur à la crèche.",
+  "À midi, nous [déjeunons] à la cantine.",
+  "Après la classe, je [goûte] avec mes amis.",
+  "Le soir, mes parents [regardent] un film.",
+  "La nuit, tout le monde [dort] dans la maison.",
+  // Les animaux de la ferme
+  "La vache [mange] de l'herbe verte.",
+  "Le coq [chante] très tôt le matin.",
+  "Les poules [pondent] des œufs.",
+  "Le fermier [trait] les vaches.",
+  "Les cochons [jouent] dans la boue.",
+  "Le cheval [galope] dans le pré.",
+  // Les repas
+  "Maman [prépare] une bonne soupe.",
+  "Nous [mangeons] des pâtes au fromage.",
+  "Papa [coupe] le pain en tranches.",
+  "Tom [boit] un verre de lait.",
+  "Le boulanger [vend] des croissants chauds.",
+  "Mamie [cuit] un gâteau au chocolat.",
+  // Les actions à la maison
+  "Chaque matin, je me [lève] très vite.",
+  "Julie se [lave] les mains dans la salle de bain.",
+  "Papa [range] le salon.",
+  "Je [brosse] mes dents dans la salle de bain.",
+  "Ma sœur [met] la table dans la cuisine.",
+  // Les fruits et légumes
+  "Les enfants [cueillent] des pommes dans le verger.",
+  "Le jardinier [arrose] les salades.",
+  "Je [pèle] une orange.",
+  "Maman [lave] les carottes.",
+  "Les fraises [poussent] au printemps.",
+  // Les saisons
+  "En hiver, la neige [tombe] sur les toits.",
+  "En été, nous [nageons] dans la mer.",
+  "En automne, les feuilles [jaunissent].",
+  "Au printemps, les oiseaux [construisent] des nids.",
+  "En hiver, le vent [souffle] fort.",
+  // Les vêtements
+  "Je [mets] mon manteau.",
+  "Zoé [enfile] ses bottes de pluie.",
+  "Papa [porte] une casquette rouge.",
+  "Maman [coud] un bouton à ma veste.",
+  "Je [boutonne] ma chemise.",
+  // Les animaux de la forêt
+  "Le hibou [guette] dans la nuit.",
+  "L'écureuil [grimpe] dans le grand chêne.",
+  "Le renard [rôde] près du terrier.",
+  "Le sanglier [fouille] la terre.",
+  // Les animaux de la savane
+  "Le lion [rugit] très fort.",
+  "Les girafes [broutent] les feuilles des arbres.",
+  "L'éléphant [lance] de l'eau avec sa trompe.",
+  "Les zèbres [courent] dans la savane.",
+  // La cour de récréation
+  "Les filles [sautent] à la corde.",
+  "Les garçons [échangent] des cartes.",
+  "Nous [courons] dans la cour.",
+  // Le sport
+  "Les joueurs [marquent] un but.",
+  "La nageuse [plonge] dans la piscine.",
+  "Léo [pédale] vite sur son vélo.",
+  "Les gymnastes [roulent] sur le tapis.",
+  // La vie de classe
+  "Nous [levons] la main pour parler.",
+  "Le délégué [distribue] les cahiers."
+];
+
+const NB_QUESTIONS = 15;
+
+/* ---------- Outils ---------- */
+const $ = id => document.getElementById(id);
+function melanger(tab){
+  const a = tab.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function decouper(phrase){
+  const re = /\[[^\]]+\]|[\p{L}\-]+|[^\p{L}\s\[\]\-]+|\s+/gu;
+  const morceaux = phrase.match(re) || [];
+  return morceaux.map(m => {
+    if(m.startsWith("[")) return {texte:m.slice(1,-1), mot:true, verbe:true};
+    if(/^[\p{L}\-]+$/u.test(m)) return {texte:m, mot:true, verbe:false};
+    return {texte:m, mot:false, verbe:false};
+  });
+}
+function montrer(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+/* ---------- État du jeu ---------- */
+let questions = [], index = 0, score = 0, verrou = false;
+
+function demarrer(){
+  questions = melanger(PHRASES).slice(0, NB_QUESTIONS);
+  index = 0; score = 0;
+  montrer("jeu");
+  afficherQuestion();
+}
+
+function afficherQuestion(){
+  verrou = false;
+  const zone = $("phrase");
+  zone.classList.remove("locked");
+  zone.innerHTML = "";
+  decouper(questions[index]).forEach(t => {
+    if(t.mot){
+      const b = document.createElement("button");
+      b.className = "word";
+      b.textContent = t.texte;
+      b.dataset.verbe = t.verbe ? "1" : "0";
+      b.addEventListener("click", () => repondre(b));
+      zone.appendChild(b);
+    } else {
+      const s = document.createElement("span");
+      s.className = "punct";
+      s.textContent = t.texte.trim() === "" ? "" : t.texte;
+      zone.appendChild(s);
+    }
+  });
+  $("numero").textContent = "Question " + (index+1) + " / " + NB_QUESTIONS;
+  $("points").textContent = "⭐ " + score;
+  $("barre").style.width = (index / NB_QUESTIONS * 100) + "%";
+  $("feedback").textContent = "";
+  $("feedback").className = "feedback";
+  $("btnNext").style.display = "none";
+}
+
+const BRAVOS = ["Bravo ! 🎉","Super ! 🌟","Excellent ! 👏","Génial ! 🚀","Bien joué ! 💪","Tu es un champion ! 🏅"];
+
+function repondre(bouton){
+  if(verrou) return;
+  verrou = true;
+  $("phrase").classList.add("locked");
+  const fb = $("feedback");
+  const bonVerbe = [...document.querySelectorAll(".word")].find(w => w.dataset.verbe === "1");
+  if(bouton.dataset.verbe === "1"){
+    bouton.classList.add("correct");
+    score++;
+    fb.textContent = BRAVOS[Math.floor(Math.random()*BRAVOS.length)] + " C'est bien le verbe !";
+    fb.classList.add("ok");
+  } else {
+    bouton.classList.add("wrong");
+    bonVerbe.classList.add("reveal");
+    fb.innerHTML = "Presque ! 😊 Le verbe était « <b>" + bonVerbe.textContent + "</b> ». Il dit ce que l'on fait.";
+    fb.classList.add("ko");
+  }
+  $("points").textContent = "⭐ " + score;
+  $("barre").style.width = ((index+1) / NB_QUESTIONS * 100) + "%";
+  const suite = $("btnNext");
+  suite.textContent = (index === NB_QUESTIONS-1) ? "Voir mon résultat 🏆" : "Question suivante ➜";
+  suite.style.display = "block";
+}
+
+function suivant(){
+  index++;
+  if(index >= NB_QUESTIONS) terminer();
+  else afficherQuestion();
+}
+
+function terminer(){
+  montrer("fin");
+  $("finScore").textContent = score + " / " + NB_QUESTIONS;
+  let nbEtoiles, emoji, msg;
+  if(score === NB_QUESTIONS){
+    nbEtoiles = 3; emoji = "🏆";
+    msg = "INCROYABLE ! Tu as tout bon ! Tu es un vrai champion des verbes ! 🎉";
+  } else if(score >= 12){
+    nbEtoiles = 3; emoji = "🥇";
+    msg = "Bravo, quel beau score ! Tu repères très bien les verbes. Continue comme ça ! 🌟";
+  } else if(score >= 8){
+    nbEtoiles = 2; emoji = "🥈";
+    msg = "Très bien ! Tu progresses vraiment. Avec un nouvel essai, tu feras encore mieux ! 💪";
+  } else if(score >= 4){
+    nbEtoiles = 1; emoji = "🥉";
+    msg = "Bon début ! Souviens-toi : le verbe dit ce que l'on fait. Rejoue, tu vas y arriver ! 😊";
+  } else {
+    nbEtoiles = 1; emoji = "🌱";
+    msg = "Courage ! On apprend en s'entraînant. Chaque essai te rend plus fort. Recommence, tu vas progresser ! 🚀";
+  }
+  $("finEmoji").textContent = emoji;
+  $("finStars").textContent = "⭐".repeat(nbEtoiles) + "☆".repeat(3-nbEtoiles);
+  $("finMessage").innerHTML = msg + "<br><b>Envie de rejouer avec de nouvelles phrases ?</b>";
+  if(score >= 8) confettis();
+}
+
+function confettis(){
+  const symboles = ["🎉","⭐","🌟","✨","🎈","💫"];
+  for(let i=0;i<40;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = symboles[Math.floor(Math.random()*symboles.length)];
+    c.style.left = Math.random()*100 + "vw";
+    c.style.animationDuration = (2.5 + Math.random()*2.5) + "s";
+    c.style.animationDelay = (Math.random()*1.2) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 7000);
+  }
+}
+
+$("btnStart").addEventListener("click", demarrer);
+$("btnNext").addEventListener("click", suivant);
+$("btnRestart").addEventListener("click", demarrer);
+</script>
+</body>
+</html>
