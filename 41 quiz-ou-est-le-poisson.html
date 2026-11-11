@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Où est le poisson ? — Quiz de repérage spatial</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(160deg, #e0f2fe, #fef9c3);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff; border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.12);
+    max-width: 640px; width: 100%;
+    padding: 24px; text-align: center;
+  }
+  h1 { color: #1d4ed8; font-size: 1.6em; margin-bottom: 4px; }
+  .progress { color: #64748b; font-size: 1em; margin-bottom: 10px; }
+  .scene {
+    background: #f8fafc; border: 3px solid #bae6fd; border-radius: 18px;
+    margin: 0 auto 14px; max-width: 420px;
+  }
+  .scene svg { display: block; width: 100%; height: auto; }
+  .question { font-size: 1.3em; color: #0f172a; margin-bottom: 6px; }
+  .phrase { font-size: 1.2em; color: #334155; margin-bottom: 14px; }
+  .phrase .blank {
+    display: inline-block; min-width: 110px;
+    border-bottom: 3px dashed #f59e0b; color: #b45309; font-weight: bold;
+    text-align: center; padding: 0 6px;
+  }
+  .phrase .blank.filled { border-bottom-style: solid; color: #15803d; }
+  .words { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .words button {
+    font-family: inherit; font-size: 1.15em; font-weight: bold;
+    padding: 10px 18px; border-radius: 14px; cursor: pointer;
+    border: 3px solid #93c5fd; background: #eff6ff; color: #1e3a8a;
+    transition: transform .1s;
+  }
+  .words button:hover { transform: scale(1.06); background: #dbeafe; }
+  .words button.correct { background: #22c55e; border-color: #15803d; color: #fff; }
+  .words button.wrong { background: #fca5a5; border-color: #dc2626; color: #7f1d1d; animation: shake .3s; }
+  .words button:disabled { cursor: default; opacity: .85; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+  .feedback { min-height: 1.6em; font-size: 1.2em; font-weight: bold; margin-top: 14px; }
+  .feedback.ok { color: #15803d; }
+  .feedback.ko { color: #dc2626; }
+  .score { font-size: 1.4em; color: #1d4ed8; margin: 18px 0; }
+  .big-btn {
+    font-family: inherit; font-size: 1.2em; font-weight: bold;
+    padding: 12px 30px; border-radius: 16px; cursor: pointer;
+    border: none; background: #f59e0b; color: #fff;
+    box-shadow: 0 4px 0 #b45309;
+  }
+  .big-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b45309; }
+  .hidden { display: none; }
+  .review { text-align: left; margin: 6px 0 16px; }
+  .review h2 { font-size: 1.15em; color: #1d4ed8; margin-bottom: 8px; text-align: center; }
+  .review-item {
+    display: flex; align-items: center; gap: 12px;
+    background: #fef2f2; border: 2px solid #fecaca; border-radius: 12px;
+    padding: 8px 10px; margin-bottom: 8px;
+  }
+  .review-item.ok { background: #f0fdf4; border-color: #bbf7d0; }
+  .review-item .thumb { width: 90px; flex-shrink: 0; }
+  .review-item .thumb svg { display: block; width: 100%; height: auto; }
+  .review-item .txt { font-size: .95em; color: #334155; }
+  .review-item .txt b { color: #15803d; }
+  .review-item .txt .misses { color: #dc2626; }
+</style>
+</head>
+<body>
+
+<!-- Bibliothèque de personnages (réutilisés dans chaque scène) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="poisson">
+      <path d="M92 40 L124 16 L124 64 Z" fill="#F2A93B" stroke="#D98A1F" stroke-width="3" stroke-linejoin="round"/>
+      <ellipse cx="55" cy="40" rx="44" ry="28" fill="#F2A93B" stroke="#D98A1F" stroke-width="3"/>
+      <path d="M50 42 q14 -16 28 -2" fill="none" stroke="#D98A1F" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="28" cy="32" r="5.5" fill="#333"/>
+      <circle cx="30" cy="30" r="1.8" fill="#fff"/>
+    </g>
+    <g id="herisson">
+      <ellipse cx="55" cy="88" rx="12" ry="8" fill="#E9B98B" stroke="#B9834F" stroke-width="2"/>
+      <ellipse cx="95" cy="88" rx="12" ry="8" fill="#E9B98B" stroke="#B9834F" stroke-width="2"/>
+      <path d="M8 82 L18 48 L30 70 L42 30 L56 62 L70 22 L82 60 L96 32 L106 64 L118 44 L124 74 L134 60 L136 84 Q100 100 60 98 Q25 96 8 82 Z"
+            fill="#7A4A21" stroke="#5C3717" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="118" cy="76" r="24" fill="#EFC9A0" stroke="#C89468" stroke-width="3"/>
+      <circle cx="103" cy="58" r="7" fill="#EFC9A0" stroke="#C89468" stroke-width="2"/>
+      <circle cx="126" cy="70" r="4.5" fill="#333"/>
+      <circle cx="138" cy="80" r="6" fill="#4A2F17"/>
+      <path d="M126 88 q7 6 13 0" fill="none" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <g id="tortue">
+      <ellipse cx="45" cy="92" rx="13" ry="9" fill="#7CC576" stroke="#4E9B4E" stroke-width="2"/>
+      <ellipse cx="100" cy="92" rx="13" ry="9" fill="#7CC576" stroke="#4E9B4E" stroke-width="2"/>
+      <circle cx="18" cy="70" r="17" fill="#8ED081" stroke="#4E9B4E" stroke-width="3"/>
+      <circle cx="12" cy="65" r="5" fill="#fff" stroke="#4E9B4E" stroke-width="1.5"/>
+      <circle cx="11" cy="65" r="2.4" fill="#333"/>
+      <path d="M8 78 q7 5 13 0" fill="none" stroke="#3d7a3d" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M30 82 a45 40 0 0 1 90 0 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="3"/>
+      <path d="M52 46 L60 82 M75 42 L75 82 M98 46 L90 82 M38 66 L112 66" fill="none" stroke="#2E7D32" stroke-width="2.5"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="card">
+  <h1>🐙 Où est le poisson ?</h1>
+  <p class="progress" id="progress"></p>
+
+  <div id="quiz">
+    <div class="scene" id="scene"></div>
+    <p class="question">Où est le poisson ?</p>
+    <p class="phrase" id="phrase"></p>
+    <div class="words" id="words"></div>
+    <p class="feedback" id="feedback"></p>
+  </div>
+
+  <div id="end" class="hidden">
+    <p class="score" id="score"></p>
+    <p id="stars" style="font-size:2.6em; letter-spacing:.1em; min-height:1.2em"></p>
+    <p id="scoreMsg" style="margin-bottom:16px"></p>
+    <div class="review" id="review"></div>
+    <button class="big-btn" id="replay">🔁 Rejouer</button>
+  </div>
+</div>
+
+<script>
+// Les 11 scènes : chaque scène est un petit dessin SVG, avec la bonne réponse.
+const SCENES = [
+  { answer: "sur",         complement: "le hérisson.", svg: '<svg viewBox="0 0 300 220"><use href="#herisson" transform="translate(70,105)"/><use href="#poisson" transform="translate(85,72) scale(0.8)"/></svg>' },
+  { answer: "sous",        complement: "le hérisson.", svg: '<svg viewBox="0 0 300 220"><use href="#herisson" transform="translate(70,5)"/><use href="#poisson" transform="translate(90,92) scale(0.8)"/></svg>' },
+  { answer: "devant",      complement: "la tortue.", svg: '<svg viewBox="0 0 300 220"><use href="#tortue" transform="translate(95,55)"/><use href="#poisson" transform="translate(80,112) scale(0.75)"/></svg>' },
+  { answer: "derrière",    complement: "le hérisson.", svg: '<svg viewBox="0 0 300 220"><use href="#poisson" transform="translate(110,90) scale(0.8)"/><use href="#herisson" transform="translate(60,65)"/></svg>' },
+  { answer: "au-dessus",   complement: "du hérisson.", svg: '<svg viewBox="0 0 300 220"><use href="#poisson" transform="translate(90,5) scale(0.8)"/><use href="#herisson" transform="translate(70,110)"/></svg>' },
+  { answer: "en dessous",  complement: "de la tortue.", svg: '<svg viewBox="0 0 300 220"><use href="#tortue" transform="translate(90,5)"/><use href="#poisson" transform="translate(90,130) scale(0.8)"/></svg>' },
+  { answer: "entre",       complement: "le hérisson et la tortue.", svg: '<svg viewBox="0 0 300 220"><use href="#herisson" transform="translate(0,70) scale(0.75)"/><use href="#poisson" transform="translate(105,80) scale(0.7)"/><use href="#tortue" transform="translate(185,70) scale(0.75)"/></svg>' },
+  { answer: "à côté",      complement: "du hérisson.", svg: '<svg viewBox="0 0 300 220"><use href="#herisson" transform="translate(15,70) scale(0.85)"/><use href="#poisson" transform="translate(175,85) scale(0.75)"/></svg>' },
+  { answer: "dans",        complement: "la tortue.", svg: '<svg viewBox="0 0 300 220"><use href="#tortue" transform="translate(80,50)"/><use href="#poisson" transform="translate(118,92) scale(0.55)" opacity="0.45"/></svg>' },
+  { answer: "en haut",     complement: "", svg: '<svg viewBox="0 0 300 220"><use href="#poisson" transform="translate(95,0) scale(0.65)"/><use href="#herisson" transform="translate(75,70) scale(0.7)"/><use href="#tortue" transform="translate(80,140) scale(0.7)"/></svg>' },
+  { answer: "en bas",      complement: "", svg: '<svg viewBox="0 0 300 220"><use href="#herisson" transform="translate(75,0) scale(0.7)"/><use href="#tortue" transform="translate(80,60) scale(0.7)"/><use href="#poisson" transform="translate(95,145) scale(0.65)"/></svg>' }
+];
+
+const WORDS = ["sur","sous","au-dessus","en dessous","devant","derrière","dans","entre","à côté","en haut","en bas"];
+
+let order, current, score, locked, attempts, errors, wrongTries;
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  order = shuffle(SCENES.map((s, i) => i));
+  current = 0; score = 0; errors = [];
+  document.getElementById("quiz").classList.remove("hidden");
+  document.getElementById("end").classList.add("hidden");
+  showQuestion();
+}
+
+function showQuestion() {
+  locked = false;
+  attempts = 0;
+  wrongTries = [];
+  const scene = SCENES[order[current]];
+  document.getElementById("progress").textContent = "Question " + (current + 1) + " / " + SCENES.length;
+  document.getElementById("scene").innerHTML = scene.svg;
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("feedback").className = "feedback";
+  const phrase = document.getElementById("phrase");
+  phrase.innerHTML = 'Le poisson est <span class="blank" id="blank">………</span>' + (scene.complement ? " " + scene.complement : "");
+
+  const container = document.getElementById("words");
+  container.innerHTML = "";
+  WORDS.forEach(word => {
+    const btn = document.createElement("button");
+    btn.textContent = word;
+    btn.onclick = () => answer(btn, word, scene.answer);
+    container.appendChild(btn);
+  });
+}
+
+function answer(btn, word, correct) {
+  if (locked) return;
+  const fb = document.getElementById("feedback");
+  if (word === correct) {
+    locked = true;
+    btn.classList.add("correct");
+    document.querySelectorAll("#words button").forEach(b => b.disabled = true);
+    const points = attempts === 0 ? 3 : (attempts === 1 ? 2 : 1);
+    score += points;
+    document.getElementById("blank").textContent = " " + correct + " ";
+    document.getElementById("blank").classList.add("filled");
+    fb.textContent = "✅ Bravo ! C'est « " + correct + " » ! (+" + points + " point" + (points > 1 ? "s" : "") + ")";
+    fb.className = "feedback ok";
+    if (attempts > 0) errors.push({ scene: SCENES[order[current]], misses: wrongTries.slice(), solved: true });
+    setTimeout(nextQuestion, 1400);
+  } else {
+    attempts++;
+    wrongTries.push(word);
+    if (attempts >= 3) {
+      locked = true;
+      errors.push({ scene: SCENES[order[current]], misses: wrongTries.slice(), solved: false });
+      document.querySelectorAll("#words button").forEach(b => {
+        b.disabled = true;
+        if (b.textContent === correct) b.classList.add("correct");
+      });
+      document.getElementById("blank").textContent = " " + correct + " ";
+      document.getElementById("blank").classList.add("filled");
+      fb.textContent = "La bonne réponse était « " + correct + " ». On passe à la suivante !";
+      fb.className = "feedback ko";
+      setTimeout(nextQuestion, 2200);
+    } else {
+      btn.classList.add("wrong");
+      btn.disabled = true;
+      fb.textContent = "❌ Essaie encore !";
+      fb.className = "feedback ko";
+    }
+  }
+}
+
+function nextQuestion() {
+  current++;
+  if (current < SCENES.length) {
+    showQuestion();
+  } else {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("progress").textContent = "";
+    const end = document.getElementById("end");
+    end.classList.remove("hidden");
+    document.getElementById("score").textContent = "🎉 Score : " + score + " / " + (SCENES.length * 3);
+    const starsEl = document.getElementById("stars");
+    const scoreMsg = document.getElementById("scoreMsg");
+    let stars, msg;
+    if (score >= 31) {
+      stars = "⭐⭐⭐";
+      msg = "Magnifique ! Tu maîtrises très bien les mots de position !";
+    } else if (score >= 25) {
+      stars = "⭐⭐★";
+      msg = "Très bien, continue comme ça !";
+    } else if (score >= 12) {
+      stars = "⭐★★";
+      msg = "Bien joué ! Tu peux rejouer pour progresser.";
+    } else {
+      stars = "";
+      msg = "Ce n'est pas grave ! Recommence, tu vas y arriver !";
+    }
+    starsEl.textContent = stars;
+    scoreMsg.textContent = msg;
+
+    // Rappel des erreurs pour revoir avec l'élève
+    const review = document.getElementById("review");
+    if (errors.length === 0) {
+      review.innerHTML = '<h2>🏆 Sans faute ! Aucune erreur à revoir.</h2>';
+    } else {
+      let html = '<h2>📖 À revoir : les questions où tu as hésité</h2>';
+      errors.forEach(e => {
+        const misses = e.misses.length ? '<span class="misses">Tu as essayé : ' + e.misses.join(", ") + '.</span> ' : '';
+        html += '<div class="review-item' + (e.solved ? ' ok' : '') + '">'
+              + '<div class="thumb">' + e.scene.svg + '</div>'
+              + '<div class="txt">' + misses
+              + 'La bonne réponse : le poisson est <b>' + e.scene.answer + '</b>'
+              + (e.scene.complement ? ' ' + e.scene.complement : '') + '</div></div>';
+      });
+      review.innerHTML = html;
+    }
+  }
+}
+
+document.getElementById("replay").onclick = startGame;
+startGame();
+</script>
+</body>
+</html>
