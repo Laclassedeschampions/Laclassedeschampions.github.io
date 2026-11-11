@@ -67,6 +67,16 @@
   .message{text-align:center; font-size:1.4rem; line-height:1.5; margin:0 auto; max-width:560px}
   .confetti{position:fixed; top:-40px; font-size:2rem; pointer-events:none; animation:fall linear forwards; z-index:50}
   @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+  .recap{margin:24px auto 0; max-width:620px; background:#fff8dc; border:4px dashed var(--orange); border-radius:24px; padding:16px 18px}
+  .recap h2{margin:0 0 4px; text-align:center; font-size:1.4rem; color:var(--orange)}
+  .recap .recap-sub{text-align:center; margin:0 0 12px; font-size:1.05rem}
+  .recap-item{background:#fff; border-radius:16px; padding:12px 14px; margin-bottom:10px; font-size:1.3rem; line-height:1.7; box-shadow:0 2px 0 #f0e2b6}
+  .recap-item .nb{display:inline-block; background:var(--violet); color:#fff; border-radius:50%; width:1.6em; height:1.6em; line-height:1.6em; text-align:center; font-size:.85rem; margin-right:8px; vertical-align:middle}
+  .recap-item .bon{background:var(--vert); color:#fff; border-radius:10px; padding:1px 8px; font-weight:bold}
+  .recap-item .mauvais{background:#ffd9d9; color:#c0392b; border-radius:10px; padding:1px 8px; text-decoration:line-through}
+  .recap-item .legende{display:block; font-size:.95rem; color:#7a6fb0; margin-top:2px}
+  .recap.parfait{border-color:var(--vert); background:#e9fbf0}
+  .recap.parfait h2{color:#1e9e55}
   @media (max-width:520px){
     h1{font-size:1.6rem} .sentence{font-size:1.45rem} .punct{font-size:1.45rem} .word{padding:2px 8px}
   }
@@ -110,6 +120,7 @@
     <div class="stars" id="finStars"></div>
     <div class="score" id="finScore"></div>
     <p class="message" id="finMessage"></p>
+    <div class="recap" id="recap"></div>
     <button class="btn" id="btnRestart">🔄 Recommencer avec de nouvelles phrases</button>
   </section>
 
@@ -225,11 +236,11 @@ function montrer(id){
 }
 
 /* ---------- État du jeu ---------- */
-let questions = [], index = 0, score = 0, verrou = false;
+let questions = [], index = 0, score = 0, verrou = false, erreurs = [];
 
 function demarrer(){
   questions = melanger(PHRASES).slice(0, NB_QUESTIONS);
-  index = 0; score = 0;
+  index = 0; score = 0; erreurs = [];
   montrer("jeu");
   afficherQuestion();
 }
@@ -278,6 +289,10 @@ function repondre(bouton){
   } else {
     bouton.classList.add("wrong");
     bonVerbe.classList.add("reveal");
+    erreurs.push({
+      phrase: questions[index],
+      choisi: [...document.querySelectorAll(".word")].indexOf(bouton)
+    });
     fb.innerHTML = "Presque ! 😊 Le verbe était « <b>" + bonVerbe.textContent + "</b> ». Il dit ce que l'on fait.";
     fb.classList.add("ko");
   }
@@ -317,7 +332,54 @@ function terminer(){
   $("finEmoji").textContent = emoji;
   $("finStars").textContent = "⭐".repeat(nbEtoiles) + "☆".repeat(3-nbEtoiles);
   $("finMessage").innerHTML = msg + "<br><b>Envie de rejouer avec de nouvelles phrases ?</b>";
+  afficherRecap();
   if(score >= 8) confettis();
+}
+
+function afficherRecap(){
+  const zone = $("recap");
+  zone.innerHTML = "";
+  zone.classList.toggle("parfait", erreurs.length === 0);
+  const titre = document.createElement("h2");
+  const sous = document.createElement("p");
+  sous.className = "recap-sub";
+  zone.appendChild(titre);
+  zone.appendChild(sous);
+  if(erreurs.length === 0){
+    titre.textContent = "✅ Aucune erreur !";
+    sous.textContent = "Tu as trouvé tous les verbes. Bravo, quel travail !";
+    return;
+  }
+  titre.textContent = "📝 Les phrases à revoir (" + erreurs.length + ")";
+  sous.textContent = "Regarde bien : le verbe est en vert, ta réponse est en rouge.";
+  erreurs.forEach((e, n) => {
+    const item = document.createElement("div");
+    item.className = "recap-item";
+    const nb = document.createElement("span");
+    nb.className = "nb";
+    nb.textContent = n + 1;
+    item.appendChild(nb);
+    let compteMot = 0;
+    decouper(e.phrase).forEach(t => {
+      if(t.mot){
+        const s = document.createElement("span");
+        s.textContent = t.texte;
+        if(t.verbe) s.className = "bon";
+        else if(compteMot === e.choisi) s.className = "mauvais";
+        compteMot++;
+        item.appendChild(s);
+      } else {
+        item.appendChild(document.createTextNode(t.texte));
+      }
+      item.appendChild(document.createTextNode(" "));
+    });
+    const leg = document.createElement("span");
+    leg.className = "legende";
+    const verbe = decouper(e.phrase).find(t => t.verbe).texte;
+    leg.textContent = "Le verbe était « " + verbe + " » : il dit ce que l'on fait.";
+    item.appendChild(leg);
+    zone.appendChild(item);
+  });
 }
 
 function confettis(){
