@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le futur, c'est parti !</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #ffd86b 0%, #ff9ecb 35%, #8fd3ff 70%, #a6f0c6 100%);
+    background-attachment: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    color: #2b2d42;
+  }
+  .card {
+    width: 100%;
+    max-width: 760px;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 12px 0 rgba(0,0,0,0.12), 0 20px 40px rgba(0,0,0,0.15);
+    padding: 28px 26px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 2.2rem;
+    color: #ff5d8f;
+    text-shadow: 3px 3px 0 #ffe066;
+  }
+  h2 { margin: 0 0 10px; color: #3a86ff; }
+  .subtitle { font-size: 1.15rem; margin-bottom: 18px; }
+  .big-emoji { font-size: 4rem; margin: 4px 0; }
+  .btn {
+    font-family: inherit;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 34px;
+    margin: 8px 6px 0;
+    cursor: pointer;
+    color: #fff;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+  .btn-start { background: #06d6a0; }
+  .btn-check { background: #3a86ff; }
+  .btn-next  { background: #ff8c42; }
+  .btn-help  { background: #9b5de5; font-size: 1rem; padding: 8px 20px; }
+  .hidden { display: none !important; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: bold; margin-bottom: 8px; font-size: 1.05rem;
+  }
+  .badge-count { background: #ffe066; border-radius: 999px; padding: 6px 16px; }
+  .badge-score { background: #c7f9cc; border-radius: 999px; padding: 6px 16px; }
+  .progress {
+    height: 18px; background: #eee; border-radius: 999px; overflow: hidden; margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #ff5d8f, #ffbe0b, #06d6a0, #3a86ff);
+    transition: width .4s;
+  }
+  .q-emoji { font-size: 3.2rem; }
+  .sentence {
+    font-size: 1.7rem;
+    line-height: 2.4;
+    margin: 6px 0 14px;
+  }
+  .sentence input {
+    font-family: inherit;
+    font-size: 1.6rem;
+    width: 11ch;
+    min-width: 150px;
+    text-align: center;
+    padding: 4px 10px;
+    border: 4px dashed #3a86ff;
+    border-radius: 14px;
+    outline: none;
+    background: #eef6ff;
+    color: #2b2d42;
+  }
+  .sentence input:focus { border-style: solid; background: #fff; border-color: #ff5d8f; }
+  .sentence input:disabled { opacity: 1; }
+  .verb {
+    display: inline-block;
+    background: #ff5d8f;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 14px;
+    padding: 0 14px;
+    margin: 0 6px;
+    font-size: 1.4rem;
+  }
+  .feedback {
+    min-height: 72px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin: 6px 0;
+    border-radius: 18px;
+    padding: 10px 14px;
+  }
+  .feedback.ok { background: #d8f9e4; color: #0a8f4f; }
+  .feedback.ko { background: #ffe3e3; color: #c1121f; }
+  .feedback.almost { background: #fff3cd; color: #a15c00; }
+  .help-box {
+    background: #f3e8ff; border-radius: 18px; padding: 12px 16px; margin-top: 14px;
+    font-size: 1.05rem; text-align: left;
+  }
+  .help-box b { color: #9b5de5; }
+
+  .final-score {
+    font-size: 4.5rem; font-weight: bold; color: #ff5d8f;
+    text-shadow: 4px 4px 0 #ffe066;
+    margin: 6px 0;
+  }
+  .stars { font-size: 2.2rem; letter-spacing: 4px; margin-bottom: 6px; }
+  .message { font-size: 1.3rem; margin-bottom: 12px; }
+  .review {
+    text-align: left; background: #fff8e1; border-radius: 18px;
+    padding: 10px 18px; margin-top: 16px; font-size: 1.05rem;
+  }
+  .review h3 { margin: 6px 0; color: #ff8c42; }
+  .review li { margin: 6px 0; }
+  .review .good { color: #0a8f4f; font-weight: bold; }
+
+  .bounce { animation: bounce .7s ease; }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    30% { transform: translateY(-18px) scale(1.15); }
+    60% { transform: translateY(0); }
+  }
+  .shake { animation: shake .4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .confetti {
+    position: absolute; top: -20px; font-size: 1.6rem; pointer-events: none;
+    animation: fall 2.4s linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(520px) rotate(360deg); opacity: 0; } }
+
+  /* ---------- Clavier à l'écran ---------- */
+  .keyboard {
+    margin: 10px auto 4px;
+    padding: 12px 8px 8px;
+    background: #e8f1ff;
+    border-radius: 22px;
+    border: 3px solid #b9d4ff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .kb-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .key {
+    font-family: inherit;
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-width: 52px;
+    height: 56px;
+    flex: 1 1 0;
+    max-width: 64px;
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+  .key.c0 { background: #3a86ff; }
+  .key.c1 { background: #06d6a0; }
+  .key.c2 { background: #ff8c42; }
+  .key.accent { background: #9b5de5; }
+  .key.back { background: #ff5d8f; max-width: 110px; flex: 1.6 1 0; font-size: 1.3rem; }
+  .keyboard.disabled .key { opacity: .45; pointer-events: none; }
+
+  @media (max-width: 520px) {
+    .key { min-width: 0; height: 48px; font-size: 1.25rem; }
+    .kb-row { gap: 4px; }
+    h1 { font-size: 1.7rem; }
+    .sentence { font-size: 1.3rem; }
+    .sentence input { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+
+  <!-- ÉCRAN D'ACCUEIL -->
+  <section id="screen-start">
+    <div class="big-emoji">🚀🦊🍎</div>
+    <h1>Le futur, c'est parti !</h1>
+    <p class="subtitle">
+      Conjugue le verbe au <b>futur simple</b> avec le bon sujet.<br>
+      15 questions t'attendent. Prêt(e) ?
+    </p>
+    <button class="btn btn-start" id="btn-start">C'est parti ! 🎉</button>
+  </section>
+
+  <!-- ÉCRAN DE QUESTION -->
+  <section id="screen-quiz" class="hidden">
+    <div class="top-bar">
+      <span class="badge-count" id="count">Question 1 / 15</span>
+      <span class="badge-score" id="score">⭐ 0</span>
+    </div>
+    <div class="progress"><div class="progress-fill" id="progress"></div></div>
+    <div class="q-emoji" id="q-emoji">📚</div>
+    <div class="sentence" id="sentence"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="keyboard" id="keyboard" aria-label="Clavier"></div>
+    <div>
+      <button class="btn btn-check" id="btn-check">Valider ✔️</button>
+      <button class="btn btn-next hidden" id="btn-next">Suivant ➡️</button>
+    </div>
+    <button class="btn btn-help" id="btn-help">💡 Aide : les terminaisons</button>
+    <div class="help-box hidden" id="help-box">
+      <b>Au futur</b>, on écrit l'<b>infinitif</b> du verbe + la terminaison :<br>
+      je → <b>-ai</b> &nbsp; tu → <b>-as</b> &nbsp; il / elle / on → <b>-a</b><br>
+      nous → <b>-ons</b> &nbsp; vous → <b>-ez</b> &nbsp; ils / elles → <b>-ont</b><br>
+      Exemples : je chanter<b>ai</b>, nous finir<b>ons</b>.
+    </div>
+  </section>
+
+  <!-- ÉCRAN FINAL -->
+  <section id="screen-end" class="hidden">
+    <h2>Quiz terminé !</h2>
+    <div class="stars" id="end-stars"></div>
+    <div class="final-score" id="end-score"></div>
+    <div class="message" id="end-message"></div>
+    <button class="btn btn-start" id="btn-restart">Recommencer 🔄</button>
+    <div class="review hidden" id="review"></div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   BANQUE DE 60 PHRASES
+   t : phrase avec ___ à la place du verbe
+   v : verbe à l'infinitif
+   a : réponse attendue
+   e : emoji
+   ============================================================ */
+const BANK = [
+  // La vie à l'école
+  { t: "Demain, les élèves ___ leurs cartables.", v: "ranger", a: "rangeront", e: "🎒" },
+  { t: "Bientôt, je ___ mon dessin avec des feutres.", v: "colorier", a: "colorierai", e: "🖍️" },
+  { t: "Nous ___ la maîtresse en silence.", v: "écouter", a: "écouterons", e: "👩‍🏫" },
+  { t: "Tu ___ ton exercice avant la récréation.", v: "finir", a: "finiras", e: "✏️" },
+
+  // Le déroulement de la journée
+  { t: "Demain matin, Léa ___ à l'école à huit heures.", v: "arriver", a: "arrivera", e: "🏫" },
+  { t: "Vous ___ la classe à seize heures trente.", v: "finir", a: "finirez", e: "🔔" },
+  { t: "Ce soir, nous ___ à la maison à pied.", v: "rentrer", a: "rentrerons", e: "🚶" },
+  { t: "À midi, les enfants ___ à la cantine.", v: "déjeuner", a: "déjeuneront", e: "🍽️" },
+
+  // Les animaux de la ferme
+  { t: "La vache ___ l'herbe du pré.", v: "brouter", a: "broutera", e: "🐄" },
+  { t: "Les poules ___ des graines dans la cour.", v: "picorer", a: "picoreront", e: "🐔" },
+  { t: "Le fermier ___ les cochons.", v: "nourrir", a: "nourrira", e: "🐷" },
+  { t: "Demain, le coq ___ au lever du soleil.", v: "chanter", a: "chantera", e: "🐓" },
+
+  // Les repas
+  { t: "Nous ___ un bon gâteau au chocolat.", v: "déguster", a: "dégusterons", e: "🍰" },
+  { t: "Tu ___ la soupe de maman.", v: "savourer", a: "savoureras", e: "🍲" },
+  { t: "Les invités ___ leur assiette.", v: "finir", a: "finiront", e: "🍝" },
+  { t: "Vous ___ la tarte avec vos amis.", v: "partager", a: "partagerez", e: "🥧" },
+
+  // Les actions à la maison
+  { t: "Demain matin, je me ___ les mains dans la salle de bain.", v: "laver", a: "laverai", e: "🛁" },
+  { t: "Ce soir, tu te ___ les dents avant de dormir.", v: "brosser", a: "brosseras", e: "🪥" },
+  { t: "Papa ___ le repas dans la cuisine.", v: "préparer", a: "préparera", e: "🍳" },
+  { t: "Ce soir, nous ___ un film dans le salon.", v: "regarder", a: "regarderons", e: "📺" },
+  { t: "Dimanche, vous ___ des crêpes dans le salon.", v: "manger", a: "mangerez", e: "🥞" },
+  { t: "Demain, tu te ___ à sept heures.", v: "réveiller", a: "réveilleras", e: "⏰" },
+
+  // Les fruits et légumes
+  { t: "Je ___ les carottes pour la soupe.", v: "éplucher", a: "éplucherai", e: "🥕" },
+  { t: "Les enfants ___ des pommes dans le verger.", v: "ramasser", a: "ramasseront", e: "🍎" },
+  { t: "Tu ___ les tomates avant de les couper.", v: "laver", a: "laveras", e: "🍅" },
+  { t: "Cet été, les fruits ___ au soleil.", v: "grossir", a: "grossiront", e: "🍑" },
+
+  // Les saisons
+  { t: "En automne, les feuilles ___ dans les arbres.", v: "rougir", a: "rougiront", e: "🍂" },
+  { t: "En hiver, la neige ___ les montagnes.", v: "blanchir", a: "blanchira", e: "❄️" },
+  { t: "En été, nous ___ dans la mer.", v: "nager", a: "nagerons", e: "🏖️" },
+  { t: "Cet hiver, je ___ sur le lac gelé.", v: "patiner", a: "patinerai", e: "⛸️" },
+
+  // Les vêtements
+  { t: "Demain, je ___ mon manteau rouge.", v: "porter", a: "porterai", e: "🧥" },
+  { t: "Tu ___ ton pull préféré.", v: "choisir", a: "choisiras", e: "🧶" },
+  { t: "Vous ___ vos bottes de pluie.", v: "enfiler", a: "enfilerez", e: "👢" },
+  { t: "Les élèves ___ leur veste au porte-manteau.", v: "accrocher", a: "accrocheront", e: "🧥" },
+
+  // Les animaux de la forêt et de la savane
+  { t: "Le renard ___ sa proie dans la forêt.", v: "guetter", a: "guettera", e: "🦊" },
+  { t: "Les écureuils ___ dans le grand chêne.", v: "grimper", a: "grimperont", e: "🐿️" },
+  { t: "Le lion ___ dans la savane.", v: "rugir", a: "rugira", e: "🦁" },
+  { t: "Les éléphants ___ la rivière.", v: "traverser", a: "traverseront", e: "🐘" },
+  { t: "Les girafes ___ les feuilles de l'acacia.", v: "manger", a: "mangeront", e: "🦒" },
+
+  // Les activités de cour de récréation
+  { t: "Nous ___ aux billes dans la cour.", v: "jouer", a: "jouerons", e: "🔮" },
+  { t: "Tu ___ à la corde à sauter.", v: "sauter", a: "sauteras", e: "🪢" },
+  { t: "Les filles ___ à la craie sur le sol.", v: "dessiner", a: "dessineront", e: "🎨" },
+  { t: "Vous ___ un jeu pour la récréation.", v: "choisir", a: "choisirez", e: "🎲" },
+
+  // Le sport
+  { t: "Notre équipe ___ le match.", v: "gagner", a: "gagnera", e: "🏆" },
+  { t: "Je ___ mon saut en longueur.", v: "réussir", a: "réussirai", e: "🤸" },
+  { t: "Vous ___ la ligne d'arrivée.", v: "franchir", a: "franchirez", e: "🏁" },
+
+  // La vie de classe
+  { t: "Le maître ___ les cahiers.", v: "distribuer", a: "distribuera", e: "📓" },
+  { t: "Tu ___ ta poésie devant la classe.", v: "réciter", a: "réciteras", e: "🎤" },
+  { t: "Les élèves ___ la dictée.", v: "réussir", a: "réussiront", e: "📝" },
+
+  // Les repères spatiaux
+  { t: "Le chat ___ sur la table de la cuisine.", v: "sauter", a: "sautera", e: "🐱" },
+  { t: "Les souris se ___ sous le lit.", v: "cacher", a: "cacheront", e: "🐭" },
+  { t: "Nous ___ le vélo devant l'école.", v: "garer", a: "garerons", e: "🚲" },
+  { t: "Vous ___ un rosier derrière la maison.", v: "planter", a: "planterez", e: "🌹" },
+  { t: "Les oiseaux ___ au-dessus de la forêt.", v: "voler", a: "voleront", e: "🐦" },
+  { t: "Je ___ mon sac en dessous du banc.", v: "déposer", a: "déposerai", e: "👜" },
+  { t: "Tu ___ ta chaise à côté de la mienne.", v: "placer", a: "placeras", e: "🪑" },
+  { t: "Maman ___ les assiettes dans le placard.", v: "poser", a: "posera", e: "🍽️" },
+  { t: "Nous ___ le livre entre les deux cahiers.", v: "glisser", a: "glisserons", e: "📚" },
+  { t: "Le ballon ___ en bas de la colline.", v: "rouler", a: "roulera", e: "⚽" },
+  { t: "Les alpinistes ___ en haut de la montagne.", v: "arriver", a: "arriveront", e: "🏔️" }
+];
+
+const NB_QUESTIONS = 15;
+const CONFETTI = ["🎉","⭐","🌈","🎈","✨","🍀","🦄"];
+
+let questions = [];
+let index = 0;
+let score = 0;
+let answered = false;
+let mistakes = [];
+
+const $ = id => document.getElementById(id);
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalize(s) {
+  return s.trim().toLowerCase().replace(/[’`´]/g, "'").replace(/\s+/g, " ");
+}
+function stripAccents(s) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function show(id) {
+  ["screen-start", "screen-quiz", "screen-end"].forEach(s => $(s).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+}
+
+function startQuiz() {
+  questions = shuffle(BANK).slice(0, NB_QUESTIONS);
+  index = 0;
+  score = 0;
+  mistakes = [];
+  show("screen-quiz");
+  showQuestion();
+}
+
+function fullSentence(q, word) {
+  return q.t.replace("___", word);
+}
+
+function showQuestion() {
+  const q = questions[index];
+  answered = false;
+  $("count").textContent = "Question " + (index + 1) + " / " + NB_QUESTIONS;
+  $("score").textContent = "⭐ " + score;
+  $("progress").style.width = (index / NB_QUESTIONS * 100) + "%";
+  $("q-emoji").textContent = q.e;
+  $("help-box").classList.add("hidden");
+
+  const box = $("sentence");
+  box.textContent = "";
+  const parts = q.t.split("___");
+  box.appendChild(document.createTextNode(parts[0]));
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = "answer";
+  input.autocomplete = "off";
+  input.autocapitalize = "none";
+  input.spellcheck = false;
+  input.setAttribute("aria-label", "Ta réponse");
+  input.setAttribute("inputmode", "none"); // évite le clavier système sur tablette
+  setKeyboardEnabled(true);
+  box.appendChild(input);
+
+  const verb = document.createElement("span");
+  verb.className = "verb";
+  verb.textContent = q.v;
+  box.appendChild(verb);
+
+  box.appendChild(document.createTextNode(parts[1]));
+
+  $("feedback").textContent = "";
+  $("feedback").className = "feedback";
+  $("btn-check").classList.remove("hidden");
+  $("btn-next").classList.add("hidden");
+  input.focus();
+}
+
+function launchConfetti() {
+  const card = $("card");
+  for (let i = 0; i < 14; i++) {
+    const c = document.createElement("span");
+    c.className = "confetti";
+    c.textContent = CONFETTI[Math.floor(Math.random() * CONFETTI.length)];
+    c.style.left = Math.random() * 95 + "%";
+    c.style.animationDelay = (Math.random() * 0.4) + "s";
+    card.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+function checkAnswer() {
+  if (answered) return;
+  const q = questions[index];
+  const input = $("answer");
+  const given = normalize(input.value);
+  if (given === "") {
+    input.focus();
+    return;
+  }
+  answered = true;
+  input.disabled = true;
+  setKeyboardEnabled(false);
+  const expected = normalize(q.a);
+  const fb = $("feedback");
+
+  if (given === expected) {
+    score++;
+    fb.className = "feedback ok bounce";
+    fb.textContent = "🎉 Bravo ! " + fullSentence(q, q.a);
+    launchConfetti();
+  } else if (stripAccents(given) === stripAccents(expected)) {
+    fb.className = "feedback almost shake";
+    fb.textContent = "😮 Presque ! Fais attention aux accents. Il fallait écrire : " + q.a;
+    mistakes.push(q);
+  } else {
+    fb.className = "feedback ko shake";
+    fb.textContent = "🤔 Pas tout à fait. La bonne réponse est : " + q.a +
+                     " (" + fullSentence(q, q.a) + ")";
+    mistakes.push(q);
+  }
+  $("score").textContent = "⭐ " + score;
+  $("btn-check").classList.add("hidden");
+  $("btn-next").classList.remove("hidden");
+  $("btn-next").textContent = (index === NB_QUESTIONS - 1) ? "Voir mon score 🏁" : "Suivant ➡️";
+  $("btn-next").focus();
+}
+
+function nextQuestion() {
+  index++;
+  if (index >= NB_QUESTIONS) {
+    endQuiz();
+  } else {
+    showQuestion();
+  }
+}
+
+function endQuiz() {
+  $("progress").style.width = "100%";
+  show("screen-end");
+  $("end-score").textContent = score + " / " + NB_QUESTIONS;
+
+  const nbStars = score >= 14 ? 3 : score >= 10 ? 2 : score >= 5 ? 1 : 0;
+  $("end-stars").textContent = "⭐".repeat(nbStars) + "☆".repeat(3 - nbStars);
+
+  let msg;
+  if (score === NB_QUESTIONS) {
+    msg = "🏆 PARFAIT ! Tu es un(e) champion(ne) du futur ! Quel travail incroyable !";
+  } else if (score >= 12) {
+    msg = "🌟 Bravo ! Tu maîtrises très bien le futur. Encore un petit effort pour le sans-faute !";
+  } else if (score >= 8) {
+    msg = "👍 Bien joué ! Tu progresses. Avec un nouvel essai, tu feras encore mieux !";
+  } else {
+    msg = "💪 Courage ! Chaque erreur t'aide à apprendre. Relis l'aide et retente ta chance, tu vas y arriver !";
+  }
+  $("end-message").textContent = msg + " Tu veux recommencer avec de nouvelles phrases ?";
+
+  const review = $("review");
+  review.textContent = "";
+  if (mistakes.length > 0) {
+    review.classList.remove("hidden");
+    const h = document.createElement("h3");
+    h.textContent = "📖 À revoir :";
+    review.appendChild(h);
+    const ul = document.createElement("ul");
+    mistakes.forEach(q => {
+      const li = document.createElement("li");
+      const strong = document.createElement("span");
+      strong.className = "good";
+      strong.textContent = q.a;
+      li.appendChild(document.createTextNode(q.e + " " + q.v + " → "));
+      li.appendChild(strong);
+      li.appendChild(document.createTextNode(" : " + fullSentence(q, q.a)));
+      ul.appendChild(li);
+    });
+    review.appendChild(ul);
+  } else {
+    review.classList.add("hidden");
+  }
+  if (score >= 10) launchConfetti();
+}
+
+/* ---------- Clavier à l'écran ---------- */
+const KB_ROWS = [
+  { keys: ["a","z","e","r","t","y","u","i","o","p"], cls: "c0" },
+  { keys: ["q","s","d","f","g","h","j","k","l","m"], cls: "c1" },
+  { keys: ["w","x","c","v","b","n"], cls: "c2", back: true },
+  { keys: ["é","è","ê","à","â","ù","û","î","ï","ô","ë","ç"], cls: "accent" }
+];
+
+function typeChar(ch) {
+  const inp = $("answer");
+  if (!inp || inp.disabled) return;
+  inp.focus();
+  const s = inp.selectionStart == null ? inp.value.length : inp.selectionStart;
+  const e = inp.selectionEnd == null ? s : inp.selectionEnd;
+  inp.setRangeText(ch, s, e, "end");
+}
+
+function backspace() {
+  const inp = $("answer");
+  if (!inp || inp.disabled) return;
+  inp.focus();
+  let s = inp.selectionStart == null ? inp.value.length : inp.selectionStart;
+  const e = inp.selectionEnd == null ? s : inp.selectionEnd;
+  if (s === e) {
+    if (s === 0) return;
+    s = s - 1;
+  }
+  inp.setRangeText("", s, e, "end");
+}
+
+function setKeyboardEnabled(on) {
+  $("keyboard").classList.toggle("disabled", !on);
+}
+
+function makeKey(label, cls, onPress) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "key " + cls;
+  b.textContent = label;
+  // pointerdown + preventDefault : le champ garde le focus et la tablette
+  // n'ouvre pas son propre clavier.
+  b.addEventListener("pointerdown", ev => {
+    ev.preventDefault();
+    onPress();
+  });
+  b.addEventListener("contextmenu", ev => ev.preventDefault());
+  return b;
+}
+
+function buildKeyboard() {
+  const kb = $("keyboard");
+  kb.textContent = "";
+  KB_ROWS.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "kb-row";
+    r.keys.forEach(k => row.appendChild(makeKey(k, r.cls, () => typeChar(k))));
+    if (r.back) row.appendChild(makeKey("⌫ Effacer", "back", backspace));
+    kb.appendChild(row);
+  });
+}
+buildKeyboard();
+
+$("btn-start").addEventListener("click", startQuiz);
+$("btn-restart").addEventListener("click", startQuiz);
+$("btn-check").addEventListener("click", checkAnswer);
+$("btn-next").addEventListener("click", nextQuestion);
+$("btn-help").addEventListener("click", () => $("help-box").classList.toggle("hidden"));
+
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  if ($("screen-quiz").classList.contains("hidden")) return;
+  e.preventDefault();
+  if (!answered) checkAnswer(); else nextQuestion();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Défi du Futur !</title>
+<style>
+  :root{
+    --bleu:#3b82f6; --violet:#8b5cf6; --rose:#ec4899; --jaune:#fbbf24;
+    --vert:#22c55e; --rouge:#ef4444; --orange:#fb923c; --fond:#fff7e6; --texte:#1f2a44;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh;
+    font-family:"Comic Sans MS","Trebuchet MS","Segoe UI",Arial,sans-serif;
+    color:var(--texte);
+    background:
+      radial-gradient(circle at 10% 15%, #ffe0f0 0 12%, transparent 13%),
+      radial-gradient(circle at 90% 20%, #d9ecff 0 14%, transparent 15%),
+      radial-gradient(circle at 15% 90%, #dcfce7 0 13%, transparent 14%),
+      radial-gradient(circle at 88% 85%, #fff0c2 0 15%, transparent 16%),
+      var(--fond);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .carte{
+    width:100%; max-width:760px; background:#fff; border-radius:28px; padding:26px 24px 30px;
+    box-shadow:0 10px 0 var(--violet), 0 18px 40px rgba(0,0,0,.18);
+    border:5px solid var(--violet); position:relative; overflow:hidden;
+  }
+  h1{margin:0 0 6px; text-align:center; font-size:clamp(28px,6vw,44px);
+     background:linear-gradient(90deg,var(--rose),var(--orange),var(--vert),var(--bleu),var(--violet));
+     -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .sous-titre{text-align:center; font-size:clamp(17px,3.5vw,21px); margin:0 0 18px}
+  .gros-emoji{font-size:clamp(60px,14vw,100px); text-align:center; animation:rebond 1.6s infinite}
+  @keyframes rebond{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .btn{
+    display:block; margin:18px auto 0; border:none; cursor:pointer; color:#fff; font:inherit;
+    font-size:clamp(20px,4vw,26px); font-weight:bold; padding:14px 34px; border-radius:50px;
+    background:linear-gradient(135deg,var(--rose),var(--orange));
+    box-shadow:0 6px 0 #b4245f; transition:transform .1s, box-shadow .1s;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:active{transform:translateY(5px); box-shadow:0 1px 0 #b4245f}
+  .btn.vert{background:linear-gradient(135deg,#34d399,var(--vert)); box-shadow:0 6px 0 #15803d}
+  .btn.vert:active{box-shadow:0 1px 0 #15803d}
+  .regle{background:#eef4ff; border-radius:18px; padding:14px 18px; font-size:clamp(16px,3.4vw,20px); line-height:1.5; margin:12px 0}
+  .regle b{color:var(--violet)}
+  .cache{display:none}
+
+  .haut{display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight:bold; font-size:clamp(15px,3.2vw,19px)}
+  .badge{background:var(--jaune); padding:6px 14px; border-radius:30px; color:#5b3a00}
+  .barre{height:20px; background:#e5e7eb; border-radius:20px; margin:10px 0 18px; overflow:hidden}
+  .barre div{height:100%; width:0; background:linear-gradient(90deg,var(--vert),var(--bleu),var(--violet)); border-radius:20px; transition:width .5s}
+  .theme{display:inline-block; background:var(--violet); color:#fff; padding:4px 14px; border-radius:20px; font-size:clamp(14px,3vw,17px); margin-bottom:8px}
+  .consigne{font-size:clamp(20px,4.4vw,28px); font-weight:bold; margin:6px 0 14px; line-height:1.3}
+  .consigne span{color:var(--rose)}
+  .choix{display:grid; gap:12px}
+  .rep{
+    text-align:left; font:inherit; font-size:clamp(18px,3.8vw,24px); line-height:1.35; cursor:pointer;
+    border:4px solid; border-radius:20px; padding:14px 16px; background:#fff; color:var(--texte);
+    display:flex; align-items:center; gap:14px; transition:transform .12s, background .2s;
+  }
+  .rep:nth-child(1){border-color:var(--bleu)} .rep:nth-child(1) .lettre{background:var(--bleu)}
+  .rep:nth-child(2){border-color:var(--orange)} .rep:nth-child(2) .lettre{background:var(--orange)}
+  .rep:nth-child(3){border-color:var(--rose)} .rep:nth-child(3) .lettre{background:var(--rose)}
+  .lettre{flex:none; width:40px; height:40px; border-radius:50%; color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:22px}
+  .rep:hover:not(:disabled){transform:scale(1.02); background:#fffbea}
+  .rep:disabled{cursor:default}
+  .rep.bon{background:#dcfce7; border-color:var(--vert)!important; animation:pop .4s}
+  .rep.mauvais{background:#fee2e2; border-color:var(--rouge)!important; animation:secoue .4s}
+  @keyframes pop{50%{transform:scale(1.04)}}
+  @keyframes secoue{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .retour{margin-top:16px; border-radius:18px; padding:14px 16px; font-size:clamp(17px,3.5vw,21px); line-height:1.4}
+  .retour.ok{background:#dcfce7; color:#14532d}
+  .retour.ko{background:#fff1d6; color:#7a3e00}
+
+  .score-grand{font-size:clamp(46px,11vw,80px); text-align:center; font-weight:bold; color:var(--violet); margin:0}
+  .etoiles{text-align:center; font-size:clamp(34px,8vw,56px); letter-spacing:6px; margin:6px 0}
+  .message{text-align:center; font-size:clamp(20px,4.2vw,26px); line-height:1.4; margin:10px 0}
+  #confettis{position:fixed; inset:0; pointer-events:none; z-index:50}
+  .record{text-align:center; color:#6b7280; font-size:16px; margin-top:12px}
+</style>
+</head>
+<body>
+<canvas id="confettis"></canvas>
+<main class="carte">
+
+  <!-- ÉCRAN D'ACCUEIL -->
+  <section id="accueil">
+    <div class="gros-emoji">🚀</div>
+    <h1>Le Défi du Futur !</h1>
+    <p class="sous-titre">Retrouve la phrase écrite au <b>futur</b> !</p>
+    <div class="regle">
+      🔎 <b>Astuce :</b> le futur parle de ce qui <b>va arriver</b> (demain, bientôt, ce soir…).<br>
+      On entend souvent <b>-rai, -ras, -ra, -rons, -rez, -ront</b> à la fin du verbe.<br>
+      Exemple : « Demain, je chanter<b>ai</b>. »
+    </div>
+    <p class="sous-titre">15 questions t'attendent. Prêt(e) ?</p>
+    <button class="btn" id="btnStart">C'est parti ! ▶</button>
+  </section>
+
+  <!-- ÉCRAN DE QUESTION -->
+  <section id="jeu" class="cache">
+    <div class="haut">
+      <span class="badge" id="compteur">Question 1 / 15</span>
+      <span class="badge" id="points">⭐ 0</span>
+    </div>
+    <div class="barre"><div id="progres"></div></div>
+    <span class="theme" id="theme"></span>
+    <p class="consigne">Quelle phrase est écrite au <span>futur</span> ?</p>
+    <div class="choix" id="choix"></div>
+    <div id="retour" class="retour cache"></div>
+    <button class="btn vert cache" id="btnSuite">Suivant ➜</button>
+  </section>
+
+  <!-- ÉCRAN FINAL -->
+  <section id="fin" class="cache">
+    <div class="gros-emoji" id="finEmoji">🏆</div>
+    <h1>Quiz terminé !</h1>
+    <p class="score-grand" id="finScore"></p>
+    <div class="etoiles" id="finEtoiles"></div>
+    <p class="message" id="finMessage"></p>
+    <button class="btn" id="btnRejouer">🔄 Recommencer avec de nouvelles questions !</button>
+    <p class="record" id="record"></p>
+  </section>
+
+</main>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== BANQUE DE 60 QUESTIONS =====
+   [thème, emoji, phrase au FUTUR (bonne réponse), phrase fausse 1, phrase fausse 2] */
+var BANQUE = [
+ // La vie à l'école
+ ["La vie à l'école","🏫","Demain, nous visiterons la bibliothèque de l'école.","Aujourd'hui, nous visitons la bibliothèque de l'école.","Hier, nous avons visité la bibliothèque de l'école."],
+ ["La vie à l'école","🏫","Le directeur ouvrira le portail à huit heures.","Le directeur ouvre le portail à huit heures.","Le directeur ouvrait le portail à huit heures."],
+ ["La vie à l'école","🏫","Lundi prochain, les élèves de CE2 iront à la piscine.","Chaque lundi, les élèves de CE2 vont à la piscine.","Lundi dernier, les élèves de CE2 sont allés à la piscine."],
+ ["La vie à l'école","🏫","La directrice choisira le gagnant du concours de dessin.","La directrice choisit le gagnant du concours de dessin.","La directrice a choisi le gagnant du concours de dessin."],
+ ["La vie à l'école","🏫","Les élèves de CM2 présenteront un spectacle à la fête de l'école.","Les élèves de CM2 présentent un spectacle à la fête de l'école.","Les élèves de CM2 présentaient un spectacle à la fête de l'école."],
+ // Le déroulement de la journée
+ ["Ma journée","⏰","Demain matin, je me réveillerai à sept heures.","Chaque matin, je me réveille à sept heures.","Hier matin, je me suis réveillé à sept heures."],
+ ["Ma journée","⏰","Ce soir, mon frère fera ses devoirs avant le dîner.","Tous les soirs, mon frère fait ses devoirs avant le dîner.","Hier soir, mon frère faisait ses devoirs avant le dîner."],
+ ["Ma journée","⏰","Après la classe, nous irons au parc.","Après la classe, nous allons au parc.","Après la classe, nous sommes allés au parc."],
+ ["Ma journée","⏰","Ce midi, Léa rentrera chez sa grand-mère.","Ce midi, Léa rentre chez sa grand-mère.","Hier midi, Léa est rentrée chez sa grand-mère."],
+ ["Ma journée","⏰","Demain soir, papa lira une histoire à ma petite sœur.","Tous les soirs, papa lit une histoire à ma petite sœur.","Hier soir, papa a lu une histoire à ma petite sœur."],
+ // Les animaux de la ferme
+ ["Les animaux de la ferme","🐄","Demain, le fermier donnera du foin aux vaches.","Chaque jour, le fermier donne du foin aux vaches.","Hier, le fermier a donné du foin aux vaches."],
+ ["Les animaux de la ferme","🐔","Les poules pondront beaucoup d'œufs au printemps.","Les poules pondent beaucoup d'œufs au printemps.","Les poules pondaient beaucoup d'œufs au printemps."],
+ ["Les animaux de la ferme","🐴","Le cheval courra dans le grand pré.","Le cheval court dans le grand pré.","Le cheval courait dans le grand pré."],
+ ["Les animaux de la ferme","🐑","Les moutons brouteront l'herbe de la colline.","Les moutons broutent l'herbe de la colline.","Les moutons broutaient l'herbe de la colline."],
+ ["Les animaux de la ferme","🐓","Le coq chantera au lever du soleil.","Le coq chante au lever du soleil.","Le coq a chanté au lever du soleil."],
+ // Les repas
+ ["Les repas","🍽️","Ce soir, nous mangerons une soupe de légumes.","Ce midi, nous mangeons une soupe de légumes.","Hier, nous avons mangé une soupe de légumes."],
+ ["Les repas","🎂","Demain, maman préparera un gâteau au chocolat.","Aujourd'hui, maman prépare un gâteau au chocolat.","Hier, maman a préparé un gâteau au chocolat."],
+ ["Les repas","🍝","Dimanche prochain, nous déjeunerons chez papi et mamie.","Chaque dimanche, nous déjeunons chez papi et mamie.","Dimanche dernier, nous avons déjeuné chez papi et mamie."],
+ ["Les repas","🥛","Au goûter, je boirai un verre de lait.","Au goûter, je bois un verre de lait.","Au goûter, j'ai bu un verre de lait."],
+ ["Les repas","🥞","Samedi, mon père cuisinera des crêpes.","Chaque samedi, mon père cuisine des crêpes.","Samedi dernier, mon père cuisinait des crêpes."],
+ // Les actions à la maison
+ ["À la maison","🏠","Demain, je me lèverai avant mon frère.","Chaque jour, je me lève avant mon frère.","Hier, je me suis levé avant mon frère."],
+ ["Dans la salle de bain","🛁","Ce soir, je me laverai les mains avec du savon.","Ce soir, je me lave les mains avec du savon.","Hier soir, je me lavais les mains avec du savon."],
+ ["Dans le salon","🛋️","Nous dînerons dans le salon ce soir.","Nous dînons dans le salon en ce moment.","Nous avons dîné dans le salon hier soir."],
+ ["Dans la cuisine","👩‍🍳","Maman préparera le repas dans la cuisine.","Maman prépare le repas dans la cuisine.","Maman préparait le repas dans la cuisine."],
+ ["À la maison","🧸","Demain, je rangerai ma chambre.","Aujourd'hui, je range ma chambre.","Hier, j'ai rangé ma chambre."],
+ ["Dans la salle de bain","🪥","Après le bain, il se brossera les dents.","Après le bain, il se brosse les dents.","Après le bain, il s'est brossé les dents."],
+ // Les fruits et légumes
+ ["Les fruits et légumes","🍎","Les pommes mûriront à l'automne.","Les pommes mûrissent à l'automne.","Les pommes mûrissaient à l'automne."],
+ ["Les fruits et légumes","🍅","Papi cueillera des tomates dans son potager.","Papi cueille des tomates dans son potager.","Papi a cueilli des tomates dans son potager."],
+ ["Les fruits et légumes","🥕","Nous planterons des carottes en mars.","Nous plantons des carottes en mars.","Nous avons planté des carottes en mars."],
+ ["Les fruits et légumes","🍓","Les fraises seront rouges et sucrées.","Les fraises sont rouges et sucrées.","Les fraises étaient rouges et sucrées."],
+ ["Les fruits et légumes","🥔","Demain, j'éplucherai les pommes de terre.","Aujourd'hui, j'épluche les pommes de terre.","Hier, j'ai épluché les pommes de terre."],
+ // Les saisons
+ ["Les saisons","❄️","L'hiver prochain, il neigera beaucoup.","En ce moment, il neige beaucoup.","L'hiver dernier, il a beaucoup neigé."],
+ ["Les saisons","🌸","Au printemps, les arbres auront de nouvelles feuilles.","Au printemps, les arbres ont de nouvelles feuilles.","Au printemps, les arbres avaient de nouvelles feuilles."],
+ ["Les saisons","☀️","En été, nous irons à la mer.","En été, nous allons à la mer.","L'été dernier, nous sommes allés à la mer."],
+ ["Les saisons","🍂","L'automne arrivera bientôt.","L'automne arrive en ce moment.","L'automne est arrivé hier."],
+ ["Les saisons","🐦","Les hirondelles reviendront au printemps.","Les hirondelles reviennent au printemps.","Les hirondelles sont revenues au printemps."],
+ // Les vêtements
+ ["Les vêtements","🧥","Demain, je mettrai mon manteau.","Aujourd'hui, je mets mon manteau.","Hier, j'ai mis mon manteau."],
+ ["Les vêtements","🧢","Demain, tu porteras ton bonnet rouge.","Aujourd'hui, tu portes ton bonnet rouge.","Hier, tu as porté ton bonnet rouge."],
+ ["Les vêtements","👗","Ma sœur achètera une robe pour la fête.","Ma sœur achète une robe pour la fête.","Ma sœur a acheté une robe pour la fête."],
+ ["Les vêtements","🥾","Quand il pleuvra, nous enfilerons nos bottes.","Quand il pleut, nous enfilons nos bottes.","Quand il pleuvait, nous enfilions nos bottes."],
+ ["Les vêtements","👕","Ce soir, Paul enfilera son pyjama.","Ce soir, Paul enfile son pyjama.","Hier soir, Paul a enfilé son pyjama."],
+ // Les animaux de la forêt
+ ["Les animaux de la forêt","🦊","Le renard se cachera dans les buissons.","Le renard se cache dans les buissons.","Le renard se cachait dans les buissons."],
+ ["Les animaux de la forêt","🐿️","Les écureuils ramasseront des noisettes.","Les écureuils ramassent des noisettes.","Les écureuils ont ramassé des noisettes."],
+ ["Les animaux de la forêt","🦉","Le hibou volera de nuit entre les arbres.","Le hibou vole de nuit entre les arbres.","Le hibou volait de nuit entre les arbres."],
+ ["Les animaux de la forêt","🦌","Les cerfs traverseront la forêt au lever du jour.","Les cerfs traversent la forêt au lever du jour.","Les cerfs ont traversé la forêt au lever du jour."],
+ ["Les animaux de la forêt","🐻","L'ours dormira dans sa grotte tout l'hiver.","L'ours dort dans sa grotte tout l'hiver.","L'ours a dormi dans sa grotte tout l'hiver."],
+ // Les animaux de la savane
+ ["Les animaux de la savane","🦁","Le lion rugira très fort.","Le lion rugit très fort.","Le lion a rugi très fort."],
+ ["Les animaux de la savane","🦒","Les girafes mangeront les feuilles des grands arbres.","Les girafes mangent les feuilles des grands arbres.","Les girafes mangeaient les feuilles des grands arbres."],
+ ["Les animaux de la savane","🐘","Les éléphants boiront à la rivière.","Les éléphants boivent à la rivière.","Les éléphants ont bu à la rivière."],
+ ["Les animaux de la savane","🦓","Les gazelles sauteront par-dessus les buissons.","Les gazelles sautent par-dessus les buissons.","Les gazelles ont sauté par-dessus les buissons."],
+ ["Les animaux de la savane","🐆","Le guépard attrapera sa proie.","Le guépard attrape sa proie.","Le guépard a attrapé sa proie."],
+ // La cour de récréation
+ ["La récréation","🛝","À la récréation, nous jouerons aux billes.","À la récréation, nous jouons aux billes.","À la récréation, nous avons joué aux billes."],
+ ["La récréation","🪢","Demain, Inès sautera à la corde.","Aujourd'hui, Inès saute à la corde.","Hier, Inès a sauté à la corde."],
+ ["La récréation","🏃","Les enfants joueront à chat perché.","Les enfants jouent à chat perché.","Les enfants jouaient à chat perché."],
+ ["La récréation","🔔","Quand la cloche sonnera, nous nous mettrons en rang.","Quand la cloche sonne, nous nous mettons en rang.","Quand la cloche a sonné, nous nous sommes mis en rang."],
+ // Le sport
+ ["Le sport","⚽","Samedi, mon équipe jouera au football.","Chaque samedi, mon équipe joue au football.","Samedi dernier, mon équipe a joué au football."],
+ ["Le sport","🏅","Demain, nous ferons une course de vitesse.","Aujourd'hui, nous faisons une course de vitesse.","Hier, nous avons fait une course de vitesse."],
+ ["Le sport","🏊","Camille nagera dans la grande piscine.","Camille nage dans la grande piscine.","Camille a nagé dans la grande piscine."],
+ // La vie de classe
+ ["La vie de classe","✏️","Demain, nous écrirons une dictée.","Aujourd'hui, nous écrivons une dictée.","Hier, nous avons écrit une dictée."],
+ ["La vie de classe","🎨","Le maître collera nos dessins sur le mur.","Le maître colle nos dessins sur le mur.","Le maître a collé nos dessins sur le mur."]
+];
+
+var NB = 15;
+var $ = function(id){return document.getElementById(id)};
+var session, idx, score, verrou;
+
+/* utilitaires */
+function melanger(t){
+  var a=t.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=a[i];a[i]=a[j];a[j]=x;}
+  return a;
+}
+function montrer(id){
+  ["accueil","jeu","fin"].forEach(function(s){$(s).classList.toggle("cache", s!==id);});
+}
+
+/* sons (WebAudio, aucun fichier externe) */
+var ctx=null;
+function bip(freqs,duree){
+  try{
+    if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+    var t=ctx.currentTime;
+    freqs.forEach(function(f,i){
+      var o=ctx.createOscillator(), g=ctx.createGain();
+      o.type="triangle"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.15,t+i*duree); g.gain.exponentialRampToValueAtTime(0.001,t+(i+1)*duree);
+      o.connect(g); g.connect(ctx.destination); o.start(t+i*duree); o.stop(t+(i+1)*duree);
+    });
+  }catch(e){}
+}
+
+/* déroulement */
+function demarrer(){
+  session = melanger(BANQUE).slice(0,NB);
+  idx=0; score=0;
+  montrer("jeu");
+  question();
+}
+
+function question(){
+  verrou=false;
+  var q=session[idx];
+  $("compteur").textContent="Question "+(idx+1)+" / "+NB;
+  $("points").textContent="⭐ "+score;
+  $("progres").style.width=(idx/NB*100)+"%";
+  $("theme").textContent=q[1]+" "+q[0];
+  $("retour").className="retour cache";
+  $("btnSuite").classList.add("cache");
+  var options=melanger([
+    {t:q[2],ok:true},{t:q[3],ok:false},{t:q[4],ok:false}
+  ]);
+  var zone=$("choix"); zone.innerHTML="";
+  options.forEach(function(o,i){
+    var b=document.createElement("button");
+    b.className="rep"; b.type="button";
+    var l=document.createElement("span"); l.className="lettre"; l.textContent="ABC".charAt(i);
+    var s=document.createElement("span"); s.textContent=o.t;
+    b.appendChild(l); b.appendChild(s);
+    b.addEventListener("click",function(){repondre(b,o.ok,q);});
+    zone.appendChild(b);
+    o.el=b;
+  });
+  zone._opts=options;
+}
+
+function repondre(bouton,ok,q){
+  if(verrou) return;
+  verrou=true;
+  var opts=$("choix")._opts;
+  opts.forEach(function(o){
+    o.el.disabled=true;
+    if(o.ok) o.el.classList.add("bon");
+  });
+  var r=$("retour");
+  if(ok){
+    score++;
+    $("points").textContent="⭐ "+score;
+    var bravo=["Bravo ! 🎉","Super ! 🌟","Excellent ! 👏","Génial ! 🚀","Bien joué ! 💪"];
+    r.className="retour ok";
+    r.textContent=bravo[Math.floor(Math.random()*bravo.length)]+" C'est bien du futur : on parle de quelque chose qui va arriver.";
+    bip([523,659,784],0.1);
+  }else{
+    bouton.classList.add("mauvais");
+    r.className="retour ko";
+    r.textContent="Oups, pas cette fois ! 😊 La bonne réponse est en vert : cette phrase parle de quelque chose qui va arriver. Tu feras mieux à la prochaine !";
+    bip([300,220],0.18);
+  }
+  $("btnSuite").textContent = (idx===NB-1) ? "Voir mon résultat 🏆" : "Suivant ➜";
+  $("btnSuite").classList.remove("cache");
+}
+
+function suite(){
+  idx++;
+  if(idx>=NB){ terminer(); } else { question(); }
+}
+
+function terminer(){
+  $("progres").style.width="100%";
+  montrer("fin");
+  $("finScore").textContent=score+" / "+NB;
+  var nbEtoiles = score>=14?3 : score>=10?2 : score>=6?1 : 0;
+  var e=""; for(var i=0;i<3;i++){ e += i<nbEtoiles ? "⭐" : "☆"; }
+  $("finEtoiles").textContent=e;
+  var emoji, msg;
+  if(score===NB){ emoji="🏆"; msg="PARFAIT ! 15 sur 15 ! Tu es un(e) champion(ne) du futur ! Tu veux essayer avec d'autres phrases ?"; }
+  else if(score>=12){ emoji="🎉"; msg="Bravo, quel beau score ! Tu maîtrises très bien le futur. Encore une partie pour viser le sans-faute ?"; }
+  else if(score>=8){ emoji="😄"; msg="Très bien ! Tu progresses vite. Avec une nouvelle partie, tu feras encore mieux !"; }
+  else { emoji="💪"; msg="Bravo d'avoir tout terminé ! Plus tu t'entraînes, plus tu deviens fort(e). Recommence : de nouvelles phrases t'attendent !"; }
+  $("finEmoji").textContent=emoji;
+  $("finMessage").textContent=msg;
+  var best=score;
+  try{
+    var old=parseInt(localStorage.getItem("futurMeilleur")||"0",10);
+    if(old>best) best=old;
+    localStorage.setItem("futurMeilleur",String(best));
+  }catch(e){}
+  $("record").textContent="🏅 Ton meilleur score : "+best+" / "+NB;
+  if(score>=10){ confettis(); bip([523,659,784,1047],0.14); }
+}
+
+/* confettis */
+function confettis(){
+  var c=$("confettis"), g=c.getContext("2d");
+  c.width=window.innerWidth; c.height=window.innerHeight;
+  var couleurs=["#ec4899","#fbbf24","#22c55e","#3b82f6","#8b5cf6","#fb923c"];
+  var p=[]; for(var i=0;i<160;i++){
+    p.push({x:Math.random()*c.width,y:-Math.random()*c.height*0.6,r:5+Math.random()*7,
+      c:couleurs[i%couleurs.length],vy:2+Math.random()*4,vx:-2+Math.random()*4,a:Math.random()*6});
+  }
+  var debut=Date.now();
+  (function boucle(){
+    g.clearRect(0,0,c.width,c.height);
+    p.forEach(function(q){
+      q.x+=q.vx; q.y+=q.vy; q.a+=0.15;
+      g.save(); g.translate(q.x,q.y); g.rotate(q.a);
+      g.fillStyle=q.c; g.fillRect(-q.r/2,-q.r/2,q.r,q.r*0.6); g.restore();
+    });
+    if(Date.now()-debut<4500) requestAnimationFrame(boucle);
+    else g.clearRect(0,0,c.width,c.height);
+  })();
+}
+
+$("btnStart").addEventListener("click",demarrer);
+$("btnSuite").addEventListener("click",suite);
+$("btnRejouer").addEventListener("click",demarrer);
+})();
+</script>
+</body>
+</html>
