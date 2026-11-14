@@ -75,6 +75,17 @@
   .msg { text-align: center; font-size: 1.4rem; margin: 10px 0; }
   .rules { background: #f3ebff; border-radius: 16px; padding: 12px 18px; margin: 12px 0; font-size: 1.05rem; }
   .rules li { margin: 4px 0; }
+  h2 { margin: 0 0 8px; font-size: 1.25rem; text-align: center; }
+  .review { background: #fff0f0; border: 3px solid #ffb3b3; border-radius: 16px; padding: 10px 14px; margin: 12px 0; }
+  .review h2 { color: #d63a3a; }
+  .review ul { list-style: none; margin: 0; padding: 0; }
+  .review li { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ffc9c9; font-size: 1.1rem; }
+  .review li:last-child { border-bottom: none; }
+  .review .em { font-size: 1.5rem; }
+  .review .wrong { color: #d63a3a; text-decoration: line-through; }
+  .review .right { color: #1a9d4e; font-weight: bold; }
+  .review .tip { width: 100%; font-size: .95rem; color: #6b5b95; }
+  .allgood { background: #e6ffed; border: 3px solid #3ecf6e; border-radius: 16px; padding: 10px; text-align: center; font-size: 1.2rem; margin: 12px 0; }
 
   .confetti { position: absolute; top: -20px; font-size: 1.6rem; pointer-events: none; animation: fall 1.8s linear forwards; z-index: 5; }
   @keyframes fall { to { transform: translateY(560px) rotate(360deg); opacity: 0; } }
@@ -133,6 +144,7 @@
     <div class="result-score"><span id="finalScore">0</span> / 15</div>
     <div class="stars" id="stars"></div>
     <div class="msg" id="finalMsg"></div>
+    <div id="reviewBox"></div>
     <button class="big-btn green" id="restartBtn">🔄 Recommencer avec de nouveaux mots</button>
   </section>
 </div>
@@ -286,7 +298,7 @@ const ACCENTS = "éèêàâçîïôùûœ".split("");
 const COLORS = ["#ff6b6b","#ff9f43","#feca57","#1dd1a1","#48dbfb","#54a0ff","#5f27cd","#ff6fb5"];
 const ALLOWED = new Set([...ROWS.flat(), ...ACCENTS, "-"]);
 
-let questions = [], idx = 0, score = 0, typed = "", locked = false;
+let questions = [], idx = 0, score = 0, typed = "", locked = false, missed = [];
 
 const $ = id => document.getElementById(id);
 const show = id => { ["home","quiz","end"].forEach(s => $(s).classList.toggle("hidden", s !== id)); };
@@ -345,8 +357,14 @@ function renderAnswer() { $("answer").textContent = typed; }
 
 /* ---------- DÉROULEMENT ---------- */
 function startQuiz() {
-  questions = shuffle(BANK).slice(0, TOTAL);
-  idx = 0; score = 0;
+  // 10 mots réguliers (s) + 5 mots qui se terminent par s, x, z (invariables), mélangés
+  const regs = BANK.filter(w => w[5] === "r");
+  const invs = BANK.filter(w => w[5] === "i");
+  questions = shuffle([
+    ...shuffle(regs).slice(0, 10),
+    ...shuffle(invs).slice(0, 5)
+  ]);
+  idx = 0; score = 0; missed = [];
   $("liveScore").textContent = 0;
   show("quiz");
   showQuestion();
@@ -395,6 +413,7 @@ function validate() {
     confetti();
   } else {
     ans.classList.add("ko");
+    missed.push({ emoji: q[0], sing: q[1], prefix: q[2], right: q[3], wrong: typed.trim(), type: q[5] });
     $("feedback").innerHTML = "❌ Presque ! La bonne réponse : <b>" + q[2] + " " + q[3] + "</b><br>" + rule;
   }
   // afficher uniquement le bouton « Suivant »
@@ -424,6 +443,23 @@ function endQuiz() {
   else if (score >= 5) msg = "💪 Bon début ! Avec un nouvel essai, tu vas progresser !";
   else msg = "🌱 Courage ! On apprend en s'entraînant. Rejoue, tu vas y arriver !";
   $("finalMsg").innerHTML = msg + "<br><br>Tu veux essayer de faire encore mieux ?";
+  const box = $("reviewBox");
+  if (missed.length === 0) {
+    box.innerHTML = '<div class="allgood">✅ Aucune erreur, quel sans-faute !</div>';
+  } else {
+    let html = '<div class="review"><h2>📚 Mes erreurs à retenir</h2><ul>';
+    missed.forEach(m => {
+      html += '<li><span class="em">' + m.emoji + '</span>' +
+        '<span>' + m.sing + ' ➜ </span>' +
+        '<span class="wrong">' + m.prefix + ' ' + m.wrong + '</span>' +
+        '<span class="right">' + m.prefix + ' ' + m.right + '</span>' +
+        '<span class="tip">' + (m.type === "i"
+          ? "Les mots qui se terminent par s, x ou z ne changent pas au pluriel."
+          : "On ajoute un s à la fin.") + '</span></li>';
+    });
+    html += '</ul></div>';
+    box.innerHTML = html;
+  }
   if (score >= 9) { for (let i = 0; i < 4; i++) setTimeout(confetti, i * 300); }
 }
 
