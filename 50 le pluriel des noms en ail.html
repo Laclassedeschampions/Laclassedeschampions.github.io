@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Défi du Pluriel – Niveau 5</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Comic Sans MS", "Trebuchet MS", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #ffb36b 0%, #ff8fa3 50%, #7fe0d0 100%);
+    display: flex; align-items: flex-start; justify-content: center; padding: 12px;
+    color: #3b2f63;
+  }
+  .card {
+    background: #fffdf7; width: 100%; max-width: 760px; border-radius: 28px; margin: auto;
+    padding: 22px 22px 26px; box-shadow: 0 12px 40px rgba(140,60,40,.3);
+    border: 5px solid #fff; position: relative; overflow: hidden;
+  }
+  h1 { margin: 0 0 6px; text-align: center; font-size: 2rem; color: #e8590c; }
+  h1 small { display: block; font-size: 1.1rem; color: #0ca678; }
+  h2 { margin: 0 0 8px; font-size: 1.25rem; text-align: center; }
+  .sub { text-align: center; margin: 0 0 14px; font-size: 1.1rem; }
+  .hidden { display: none !important; }
+
+  .big-btn {
+    display: block; margin: 16px auto 0; padding: 14px 34px; border: none; border-radius: 40px;
+    font-size: 1.4rem; font-family: inherit; font-weight: bold; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, #ff7a3d, #ff4f8b); box-shadow: 0 6px 0 #c23468;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c23468; }
+  .big-btn.green { background: linear-gradient(90deg, #3ecf6e, #1fa7a0); box-shadow: 0 6px 0 #167f7a; }
+
+  /* Règle */
+  .rule-main { background: #e6fcf5; border: 3px solid #20c997; border-radius: 18px; padding: 12px 18px; margin: 10px 0; text-align: center; font-size: 1.2rem; }
+  .rule-main .ex { font-size: 1.6rem; margin-top: 8px; }
+  .rule-main b.s { color: #d6336c; font-size: 1.3em; }
+  .rule-exc { background: #fff0d6; border: 3px dashed #ff9f43; border-radius: 18px; padding: 12px 18px; margin: 10px 0; }
+  .rule-exc .lead { text-align: center; font-size: 1.15rem; margin-bottom: 8px; }
+  .exc-list { list-style: none; margin: 0; padding: 0; }
+  .exc-list li {
+    display: flex; align-items: center; gap: 10px; padding: 6px 12px; margin: 5px 0;
+    border-radius: 12px; font-size: 1.3rem; background: #fff;
+  }
+  .exc-list li:nth-child(odd) { background: #fff8e6; }
+  .exc-list .em { font-size: 1.5rem; width: 2rem; text-align: center; }
+  .exc-list .sg { flex: 1; text-align: right; font-weight: bold; color: #2a7de1; }
+  .exc-list .ar { color: #ff5fa2; font-weight: bold; }
+  .exc-list .pl { flex: 1; font-weight: bold; color: #e8590c; }
+  .exc-list .pl b { color: #d6336c; font-size: 1.1em; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress { flex: 1; height: 18px; background: #eee; border-radius: 12px; overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg,#3ecf6e,#ffd23f,#ff7a3d); transition: width .4s; }
+  .counter { font-weight: bold; font-size: 1.05rem; white-space: nowrap; }
+  .scorebox { background: #ffe9a8; border-radius: 14px; padding: 4px 12px; font-weight: bold; }
+
+  .theme { display: inline-block; background: #d9f1ff; border-radius: 20px; padding: 3px 14px; font-size: .95rem; }
+  .theme-wrap { text-align: center; }
+  .emoji { font-size: 4.2rem; text-align: center; margin: 4px 0; animation: pop .5s; }
+  .question { text-align: center; font-size: 1.9rem; font-weight: bold; margin: 4px 0 10px; }
+  .question .sing { color: #2a7de1; }
+  .answerline { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .arrow { font-size: 1.8rem; color: #ff5fa2; }
+  .prefix { font-size: 1.9rem; font-weight: bold; color: #9b4fd1; }
+  .answer {
+    min-width: 200px; min-height: 58px; padding: 6px 16px; border: 4px dashed #ffb347; border-radius: 16px;
+    font-size: 2rem; font-weight: bold; letter-spacing: 2px; text-align: center; background: #fff8e1;
+  }
+  .answer.ok { border: 4px solid #2ecc71; background: #e6ffed; animation: pop .4s; }
+  .answer.ko { border: 4px solid #ff5a5a; background: #ffecec; animation: shake .4s; }
+  .cursor::after { content: "|"; animation: blink 1s infinite; color: #ff7a3d; }
+
+  .feedback { min-height: 64px; text-align: center; font-size: 1.15rem; margin: 6px 0; }
+  .feedback b { font-size: 1.3rem; }
+
+  .keyboard { display: flex; flex-direction: column; gap: 7px; align-items: center; margin-top: 4px; }
+  .row { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
+  .key {
+    width: min(9vw, 54px); height: 52px; border: none; border-radius: 12px; font-size: 1.5rem;
+    font-family: inherit; font-weight: bold; cursor: pointer; color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.25);
+  }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .key.accent { background: #a259e6 !important; }
+  .key.wide { width: auto; padding: 0 18px; font-size: 1.15rem; }
+  .key.del { background: #ff5a5a !important; }
+  .key.go { background: #2ecc71 !important; }
+  .keyboard.locked .key:not(.next) { opacity: .45; pointer-events: none; }
+
+  .result-score { font-size: 4rem; font-weight: bold; text-align: center; color: #e8590c; margin: 6px 0; }
+  .stars { font-size: 2.6rem; text-align: center; letter-spacing: 6px; }
+  .msg { text-align: center; font-size: 1.4rem; margin: 10px 0; }
+  .review { background: #fff0f0; border: 3px solid #ffb3b3; border-radius: 16px; padding: 10px 14px; margin: 12px 0; }
+  .review h2 { color: #d63a3a; }
+  .review ul { list-style: none; margin: 0; padding: 0; }
+  .review li { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ffc9c9; font-size: 1.1rem; }
+  .review li:last-child { border-bottom: none; }
+  .review .em { font-size: 1.5rem; }
+  .review .wrong { color: #d63a3a; text-decoration: line-through; }
+  .review .right { color: #1a9d4e; font-weight: bold; }
+  .review .tip { width: 100%; font-size: .95rem; color: #6b5b95; }
+  .allgood { background: #e6ffed; border: 3px solid #3ecf6e; border-radius: 16px; padding: 10px; text-align: center; font-size: 1.2rem; margin: 12px 0; }
+
+  .confetti { position: absolute; top: -20px; font-size: 1.6rem; pointer-events: none; animation: fall 1.8s linear forwards; z-index: 5; }
+  @keyframes fall { to { transform: translateY(560px) rotate(360deg); opacity: 0; } }
+  @keyframes pop { 0% { transform: scale(.5); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (max-width: 520px) {
+    h1 { font-size: 1.5rem; } .question, .prefix { font-size: 1.4rem; }
+    .answer { font-size: 1.5rem; min-width: 140px; } .key { height: 46px; font-size: 1.25rem; width: 8.6vw; }
+    .emoji { font-size: 3.2rem; } .exc-list li { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+
+  <!-- ACCUEIL : RÈGLE + EXCEPTIONS -->
+  <section id="home">
+    <h1>🌈 Le Défi du Pluriel 🌈<small>Niveau 5 : les noms en « ail »</small></h1>
+
+    <div class="rule-main">
+      <b>La règle :</b> les noms qui se terminent par <b>ail</b> prennent un <b class="s">s</b> au pluriel.
+      <div class="ex">un détail ➜ des détail<b class="s">s</b></div>
+    </div>
+
+    <div class="rule-exc">
+      <div class="lead">⚠️ <b>Attention aux 7 exceptions !</b><br>Ces noms changent <b>ail</b> en <b>aux</b> au pluriel :</div>
+      <ul class="exc-list" id="excList"></ul>
+    </div>
+
+    <p class="sub"><b>15 questions</b> t'attendent. Prêt(e) ?</p>
+    <button class="big-btn" id="startBtn">🚀 C'est parti !</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <span class="counter" id="counter">1 / 15</span>
+      <div class="progress"><div id="bar"></div></div>
+      <span class="scorebox">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="theme-wrap"><span class="theme" id="theme"></span></div>
+    <div class="emoji" id="emoji"></div>
+    <div class="question" id="question"></div>
+    <div class="answerline">
+      <span class="arrow">➜</span>
+      <span class="prefix" id="prefix"></span>
+      <div class="answer cursor" id="answer"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="keyboard" id="keyboard"></div>
+  </section>
+
+  <!-- FIN -->
+  <section id="end" class="hidden">
+    <h1>🎉 Quiz terminé ! 🎉</h1>
+    <div class="result-score"><span id="finalScore">0</span> / 15</div>
+    <div class="stars" id="stars"></div>
+    <div class="msg" id="finalMsg"></div>
+    <div id="reviewBox"></div>
+    <button class="big-btn green" id="restartBtn">🔄 Recommencer avec de nouveaux mots</button>
+    <button class="big-btn" id="homeBtn" style="font-size:1.1rem;padding:10px 24px">📖 Revoir la règle</button>
+  </section>
+</div>
+
+<script>
+/* ---------- BANQUES DE MOTS ----------
+   [emoji, mot affiché, début de la réponse, réponse attendue, thème, type, singulier (liste), pluriel (liste)]
+   types : "r" = régulier (ail ➜ ails) ; "e" = exception (ail ➜ aux) */
+
+const T = "Les noms en -ail";
+
+/* --- LES 7 EXCEPTIONS (ordre alphabétique) --- */
+const EXCEPTIONS = [
+  ["📝","un bail","des","baux",T,"e","un bail","des baux"],
+  ["🪸","un corail","des","coraux",T,"e","un corail","des coraux"],
+  ["🏺","un émail","des","émaux",T,"e","un émail","des émaux"],
+  ["🕳️","un soupirail","des","soupiraux",T,"e","un soupirail","des soupiraux"],
+  ["🛠️","un travail","des","travaux",T,"e","un travail","des travaux"],
+  ["🚪","un vantail","des","vantaux",T,"e","un vantail","des vantaux"],
+  ["⛪","un vitrail","des","vitraux",T,"e","un vitrail","des vitraux"]
+];
+
+/* --- NOMS EN -AIL RÉGULIERS (pluriel en s) --- */
+const REGULARS = [
+  ["🔍","un détail","des","détails",T,"r"],
+  ["🏰","un portail","des","portails",T,"r"],
+  ["🚂","un rail","des","rails",T,"r"],
+  ["🧶","un chandail","des","chandails",T,"r"],
+  ["🌬️","un éventail","des","éventails",T,"r"],
+  ["🌾","un épouvantail","des","épouvantails",T,"r"],
+  ["⚓","un gouvernail","des","gouvernails",T,"r"],
+  ["🧰","un attirail","des","attirails",T,"r"],
+  ["🐴","un poitrail","des","poitrails",T,"r"],
+  ["✉️","un mail","des","mails",T,"r"],
+  ["🧄","un ail","des","ails",T,"r"],
+  ["🐑","un bercail","des","bercails",T,"r"]
+];
+
+const NB_REG = 10, NB_EXC = 5;
+const TOTAL = NB_REG + NB_EXC;
+
+const ROWS = ["azertyuiop".split(""), "qsdfghjklm".split(""), "wxcvbn".split("")];
+const ACCENTS = "éèêàâçîïôùûœ".split("");
+const COLORS = ["#ff6b6b","#ff9f43","#feca57","#1dd1a1","#48dbfb","#54a0ff","#5f27cd","#ff6fb5"];
+const ALLOWED = new Set([...ROWS.flat(), ...ACCENTS, "-"]);
+
+let questions = [], idx = 0, score = 0, typed = "", locked = false, missed = [];
+
+const $ = id => document.getElementById(id);
+const show = id => ["home","quiz","end"].forEach(s => $(s).classList.toggle("hidden", s !== id));
+
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- LISTE DES EXCEPTIONS (accueil) : alphabétique, un mot par ligne ---------- */
+function buildExcList() {
+  const ul = $("excList");
+  ul.innerHTML = "";
+  EXCEPTIONS.slice().sort((a, b) => a[3].localeCompare(b[3], "fr")).forEach(w => {
+    const li = document.createElement("li");
+    const plural = w[7].replace(/aux$/, "<b>aux</b>");
+    li.innerHTML =
+      '<span class="em">' + w[0] + '</span>' +
+      '<span class="sg">' + w[6] + '</span>' +
+      '<span class="ar">➜</span>' +
+      '<span class="pl">' + plural + '</span>';
+    ul.appendChild(li);
+  });
+}
+
+/* ---------- CLAVIER ---------- */
+function buildKeyboard() {
+  const kb = $("keyboard"); kb.innerHTML = "";
+  let c = 0;
+  const mk = (label, cls, fn) => {
+    const b = document.createElement("button");
+    b.className = "key " + (cls || "");
+    b.textContent = label;
+    if (!cls) b.style.background = COLORS[c++ % COLORS.length];
+    b.addEventListener("click", fn);
+    return b;
+  };
+  ROWS.forEach(r => {
+    const row = document.createElement("div"); row.className = "row";
+    r.forEach(ch => row.appendChild(mk(ch, "", () => typeChar(ch))));
+    kb.appendChild(row);
+  });
+  const rowA = document.createElement("div"); rowA.className = "row";
+  ACCENTS.forEach(ch => rowA.appendChild(mk(ch, "accent", () => typeChar(ch))));
+  kb.appendChild(rowA);
+  const rowC = document.createElement("div"); rowC.className = "row";
+  rowC.appendChild(mk("⌫ Effacer", "wide del", backspace));
+  rowC.appendChild(mk("✔ Valider", "wide go", validate));
+  const next = mk("Suivant ➜", "wide go next hidden", nextQuestion);
+  next.id = "nextBtn";
+  rowC.appendChild(next);
+  kb.appendChild(rowC);
+}
+
+function typeChar(ch) { if (locked || typed.length >= 20) return; typed += ch; renderAnswer(); }
+function backspace() { if (locked) return; typed = typed.slice(0, -1); renderAnswer(); }
+function renderAnswer() { $("answer").textContent = typed; }
+
+/* ---------- DÉROULEMENT ---------- */
+function startQuiz() {
+  questions = shuffle([
+    ...shuffle(REGULARS).slice(0, NB_REG),      // 10 noms en -ail réguliers (ails)
+    ...shuffle(EXCEPTIONS).slice(0, NB_EXC)     // 5 exceptions au hasard parmi 7 (aux)
+  ]);
+  idx = 0; score = 0; missed = [];
+  $("liveScore").textContent = 0;
+  show("quiz");
+  showQuestion();
+  window.scrollTo(0, 0);
+}
+
+function showQuestion() {
+  const q = questions[idx];
+  typed = ""; locked = false;
+  $("counter").textContent = (idx + 1) + " / " + TOTAL;
+  $("bar").style.width = (idx / TOTAL * 100) + "%";
+  $("theme").textContent = "🏷️ " + q[4];
+  $("emoji").textContent = q[0];
+  $("emoji").style.animation = "none"; void $("emoji").offsetWidth; $("emoji").style.animation = "";
+  $("question").innerHTML = '<span class="sing">' + q[1] + '</span>';
+  $("prefix").textContent = q[2];
+  const ans = $("answer");
+  ans.className = "answer cursor";
+  ans.textContent = "";
+  $("feedback").innerHTML = "Écris le pluriel avec le clavier 👇";
+  $("keyboard").classList.remove("locked");
+  $("nextBtn").classList.add("hidden");
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.remove("hidden"));
+}
+
+function ruleFor(type) {
+  return type === "e"
+    ? "⚠️ <b>Exception !</b> Ce nom en <b>ail</b> fait son pluriel en <b>aux</b>."
+    : "Les noms en <b>ail</b> prennent un <b>s</b> au pluriel.";
+}
+
+function validate() {
+  if (locked) return;
+  if (typed.length === 0) { $("feedback").innerHTML = "✋ Écris d'abord ta réponse !"; return; }
+  locked = true;
+  const q = questions[idx];
+  const good = typed.trim().toLowerCase() === q[3];
+  const ans = $("answer");
+  ans.classList.remove("cursor");
+  if (good) {
+    score++;
+    $("liveScore").textContent = score;
+    ans.classList.add("ok");
+    const cheers = ["Bravo !","Super !","Génial !","Excellent !","Parfait !","Bien joué !"];
+    $("feedback").innerHTML = "✅ <b>" + cheers[Math.floor(Math.random()*cheers.length)] + "</b><br>" + ruleFor(q[5]);
+    confetti();
+  } else {
+    ans.classList.add("ko");
+    missed.push({ emoji: q[0], sing: q[1], prefix: q[2], right: q[3], wrong: typed.trim(), type: q[5] });
+    $("feedback").innerHTML = "❌ Presque ! La bonne réponse : <b>" + q[2] + " " + q[3] + "</b><br>" + ruleFor(q[5]);
+  }
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.add("hidden"));
+  const nb = $("nextBtn");
+  nb.classList.remove("hidden");
+  nb.textContent = idx === TOTAL - 1 ? "🏁 Voir mon score" : "Suivant ➜";
+  $("keyboard").classList.add("locked");
+}
+
+function nextQuestion() {
+  if (!locked) return;
+  idx++;
+  if (idx >= TOTAL) endQuiz(); else showQuestion();
+}
+
+function endQuiz() {
+  $("bar").style.width = "100%";
+  show("end");
+  window.scrollTo(0, 0);
+  $("finalScore").textContent = score;
+  const stars = score >= 13 ? 3 : score >= 9 ? 2 : score >= 5 ? 1 : 0;
+  $("stars").textContent = "⭐".repeat(stars) + "☆".repeat(3 - stars);
+  let msg;
+  if (score === TOTAL) msg = "🏆 PARFAIT ! Tu es un(e) champion(ne) des noms en « ail » ! 🏆";
+  else if (score >= 13) msg = "🌟 Bravo, c'est excellent ! Tu maîtrises presque tout !";
+  else if (score >= 9) msg = "👏 Très bien ! Encore un petit effort et ce sera parfait !";
+  else if (score >= 5) msg = "💪 Bon début ! Avec un nouvel essai, tu vas progresser !";
+  else msg = "🌱 Courage ! Relis bien la règle et les 7 exceptions, puis rejoue : tu vas y arriver !";
+  $("finalMsg").innerHTML = msg + "<br><br>Tu veux essayer de faire encore mieux ?";
+
+  const box = $("reviewBox");
+  if (missed.length === 0) {
+    box.innerHTML = '<div class="allgood">✅ Aucune erreur, quel sans-faute !</div>';
+  } else {
+    let html = '<div class="review"><h2>📚 Mes erreurs à retenir</h2><ul>';
+    missed.forEach(m => {
+      html += '<li><span class="em">' + m.emoji + '</span>' +
+        '<span>' + m.sing + ' ➜ </span>' +
+        '<span class="wrong">' + m.prefix + ' ' + m.wrong + '</span>' +
+        '<span class="right">' + m.prefix + ' ' + m.right + '</span>' +
+        '<span class="tip">' + (m.type === "e" ? "⚠️ Exception : ail devient aux." : "Les noms en ail prennent un s.") + '</span></li>';
+    });
+    html += '</ul></div>';
+    box.innerHTML = html;
+  }
+  if (score >= 9) for (let i = 0; i < 4; i++) setTimeout(confetti, i * 300);
+}
+
+/* ---------- CONFETTIS ---------- */
+function confetti() {
+  const card = $("card");
+  const items = ["🎉","⭐","✨","🌟","🎈","💖"];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.textContent = items[Math.floor(Math.random() * items.length)];
+    s.style.left = Math.random() * 95 + "%";
+    s.style.animationDelay = Math.random() * 0.4 + "s";
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 2400);
+  }
+}
+
+/* ---------- CLAVIER PHYSIQUE (en bonus) ---------- */
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Enter") { e.preventDefault(); locked ? nextQuestion() : validate(); }
+  else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+  else if (e.key.length === 1 && ALLOWED.has(e.key.toLowerCase())) typeChar(e.key.toLowerCase());
+});
+
+$("startBtn").addEventListener("click", startQuiz);
+$("restartBtn").addEventListener("click", startQuiz);
+$("homeBtn").addEventListener("click", () => { show("home"); window.scrollTo(0, 0); });
+buildExcList();
+buildKeyboard();
+</script>
+</body>
+</html>

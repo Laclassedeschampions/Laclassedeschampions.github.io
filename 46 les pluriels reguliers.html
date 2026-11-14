@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Défi du Pluriel</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Comic Sans MS", "Trebuchet MS", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #ffd86b 0%, #ff9ecd 50%, #8fd3ff 100%);
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+    color: #3b2f63;
+  }
+  .card {
+    background: #fffdf7; width: 100%; max-width: 760px; border-radius: 28px;
+    padding: 22px 22px 26px; box-shadow: 0 12px 40px rgba(80,40,120,.3);
+    border: 5px solid #fff; position: relative; overflow: hidden;
+  }
+  h1 { margin: 0 0 6px; text-align: center; font-size: 2rem; color: #ff5fa2; }
+  .sub { text-align: center; margin: 0 0 18px; font-size: 1.1rem; }
+  .hidden { display: none !important; }
+
+  .big-btn {
+    display: block; margin: 16px auto 0; padding: 14px 34px; border: none; border-radius: 40px;
+    font-size: 1.4rem; font-family: inherit; font-weight: bold; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, #ff7a3d, #ff4f8b); box-shadow: 0 6px 0 #c23468;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c23468; }
+  .big-btn.green { background: linear-gradient(90deg, #3ecf6e, #1fa7a0); box-shadow: 0 6px 0 #167f7a; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress { flex: 1; height: 18px; background: #eee; border-radius: 12px; overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg,#3ecf6e,#ffd23f,#ff7a3d); transition: width .4s; }
+  .counter { font-weight: bold; font-size: 1.05rem; white-space: nowrap; }
+  .scorebox { background: #ffe9a8; border-radius: 14px; padding: 4px 12px; font-weight: bold; }
+
+  .theme { text-align: center; display: inline-block; background: #d9f1ff; border-radius: 20px;
+           padding: 3px 14px; font-size: .95rem; }
+  .theme-wrap { text-align: center; }
+  .emoji { font-size: 4.2rem; text-align: center; margin: 4px 0; animation: pop .5s; }
+  .question { text-align: center; font-size: 1.9rem; font-weight: bold; margin: 4px 0 10px; }
+  .question .sing { color: #2a7de1; }
+  .answerline { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .arrow { font-size: 1.8rem; color: #ff5fa2; }
+  .prefix { font-size: 1.9rem; font-weight: bold; color: #9b4fd1; }
+  .answer {
+    min-width: 200px; min-height: 58px; padding: 6px 16px; border: 4px dashed #ffb347; border-radius: 16px;
+    font-size: 2rem; font-weight: bold; letter-spacing: 2px; text-align: center; background: #fff8e1;
+  }
+  .answer.ok { border: 4px solid #2ecc71; background: #e6ffed; animation: pop .4s; }
+  .answer.ko { border: 4px solid #ff5a5a; background: #ffecec; animation: shake .4s; }
+  .cursor::after { content: "|"; animation: blink 1s infinite; color: #ff7a3d; }
+
+  .feedback { min-height: 64px; text-align: center; font-size: 1.15rem; margin: 6px 0; }
+  .feedback b { font-size: 1.3rem; }
+
+  .keyboard { display: flex; flex-direction: column; gap: 7px; align-items: center; margin-top: 4px; }
+  .row { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
+  .key {
+    width: min(9vw, 54px); height: 52px; border: none; border-radius: 12px; font-size: 1.5rem;
+    font-family: inherit; font-weight: bold; cursor: pointer; color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.25);
+  }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .key.accent { background: #a259e6 !important; }
+  .key.wide { width: auto; padding: 0 18px; font-size: 1.15rem; }
+  .key.del { background: #ff5a5a !important; }
+  .key.go { background: #2ecc71 !important; }
+  .keyboard.locked .key:not(.next) { opacity: .45; pointer-events: none; }
+
+  .result-score { font-size: 4rem; font-weight: bold; text-align: center; color: #ff5fa2; margin: 6px 0; }
+  .stars { font-size: 2.6rem; text-align: center; letter-spacing: 6px; }
+  .msg { text-align: center; font-size: 1.4rem; margin: 10px 0; }
+  .rules { background: #f3ebff; border-radius: 16px; padding: 12px 18px; margin: 12px 0; font-size: 1.05rem; }
+  .rules li { margin: 4px 0; }
+
+  .confetti { position: absolute; top: -20px; font-size: 1.6rem; pointer-events: none; animation: fall 1.8s linear forwards; z-index: 5; }
+  @keyframes fall { to { transform: translateY(560px) rotate(360deg); opacity: 0; } }
+  @keyframes pop { 0% { transform: scale(.5); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (max-width: 520px) {
+    h1 { font-size: 1.5rem; } .question, .prefix { font-size: 1.4rem; }
+    .answer { font-size: 1.5rem; min-width: 140px; } .key { height: 46px; font-size: 1.25rem; width: 8.6vw; }
+    .emoji { font-size: 3.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+
+  <!-- ÉCRAN D'ACCUEIL -->
+  <section id="home">
+    <h1>🌈 Le Défi du Pluriel 🌈</h1>
+    <p class="sub">Écris le mot au pluriel avec le clavier magique !</p>
+    <div class="emoji">🐮🍎⚽</div>
+    <div class="rules">
+      <b>À retenir :</b>
+      <ul>
+        <li>En général, on ajoute un <b>s</b> : un fleuve ➜ des fleuve<b>s</b></li>
+        <li>Si le mot finit par <b>s</b>, <b>x</b> ou <b>z</b>, il <b>ne change pas</b> : un nez ➜ des nez</li>
+        <li>Les adjectifs s'accordent aussi : des sacs lour<b>ds</b></li>
+      </ul>
+    </div>
+    <p class="sub"><b>15 questions</b> t'attendent. Prêt(e) ?</p>
+    <button class="big-btn" id="startBtn">🚀 C'est parti !</button>
+  </section>
+
+  <!-- ÉCRAN DE QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <span class="counter" id="counter">1 / 15</span>
+      <div class="progress"><div id="bar"></div></div>
+      <span class="scorebox">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="theme-wrap"><span class="theme" id="theme"></span></div>
+    <div class="emoji" id="emoji"></div>
+    <div class="question" id="question"></div>
+    <div class="answerline">
+      <span class="arrow">➜</span>
+      <span class="prefix" id="prefix"></span>
+      <div class="answer cursor" id="answer"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="keyboard" id="keyboard"></div>
+  </section>
+
+  <!-- ÉCRAN FINAL -->
+  <section id="end" class="hidden">
+    <h1>🎉 Quiz terminé ! 🎉</h1>
+    <div class="result-score"><span id="finalScore">0</span> / 15</div>
+    <div class="stars" id="stars"></div>
+    <div class="msg" id="finalMsg"></div>
+    <button class="big-btn green" id="restartBtn">🔄 Recommencer avec de nouveaux mots</button>
+  </section>
+</div>
+
+<script>
+/* ---------- BANQUE DE MOTS ----------
+   [emoji, mot au singulier (affiché), début de la réponse affiché, réponse attendue, thème, type]
+   type : "r" = régulier (on ajoute s) ; "i" = invariable (finit par s, x, z) */
+const BANK = [
+  // La vie de classe / l'école
+  ["✏️","un crayon","des","crayons","L'école","r"],
+  ["📓","un cahier","des","cahiers","L'école","r"],
+  ["📏","une règle","des","règles","L'école","r"],
+  ["🎒","un cartable","des","cartables","L'école","r"],
+  ["📖","un livre","des","livres","La classe","r"],
+  ["🖍️","un feutre","des","feutres","La classe","r"],
+  ["📝","une dictée","des","dictées","La classe","r"],
+  ["🔢","un chiffre","des","chiffres","La classe","r"],
+  ["🧽","une gomme","des","gommes","L'école","r"],
+  ["👧","une élève","des","élèves","La classe","r"],
+  // La journée
+  ["⏰","un réveil","des","réveils","La journée","r"],
+  ["🕐","une heure","des","heures","La journée","r"],
+  ["🌙","une nuit","des","nuits","La journée","r"],
+  ["🍪","un goûter","des","goûters","La journée","r"],
+  ["🌅","un matin","des","matins","La journée","r"],
+  // Animaux de la ferme
+  ["🐄","une vache","des","vaches","La ferme","r"],
+  ["🐖","un cochon","des","cochons","La ferme","r"],
+  ["🐔","une poule","des","poules","La ferme","r"],
+  ["🐑","un mouton","des","moutons","La ferme","r"],
+  ["🦆","un canard","des","canards","La ferme","r"],
+  ["🐰","un lapin","des","lapins","La ferme","r"],
+  ["🐐","une chèvre","des","chèvres","La ferme","r"],
+  ["🫏","un âne","des","ânes","La ferme","r"],
+  ["🚜","un tracteur","des","tracteurs","La ferme","r"],
+  // Repas
+  ["🥖","un pain","des","pains","Les repas","r"],
+  ["🍽️","une assiette","des","assiettes","Les repas","r"],
+  ["🥄","une cuillère","des","cuillères","Les repas","r"],
+  ["🥛","un verre","des","verres","Les repas","r"],
+  ["🥞","une crêpe","des","crêpes","Les repas","r"],
+  ["🧀","un fromage","des","fromages","Les repas","r"],
+  ["🍲","une soupe","des","soupes","Les repas","r"],
+  ["🍴","un repas","des","repas","Les repas","i"],
+  // Maison
+  ["🛏️","un lit","des","lits","À la maison","r"],
+  ["🚿","une douche","des","douches","À la maison","r"],
+  ["🧼","un savon","des","savons","À la maison","r"],
+  ["🪥","une brosse","des","brosses","À la maison","r"],
+  ["🟫","un tapis","des","tapis","À la maison","i"],
+  ["🧹","un balai","des","balais","À la maison","r"],
+  ["🍳","une casserole","des","casseroles","La cuisine","r"],
+  ["🪞","un miroir","des","miroirs","La salle de bain","r"],
+  // Fruits et légumes
+  ["🍎","une pomme","des","pommes","Fruits et légumes","r"],
+  ["🍐","une poire","des","poires","Fruits et légumes","r"],
+  ["🍌","une banane","des","bananes","Fruits et légumes","r"],
+  ["🍓","une fraise","des","fraises","Fruits et légumes","r"],
+  ["🥕","une carotte","des","carottes","Fruits et légumes","r"],
+  ["🍅","une tomate","des","tomates","Fruits et légumes","r"],
+  ["🧅","un oignon","des","oignons","Fruits et légumes","r"],
+  ["🍋","un citron","des","citrons","Fruits et légumes","r"],
+  ["🫛","un pois","des","pois","Fruits et légumes","i"],
+  ["🌱","un radis","des","radis","Fruits et légumes","i"],
+  // Saisons
+  ["☁️","un nuage","des","nuages","Les saisons","r"],
+  ["🌸","une fleur","des","fleurs","Le printemps","r"],
+  ["❄️","un flocon","des","flocons","L'hiver","r"],
+  ["⛈️","un orage","des","orages","L'été","r"],
+  ["📅","un mois","des","mois","Les saisons","i"],
+  ["☀️","un rayon","des","rayons","L'été","r"],
+  // Vêtements
+  ["🧦","une chaussette","des","chaussettes","Les vêtements","r"],
+  ["👗","une robe","des","robes","Les vêtements","r"],
+  ["🧢","une casquette","des","casquettes","Les vêtements","r"],
+  ["🧣","une écharpe","des","écharpes","Les vêtements","r"],
+  ["🧤","un gant","des","gants","Les vêtements","r"],
+  ["👟","une chaussure","des","chaussures","Les vêtements","r"],
+  ["🩳","un short","des","shorts","Les vêtements","r"],
+  // Forêt
+  ["🦊","un renard","des","renards","La forêt","r"],
+  ["🐺","un loup","des","loups","La forêt","r"],
+  ["🐿️","un écureuil","des","écureuils","La forêt","r"],
+  ["🦌","un cerf","des","cerfs","La forêt","r"],
+  ["🐗","un sanglier","des","sangliers","La forêt","r"],
+  ["🐻","un ours","des","ours","La forêt","i"],
+  ["🍄","un champignon","des","champignons","La forêt","r"],
+  ["🌳","un arbre","des","arbres","La forêt","r"],
+  // Savane
+  ["🦁","un lion","des","lions","La savane","r"],
+  ["🦒","une girafe","des","girafes","La savane","r"],
+  ["🐘","un éléphant","des","éléphants","La savane","r"],
+  ["🦓","un zèbre","des","zèbres","La savane","r"],
+  ["🐒","un singe","des","singes","La savane","r"],
+  ["🐊","un crocodile","des","crocodiles","La savane","r"],
+  ["🦏","un rhinocéros","des","rhinocéros","La savane","i"],
+  // Récréation
+  ["🪢","une corde","des","cordes","La récréation","r"],
+  ["⚽","un ballon","des","ballons","La récréation","r"],
+  ["🔮","une bille","des","billes","La récréation","r"],
+  ["🛝","un toboggan","des","toboggans","La récréation","r"],
+  ["🪑","un banc","des","bancs","La récréation","r"],
+  // Sport
+  ["🥅","un but","des","buts","Le sport","r"],
+  ["🏊","un nageur","des","nageurs","Le sport","r"],
+  ["🚴","un vélo","des","vélos","Le sport","r"],
+  ["🏅","une médaille","des","médailles","Le sport","r"],
+  ["🎾","une raquette","des","raquettes","Le sport","r"],
+  ["🏟️","un stade","des","stades","Le sport","r"],
+  // Corps
+  ["💪","un bras","des","bras","Le corps","i"],
+  ["🦵","une jambe","des","jambes","Le corps","r"],
+  ["🦶","un pied","des","pieds","Le corps","r"],
+  ["👃","un nez","des","nez","Le corps","i"],
+  ["👂","une oreille","des","oreilles","Le corps","r"],
+  ["👄","une bouche","des","bouches","Le corps","r"],
+  ["🖐️","un doigt","des","doigts","Le corps","r"],
+  ["🦷","une dent","des","dents","Le corps","r"],
+  ["🔙","un dos","des","dos","Le corps","i"],
+  // Mots en x / s / z divers
+  ["🗣️","une voix","des","voix","Les mots invariables","i"],
+  ["💰","un prix","des","prix","Les mots invariables","i"],
+  ["🥜","une noix","des","noix","Les mots invariables","i"],
+  ["🔥","un gaz","des","gaz","Les mots invariables","i"],
+  // Adjectifs : on affiche le nom et l'adjectif, on demande l'adjectif
+  ["🎒","un sac lourd","des sacs","lourds","Les adjectifs","r"],
+  ["🍎","une pomme rouge","des pommes","rouges","Les adjectifs","r"],
+  ["🦁","un lion fort","des lions","forts","Les adjectifs","r"],
+  ["🌫️","un ciel gris","des ciels","gris","Les adjectifs","i"],
+  ["😊","un enfant heureux","des enfants","heureux","Les adjectifs","i"],
+  ["🐰","un lapin doux","des lapins","doux","Les adjectifs","i"],
+  ["🌬️","un vent frais","des vents","frais","Les adjectifs","i"],
+  ["🍌","un fruit mûr","des fruits","mûrs","Les adjectifs","r"],
+  ["🐘","un éléphant gros","des éléphants","gros","Les adjectifs","i"],
+  ["🌸","une fleur parfumée","des fleurs","parfumées","Les adjectifs","r"],
+  ["🦊","un renard rusé","des renards","rusés","Les adjectifs","r"],
+  ["🐻","un ours brun","des ours","bruns","Les adjectifs","r"],
+  ["👦","un élève sérieux","des élèves","sérieux","Les adjectifs","i"],
+  ["🥶","un hiver froid","des hivers","froids","Les adjectifs","r"],
+  ["🧣","une écharpe chaude","des écharpes","chaudes","Les adjectifs","r"]
+];
+
+const TOTAL = 15;
+const ROWS = [
+  "azertyuiop".split(""),
+  "qsdfghjklm".split(""),
+  "wxcvbn".split("")
+];
+const ACCENTS = "éèêàâçîïôùûœ".split("");
+const COLORS = ["#ff6b6b","#ff9f43","#feca57","#1dd1a1","#48dbfb","#54a0ff","#5f27cd","#ff6fb5"];
+const ALLOWED = new Set([...ROWS.flat(), ...ACCENTS, "-"]);
+
+let questions = [], idx = 0, score = 0, typed = "", locked = false;
+
+const $ = id => document.getElementById(id);
+const show = id => { ["home","quiz","end"].forEach(s => $(s).classList.toggle("hidden", s !== id)); };
+
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- CLAVIER ---------- */
+function buildKeyboard() {
+  const kb = $("keyboard");
+  kb.innerHTML = "";
+  let c = 0;
+  const mk = (label, cls, fn) => {
+    const b = document.createElement("button");
+    b.className = "key " + (cls || "");
+    b.textContent = label;
+    if (!cls || cls === "") b.style.background = COLORS[c++ % COLORS.length];
+    b.addEventListener("click", fn);
+    return b;
+  };
+  ROWS.forEach(r => {
+    const row = document.createElement("div"); row.className = "row";
+    r.forEach(ch => row.appendChild(mk(ch, "", () => typeChar(ch))));
+    kb.appendChild(row);
+  });
+  const rowA = document.createElement("div"); rowA.className = "row";
+  ACCENTS.forEach(ch => rowA.appendChild(mk(ch, "accent", () => typeChar(ch))));
+  kb.appendChild(rowA);
+
+  const rowC = document.createElement("div"); rowC.className = "row";
+  rowC.appendChild(mk("⌫ Effacer", "wide del", backspace));
+  rowC.appendChild(mk("✔ Valider", "wide go", validate));
+  const next = mk("Suivant ➜", "wide go next hidden", nextQuestion);
+  next.id = "nextBtn";
+  rowC.appendChild(next);
+  kb.appendChild(rowC);
+}
+
+function typeChar(ch) {
+  if (locked || typed.length >= 20) return;
+  typed += ch;
+  renderAnswer();
+}
+function backspace() {
+  if (locked) return;
+  typed = typed.slice(0, -1);
+  renderAnswer();
+}
+function renderAnswer() { $("answer").textContent = typed; }
+
+/* ---------- DÉROULEMENT ---------- */
+function startQuiz() {
+  questions = shuffle(BANK).slice(0, TOTAL);
+  idx = 0; score = 0;
+  $("liveScore").textContent = 0;
+  show("quiz");
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[idx];
+  typed = ""; locked = false;
+  $("counter").textContent = (idx + 1) + " / " + TOTAL;
+  $("bar").style.width = (idx / TOTAL * 100) + "%";
+  $("theme").textContent = "🏷️ " + q[4];
+  $("emoji").textContent = q[0];
+  $("emoji").style.animation = "none"; void $("emoji").offsetWidth; $("emoji").style.animation = "";
+  // le mot au singulier est mis en valeur
+  $("question").innerHTML = '<span class="sing">' + q[1] + '</span>';
+  $("prefix").textContent = q[2];
+  const ans = $("answer");
+  ans.className = "answer cursor";
+  ans.textContent = "";
+  $("feedback").innerHTML = "Écris le pluriel avec le clavier 👇";
+  $("keyboard").classList.remove("locked");
+  $("nextBtn").classList.add("hidden");
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.remove("hidden"));
+}
+
+function validate() {
+  if (locked) return;
+  if (typed.length === 0) {
+    $("feedback").innerHTML = "✋ Écris d'abord ta réponse !";
+    return;
+  }
+  locked = true;
+  const q = questions[idx];
+  const good = typed.trim().toLowerCase() === q[3];
+  const ans = $("answer");
+  ans.classList.remove("cursor");
+  const rule = q[5] === "i"
+    ? "Les mots qui se terminent par <b>s</b>, <b>x</b> ou <b>z</b> ne changent pas au pluriel."
+    : "On ajoute un <b>s</b> à la fin.";
+  if (good) {
+    score++;
+    $("liveScore").textContent = score;
+    ans.classList.add("ok");
+    const cheers = ["Bravo !","Super !","Génial !","Excellent !","Parfait !","Bien joué !"];
+    $("feedback").innerHTML = "✅ <b>" + cheers[Math.floor(Math.random()*cheers.length)] + "</b><br>" + rule;
+    confetti();
+  } else {
+    ans.classList.add("ko");
+    $("feedback").innerHTML = "❌ Presque ! La bonne réponse : <b>" + q[2] + " " + q[3] + "</b><br>" + rule;
+  }
+  // afficher uniquement le bouton « Suivant »
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.add("hidden"));
+  const nb = $("nextBtn");
+  nb.classList.remove("hidden");
+  nb.textContent = idx === TOTAL - 1 ? "🏁 Voir mon score" : "Suivant ➜";
+  $("keyboard").classList.add("locked");
+}
+
+function nextQuestion() {
+  if (!locked) return;
+  idx++;
+  if (idx >= TOTAL) endQuiz(); else showQuestion();
+}
+
+function endQuiz() {
+  $("bar").style.width = "100%";
+  show("end");
+  $("finalScore").textContent = score;
+  const stars = score >= 13 ? 3 : score >= 9 ? 2 : score >= 5 ? 1 : 0;
+  $("stars").textContent = "⭐".repeat(stars) + "☆".repeat(3 - stars);
+  let msg;
+  if (score === TOTAL) msg = "🏆 PARFAIT ! Tu es un(e) champion(ne) du pluriel ! 🏆";
+  else if (score >= 13) msg = "🌟 Bravo, c'est excellent ! Tu maîtrises presque tout !";
+  else if (score >= 9) msg = "👏 Très bien ! Encore un petit effort et ce sera parfait !";
+  else if (score >= 5) msg = "💪 Bon début ! Avec un nouvel essai, tu vas progresser !";
+  else msg = "🌱 Courage ! On apprend en s'entraînant. Rejoue, tu vas y arriver !";
+  $("finalMsg").innerHTML = msg + "<br><br>Tu veux essayer de faire encore mieux ?";
+  if (score >= 9) { for (let i = 0; i < 4; i++) setTimeout(confetti, i * 300); }
+}
+
+/* ---------- CONFETTIS ---------- */
+function confetti() {
+  const card = $("card");
+  const items = ["🎉","⭐","✨","🌟","🎈","💖"];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.textContent = items[Math.floor(Math.random() * items.length)];
+    s.style.left = Math.random() * 95 + "%";
+    s.style.animationDelay = Math.random() * 0.4 + "s";
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 2400);
+  }
+}
+
+/* ---------- CLAVIER PHYSIQUE (en bonus) ---------- */
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Enter") { e.preventDefault(); locked ? nextQuestion() : validate(); }
+  else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+  else if (e.key.length === 1 && ALLOWED.has(e.key.toLowerCase())) typeChar(e.key.toLowerCase());
+});
+
+$("startBtn").addEventListener("click", startQuiz);
+$("restartBtn").addEventListener("click", startQuiz);
+buildKeyboard();
+</script>
+</body>
+</html>

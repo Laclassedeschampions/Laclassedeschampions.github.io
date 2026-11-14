@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Défi du Pluriel – Niveau 2</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Comic Sans MS", "Trebuchet MS", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #8fd3ff 0%, #b69cff 50%, #ff9ecd 100%);
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+    color: #3b2f63;
+  }
+  .card {
+    background: #fffdf7; width: 100%; max-width: 760px; border-radius: 28px;
+    padding: 22px 22px 26px; box-shadow: 0 12px 40px rgba(60,40,140,.3);
+    border: 5px solid #fff; position: relative; overflow: hidden;
+  }
+  h1 { margin: 0 0 6px; text-align: center; font-size: 2rem; color: #7a4fe0; }
+  h1 small { display: block; font-size: 1.1rem; color: #ff5fa2; }
+  .sub { text-align: center; margin: 0 0 14px; font-size: 1.1rem; }
+  .hidden { display: none !important; }
+
+  .big-btn {
+    display: block; margin: 16px auto 0; padding: 14px 34px; border: none; border-radius: 40px;
+    font-size: 1.4rem; font-family: inherit; font-weight: bold; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, #7a4fe0, #ff4f8b); box-shadow: 0 6px 0 #4b2ea3;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #4b2ea3; }
+  .big-btn.green { background: linear-gradient(90deg, #3ecf6e, #1fa7a0); box-shadow: 0 6px 0 #167f7a; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress { flex: 1; height: 18px; background: #eee; border-radius: 12px; overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg,#3ecf6e,#ffd23f,#ff7a3d); transition: width .4s; }
+  .counter { font-weight: bold; font-size: 1.05rem; white-space: nowrap; }
+  .scorebox { background: #ffe9a8; border-radius: 14px; padding: 4px 12px; font-weight: bold; }
+
+  .theme { display: inline-block; background: #d9f1ff; border-radius: 20px; padding: 3px 14px; font-size: .95rem; }
+  .theme-wrap { text-align: center; }
+  .emoji { font-size: 4.2rem; text-align: center; margin: 4px 0; animation: pop .5s; }
+  .question { text-align: center; font-size: 1.9rem; font-weight: bold; margin: 4px 0 10px; }
+  .question .sing { color: #2a7de1; }
+  .answerline { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .arrow { font-size: 1.8rem; color: #ff5fa2; }
+  .prefix { font-size: 1.9rem; font-weight: bold; color: #9b4fd1; }
+  .answer {
+    min-width: 200px; min-height: 58px; padding: 6px 16px; border: 4px dashed #ffb347; border-radius: 16px;
+    font-size: 2rem; font-weight: bold; letter-spacing: 2px; text-align: center; background: #fff8e1;
+  }
+  .answer.ok { border: 4px solid #2ecc71; background: #e6ffed; animation: pop .4s; }
+  .answer.ko { border: 4px solid #ff5a5a; background: #ffecec; animation: shake .4s; }
+  .cursor::after { content: "|"; animation: blink 1s infinite; color: #ff7a3d; }
+
+  .feedback { min-height: 64px; text-align: center; font-size: 1.15rem; margin: 6px 0; }
+  .feedback b { font-size: 1.3rem; }
+
+  .keyboard { display: flex; flex-direction: column; gap: 7px; align-items: center; margin-top: 4px; }
+  .row { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
+  .key {
+    width: min(9vw, 54px); height: 52px; border: none; border-radius: 12px; font-size: 1.5rem;
+    font-family: inherit; font-weight: bold; cursor: pointer; color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.25);
+  }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .key.accent { background: #a259e6 !important; }
+  .key.wide { width: auto; padding: 0 18px; font-size: 1.15rem; }
+  .key.del { background: #ff5a5a !important; }
+  .key.go { background: #2ecc71 !important; }
+  .keyboard.locked .key:not(.next) { opacity: .45; pointer-events: none; }
+
+  .result-score { font-size: 4rem; font-weight: bold; text-align: center; color: #ff5fa2; margin: 6px 0; }
+  .stars { font-size: 2.6rem; text-align: center; letter-spacing: 6px; }
+  .msg { text-align: center; font-size: 1.4rem; margin: 10px 0; }
+  .rules { background: #f3ebff; border-radius: 16px; padding: 12px 18px; margin: 10px 0; font-size: 1.05rem; }
+  .rules ul { margin: 6px 0 0; padding-left: 22px; }
+  .rules li { margin: 4px 0; }
+  .exc { background: #fff0d6; border: 3px dashed #ff9f43; }
+  .review { background: #fff0f0; border-radius: 16px; padding: 10px 18px; margin: 10px 0; font-size: 1.1rem; text-align: center; }
+
+  .confetti { position: absolute; top: -20px; font-size: 1.6rem; pointer-events: none; animation: fall 1.8s linear forwards; z-index: 5; }
+  @keyframes fall { to { transform: translateY(560px) rotate(360deg); opacity: 0; } }
+  @keyframes pop { 0% { transform: scale(.5); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (max-width: 520px) {
+    h1 { font-size: 1.5rem; } .question, .prefix { font-size: 1.4rem; }
+    .answer { font-size: 1.5rem; min-width: 140px; } .key { height: 46px; font-size: 1.25rem; width: 8.6vw; }
+    .emoji { font-size: 3.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+
+  <!-- ACCUEIL -->
+  <section id="home">
+    <h1>🌈 Le Défi du Pluriel 🌈<small>Niveau 2 : eu, eau, au</small></h1>
+    <div class="emoji">🎂🏰🔥</div>
+    <div class="rules">
+      <b>À retenir :</b>
+      <ul>
+        <li>Les mots en <b>eu</b>, <b>eau</b>, <b>au</b> prennent un <b>x</b> : un bat<b>eau</b> ➜ des bat<b>eaux</b>, un j<b>eu</b> ➜ des j<b>eux</b></li>
+        <li>Pour les autres mots, c'est comme au niveau 1 : on ajoute un <b>s</b>, sauf si le mot finit déjà par <b>s</b>, <b>x</b> ou <b>z</b>.</li>
+      </ul>
+    </div>
+    <div class="rules exc">
+      ⚠️ <b>Attention aux 3 exceptions</b> qui prennent un <b>s</b> :<br>
+      <b>pneu</b>, <b>bleu</b>, <b>landau</b><br>
+      💡 Astuce : « Un <b>pneu bleu</b> sur un <b>landau</b> » 🛞💙👶
+    </div>
+    <p class="sub"><b>15 questions</b> t'attendent. Prêt(e) ?</p>
+    <button class="big-btn" id="startBtn">🚀 C'est parti !</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <span class="counter" id="counter">1 / 15</span>
+      <div class="progress"><div id="bar"></div></div>
+      <span class="scorebox">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="theme-wrap"><span class="theme" id="theme"></span></div>
+    <div class="emoji" id="emoji"></div>
+    <div class="question" id="question"></div>
+    <div class="answerline">
+      <span class="arrow">➜</span>
+      <span class="prefix" id="prefix"></span>
+      <div class="answer cursor" id="answer"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="keyboard" id="keyboard"></div>
+  </section>
+
+  <!-- FIN -->
+  <section id="end" class="hidden">
+    <h1>🎉 Quiz terminé ! 🎉</h1>
+    <div class="result-score"><span id="finalScore">0</span> / 15</div>
+    <div class="stars" id="stars"></div>
+    <div class="msg" id="finalMsg"></div>
+    <div class="review hidden" id="review"></div>
+    <button class="big-btn green" id="restartBtn">🔄 Recommencer avec de nouveaux mots</button>
+  </section>
+</div>
+
+<script>
+/* ---------- BANQUES DE MOTS ----------
+   [emoji, mot affiché, début de la réponse, réponse attendue, thème, type]
+   types : "x" = eu/eau/au (pluriel en x) ; "e" = exception en s (pneu, bleu, landau) ;
+           "r" = régulier (s) ; "i" = invariable (finit par s, x, z) */
+
+const T = "Mots en eu, eau, au";
+
+/* --- 3 exceptions : toujours présentes dans chaque partie --- */
+const EXCEPTIONS = [
+  ["🛞","un pneu","des","pneus",T,"e"],
+  ["💙","un ciel bleu","des ciels","bleus",T,"e"],
+  ["👶","un landau","des","landaus",T,"e"]
+];
+
+/* --- 37 mots en eu / eau / au (pluriel en x) --- */
+const WORDS_X = [
+  // eu
+  ["🎮","un jeu","des","jeux",T,"x"],
+  ["🔥","un feu","des","feux",T,"x"],
+  ["👦","un neveu","des","neveux",T,"x"],
+  ["💇","un cheveu","des","cheveux",T,"x"],
+  ["📍","un lieu","des","lieux",T,"x"],
+  ["🎯","un milieu","des","milieux",T,"x"],
+  ["👋","un adieu","des","adieux",T,"x"],
+  ["🪵","un pieu","des","pieux",T,"x"],
+  // eau
+  ["⛵","un bateau","des","bateaux",T,"x"],
+  ["🎂","un gâteau","des","gâteaux",T,"x"],
+  ["🔪","un couteau","des","couteaux",T,"x"],
+  ["🏰","un château","des","châteaux",T,"x"],
+  ["🎩","un chapeau","des","chapeaux",T,"x"],
+  ["🧥","un manteau","des","manteaux",T,"x"],
+  ["🪟","un rideau","des","rideaux",T,"x"],
+  ["🏁","un drapeau","des","drapeaux",T,"x"],
+  ["🖼️","un tableau","des","tableaux",T,"x"],
+  ["🗄️","un bureau","des","bureaux",T,"x"],
+  ["🪧","un panneau","des","panneaux",T,"x"],
+  ["💍","un anneau","des","anneaux",T,"x"],
+  ["🖌️","un pinceau","des","pinceaux",T,"x"],
+  ["🐑","un agneau","des","agneaux",T,"x"],
+  ["🐏","un troupeau","des","troupeaux",T,"x"],
+  ["🎁","un cadeau","des","cadeaux",T,"x"],
+  ["🔨","un marteau","des","marteaux",T,"x"],
+  ["🐶","un museau","des","museaux",T,"x"],
+  ["🐫","un chameau","des","chameaux",T,"x"],
+  ["🪣","un seau","des","seaux",T,"x"],
+  ["🐮","un veau","des","veaux",T,"x"],
+  ["🧠","un cerveau","des","cerveaux",T,"x"],
+  ["🐦","un oiseau","des","oiseaux",T,"x"],
+  ["🐂","un taureau","des","taureaux",T,"x"],
+  // au
+  ["🍑","un noyau","des","noyaux",T,"x"],
+  ["🚰","un tuyau","des","tuyaux",T,"x"],
+  ["🏫","un préau","des","préaux",T,"x"],
+  ["🌪️","un fléau","des","fléaux",T,"x"],
+  ["🪢","un boyau","des","boyaux",T,"x"]
+];
+
+/* --- 20 mots du niveau 1 (réguliers + mots en s, x, z) --- */
+const WORDS_L1 = [
+  ["✏️","un crayon","des","crayons","La classe","r"],
+  ["📓","un cahier","des","cahiers","La classe","r"],
+  ["🐄","une vache","des","vaches","La ferme","r"],
+  ["🐔","une poule","des","poules","La ferme","r"],
+  ["🍎","une pomme","des","pommes","Fruits et légumes","r"],
+  ["🦁","un lion","des","lions","La savane","r"],
+  ["⚽","un ballon","des","ballons","La récréation","r"],
+  ["🦵","une jambe","des","jambes","Le corps","r"],
+  ["👂","une oreille","des","oreilles","Le corps","r"],
+  ["🌸","une fleur","des","fleurs","Les saisons","r"],
+  ["🧦","une chaussette","des","chaussettes","Les vêtements","r"],
+  ["🦊","un renard","des","renards","La forêt","r"],
+  ["🍴","un repas","des","repas","Les repas","i"],
+  ["🟫","un tapis","des","tapis","À la maison","i"],
+  ["🌱","un radis","des","radis","Fruits et légumes","i"],
+  ["🐻","un ours","des","ours","La forêt","i"],
+  ["💪","un bras","des","bras","Le corps","i"],
+  ["👃","un nez","des","nez","Le corps","i"],
+  ["🗣️","une voix","des","voix","Les mots invariables","i"],
+  ["💰","un prix","des","prix","Les mots invariables","i"]
+];
+
+const NB_X = 7, NB_L1 = 5;       // 3 exceptions + 7 mots en x + 5 mots du niveau 1 = 15
+const TOTAL = EXCEPTIONS.length + NB_X + NB_L1;
+
+const ROWS = ["azertyuiop".split(""), "qsdfghjklm".split(""), "wxcvbn".split("")];
+const ACCENTS = "éèêàâçîïôùûœ".split("");
+const COLORS = ["#ff6b6b","#ff9f43","#feca57","#1dd1a1","#48dbfb","#54a0ff","#5f27cd","#ff6fb5"];
+const ALLOWED = new Set([...ROWS.flat(), ...ACCENTS, "-"]);
+
+let questions = [], idx = 0, score = 0, typed = "", locked = false, missed = [];
+
+const $ = id => document.getElementById(id);
+const show = id => ["home","quiz","end"].forEach(s => $(s).classList.toggle("hidden", s !== id));
+
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- CLAVIER ---------- */
+function buildKeyboard() {
+  const kb = $("keyboard"); kb.innerHTML = "";
+  let c = 0;
+  const mk = (label, cls, fn) => {
+    const b = document.createElement("button");
+    b.className = "key " + (cls || "");
+    b.textContent = label;
+    if (!cls) b.style.background = COLORS[c++ % COLORS.length];
+    b.addEventListener("click", fn);
+    return b;
+  };
+  ROWS.forEach(r => {
+    const row = document.createElement("div"); row.className = "row";
+    r.forEach(ch => row.appendChild(mk(ch, "", () => typeChar(ch))));
+    kb.appendChild(row);
+  });
+  const rowA = document.createElement("div"); rowA.className = "row";
+  ACCENTS.forEach(ch => rowA.appendChild(mk(ch, "accent", () => typeChar(ch))));
+  kb.appendChild(rowA);
+  const rowC = document.createElement("div"); rowC.className = "row";
+  rowC.appendChild(mk("⌫ Effacer", "wide del", backspace));
+  rowC.appendChild(mk("✔ Valider", "wide go", validate));
+  const next = mk("Suivant ➜", "wide go next hidden", nextQuestion);
+  next.id = "nextBtn";
+  rowC.appendChild(next);
+  kb.appendChild(rowC);
+}
+
+function typeChar(ch) { if (locked || typed.length >= 20) return; typed += ch; renderAnswer(); }
+function backspace() { if (locked) return; typed = typed.slice(0, -1); renderAnswer(); }
+function renderAnswer() { $("answer").textContent = typed; }
+
+/* ---------- DÉROULEMENT ---------- */
+function startQuiz() {
+  questions = shuffle([
+    ...EXCEPTIONS,                                  // toujours les 3 exceptions
+    ...shuffle(WORDS_X).slice(0, NB_X),             // 7 mots en eu/eau/au au hasard
+    ...shuffle(WORDS_L1).slice(0, NB_L1)            // 5 mots du niveau 1 au hasard
+  ]);
+  idx = 0; score = 0; missed = [];
+  $("liveScore").textContent = 0;
+  show("quiz");
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[idx];
+  typed = ""; locked = false;
+  $("counter").textContent = (idx + 1) + " / " + TOTAL;
+  $("bar").style.width = (idx / TOTAL * 100) + "%";
+  $("theme").textContent = "🏷️ " + q[4];
+  $("emoji").textContent = q[0];
+  $("emoji").style.animation = "none"; void $("emoji").offsetWidth; $("emoji").style.animation = "";
+  $("question").innerHTML = '<span class="sing">' + q[1] + '</span>';
+  $("prefix").textContent = q[2];
+  const ans = $("answer");
+  ans.className = "answer cursor";
+  ans.textContent = "";
+  $("feedback").innerHTML = "Écris le pluriel avec le clavier 👇";
+  $("keyboard").classList.remove("locked");
+  $("nextBtn").classList.add("hidden");
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.remove("hidden"));
+}
+
+function ruleFor(type) {
+  switch (type) {
+    case "x": return "Les mots en <b>eu</b>, <b>eau</b>, <b>au</b> prennent un <b>x</b> au pluriel.";
+    case "e": return "⚠️ Exception ! <b>pneu</b>, <b>bleu</b> et <b>landau</b> prennent un <b>s</b>.";
+    case "i": return "Les mots qui se terminent par <b>s</b>, <b>x</b> ou <b>z</b> ne changent pas au pluriel.";
+    default:  return "On ajoute un <b>s</b> à la fin.";
+  }
+}
+
+function validate() {
+  if (locked) return;
+  if (typed.length === 0) { $("feedback").innerHTML = "✋ Écris d'abord ta réponse !"; return; }
+  locked = true;
+  const q = questions[idx];
+  const good = typed.trim().toLowerCase() === q[3];
+  const ans = $("answer");
+  ans.classList.remove("cursor");
+  if (good) {
+    score++;
+    $("liveScore").textContent = score;
+    ans.classList.add("ok");
+    const cheers = ["Bravo !","Super !","Génial !","Excellent !","Parfait !","Bien joué !"];
+    $("feedback").innerHTML = "✅ <b>" + cheers[Math.floor(Math.random()*cheers.length)] + "</b><br>" + ruleFor(q[5]);
+    confetti();
+  } else {
+    ans.classList.add("ko");
+    missed.push(q[2] + " " + q[3]);
+    $("feedback").innerHTML = "❌ Presque ! La bonne réponse : <b>" + q[2] + " " + q[3] + "</b><br>" + ruleFor(q[5]);
+  }
+  document.querySelectorAll(".key.go:not(.next), .key.del").forEach(k => k.classList.add("hidden"));
+  const nb = $("nextBtn");
+  nb.classList.remove("hidden");
+  nb.textContent = idx === TOTAL - 1 ? "🏁 Voir mon score" : "Suivant ➜";
+  $("keyboard").classList.add("locked");
+}
+
+function nextQuestion() {
+  if (!locked) return;
+  idx++;
+  if (idx >= TOTAL) endQuiz(); else showQuestion();
+}
+
+function endQuiz() {
+  $("bar").style.width = "100%";
+  show("end");
+  $("finalScore").textContent = score;
+  const stars = score >= 13 ? 3 : score >= 9 ? 2 : score >= 5 ? 1 : 0;
+  $("stars").textContent = "⭐".repeat(stars) + "☆".repeat(3 - stars);
+  let msg;
+  if (score === TOTAL) msg = "🏆 PARFAIT ! Tu es un(e) champion(ne) du pluriel ! 🏆";
+  else if (score >= 13) msg = "🌟 Bravo, c'est excellent ! Tu maîtrises presque tout !";
+  else if (score >= 9) msg = "👏 Très bien ! Encore un petit effort et ce sera parfait !";
+  else if (score >= 5) msg = "💪 Bon début ! Avec un nouvel essai, tu vas progresser !";
+  else msg = "🌱 Courage ! On apprend en s'entraînant. Rejoue, tu vas y arriver !";
+  $("finalMsg").innerHTML = msg + "<br><br>Tu veux essayer de faire encore mieux ?";
+  const rv = $("review");
+  if (missed.length) {
+    rv.classList.remove("hidden");
+    rv.innerHTML = "📚 <b>Mots à revoir :</b><br>" + missed.join(" &nbsp;•&nbsp; ");
+  } else rv.classList.add("hidden");
+  if (score >= 9) for (let i = 0; i < 4; i++) setTimeout(confetti, i * 300);
+}
+
+/* ---------- CONFETTIS ---------- */
+function confetti() {
+  const card = $("card");
+  const items = ["🎉","⭐","✨","🌟","🎈","💖"];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement("span");
+    s.className = "confetti";
+    s.textContent = items[Math.floor(Math.random() * items.length)];
+    s.style.left = Math.random() * 95 + "%";
+    s.style.animationDelay = Math.random() * 0.4 + "s";
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 2400);
+  }
+}
+
+/* ---------- CLAVIER PHYSIQUE (en bonus) ---------- */
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Enter") { e.preventDefault(); locked ? nextQuestion() : validate(); }
+  else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+  else if (e.key.length === 1 && ALLOWED.has(e.key.toLowerCase())) typeChar(e.key.toLowerCase());
+});
+
+$("startBtn").addEventListener("click", startQuiz);
+$("restartBtn").addEventListener("click", startQuiz);
+buildKeyboard();
+</script>
+</body>
+</html>
