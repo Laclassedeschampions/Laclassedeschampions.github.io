@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Défi lecture – CM2</title>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; padding:16px; font-family:Arial,Helvetica,sans-serif; color:#1f2937; background:linear-gradient(135deg,#dbeafe,#fef3c7); }
+main { max-width:850px; margin:0 auto; }
+.card { background:#fff; border-radius:18px; padding:20px; margin:14px 0; box-shadow:0 5px 18px rgba(0,0,0,.10); }
+h1 { text-align:center; font-size:clamp(24px,5vw,34px); margin:4px 0 10px; }
+.intro,.center { text-align:center; }
+.meta { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; }
+.pill { background:#eef2ff; border-radius:20px; padding:8px 12px; font-weight:bold; }
+#passage { display:block; width:100%; padding:18px; margin:8px 0 18px; border-left:6px solid #6366f1; border-radius:10px; background:#f8fafc; font-size:20px; line-height:1.6; overflow-wrap:anywhere; white-space:normal; }
+#question { font-size:21px; line-height:1.45; font-weight:bold; margin:12px 0; overflow-wrap:anywhere; }
+.answer { display:block; width:100%; min-width:0; height:auto; min-height:54px; margin:10px 0; padding:14px 16px; border:2px solid #cbd5e1; border-radius:12px; background:white; color:#1f2937; text-align:left; font:18px/1.45 Arial,Helvetica,sans-serif; white-space:normal; overflow-wrap:anywhere; word-break:normal; cursor:pointer; }
+.answer:focus { outline:3px solid #93c5fd; outline-offset:2px; }
+.answer:disabled { opacity:1; cursor:default; }
+.answer.correct { background:#dcfce7; border-color:#16a34a; }
+.answer.wrong { background:#fee2e2; border-color:#dc2626; }
+.action { border:0; border-radius:12px; padding:13px 20px; background:#4f46e5; color:white; font-size:17px; font-weight:bold; cursor:pointer; }
+#next { display:none; margin-top:12px; }
+#feedback { min-height:28px; font-weight:bold; }
+.hidden { display:none; }
+.score { font-size:44px; font-weight:bold; }
+@media(max-width:520px){ body{padding:8px} .card{padding:15px} #passage{font-size:18px} .answer{font-size:17px} }
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+<h1>📚 Défi lecture – CM2</h1>
+<p class="intro">55 textes • 10 questions par partie • compréhension explicite et implicite</p>
+<div class="meta">
+<span class="pill" id="counter">Question 1 / 10</span>
+<span class="pill" id="kind">Compréhension</span>
+<span class="pill">Score : <span id="score">0</span></span>
+</div>
+</section>
+<section class="card" id="game">
+<div id="passage"></div>
+<div id="question"></div>
+<div id="answers"></div>
+<p id="feedback" aria-live="polite"></p>
+<button class="action" id="next" type="button">Question suivante →</button>
+<p class="intro">Les réponses sont mélangées à chaque partie. Aucune lettre A, B ou C n'est affichée.</p>
+</section>
+<section class="card hidden center" id="finish">
+<h1>🎉 Partie terminée !</h1>
+<div class="score"><span id="finalScore">0</span> / 10</div>
+<p id="message"></p>
+<button class="action" id="restart" type="button">🔄 Nouvelle partie</button>
+</section>
+</main>
+<script>
+"use strict";
+const BANK = [{"theme": "Vie de classe", "passage": "La maîtresse présente le programme : recherche sur les volcans, puis affiche par groupes de trois. Avant la récréation, chaque groupe doit choisir un porte-parole.", "question": "Qui doit être choisi avant la récréation ?", "answers": ["un porte-parole", "la maîtresse", "un surveillant"], "correct": 0, "kind": "explicite"}, {"theme": "Vie de classe", "passage": "Le groupe discute longtemps. Hugo propose une solution, mais Zoé rappelle qu'il faut écouter chacun. Une autre proposition est finalement retenue.", "question": "Pourquoi l'idée d'Hugo n'est-elle pas retenue ?", "answers": ["Le groupe a choisi après avoir écouté les différentes idées.", "Hugo est absent.", "La maîtresse a annulé l'activité."], "correct": 0, "kind": "implicite"}, {"theme": "Vie de classe", "passage": "Maya prépare le journal de classe. Lina réalise les illustrations et Mehdi relit les articles. Aujourd'hui, ils doivent remettre les pages dans l'ordre avant l'impression.", "question": "Qui relit les articles ?", "answers": ["Lina", "Mehdi", "Maya"], "correct": 1, "kind": "explicite"}, {"theme": "Vie de classe", "passage": "À la fin de l'activité, plusieurs élèves rangent les feutres sans qu'on le leur demande. Arthur vérifie aussi que les tables sont propres avant de partir.", "question": "Que montre leur comportement ?", "answers": ["Ils prennent spontanément des responsabilités.", "Ils veulent éviter le travail.", "Ils ont terminé plus tôt que prévu."], "correct": 0, "kind": "implicite"}, {"theme": "Vie de classe", "passage": "Camille change d'avis après avoir entendu un argument auquel elle n'avait pas pensé. Elle explique que cette nouvelle information lui fait revoir son idée.", "question": "Que montre surtout Camille ?", "answers": ["Elle sait faire évoluer son opinion.", "Elle refuse le débat.", "Elle veut imposer son choix."], "correct": 0, "kind": "explicite"}, {"theme": "Journée à l'école", "passage": "Yanis arrive à 8 h 20. Après l'appel, la classe étudie un documentaire puis fait des mathématiques. L'après-midi, les élèves pratiquent un sport avant quinze minutes de lecture silencieuse.", "question": "Quelle activité a lieu avant la lecture silencieuse ?", "answers": ["Les mathématiques", "Le sport", "Le documentaire"], "correct": 1, "kind": "implicite"}, {"theme": "Journée à l'école", "passage": "Noé vérifie deux fois son cartable avant de partir. Il doit apprendre une poésie et terminer un exercice de mathématiques pour le lendemain.", "question": "Pourquoi vérifie-t-il son cartable ?", "answers": ["Pour emporter ce dont il a besoin pour ses devoirs.", "Pour retrouver un ballon.", "Pour préparer le déjeuner."], "correct": 0, "kind": "explicite"}, {"theme": "Journée à l'école", "passage": "Une sortie dans la cour était prévue à 14 h, mais une forte pluie commence. L'enseignante installe donc le matériel dans la classe.", "question": "Pourquoi l'activité est-elle déplacée ?", "answers": ["La pluie empêche la sortie prévue.", "Les élèves ont oublié leur matériel.", "L'activité est supprimée."], "correct": 0, "kind": "implicite"}, {"theme": "Journée à l'école", "passage": "Inès est fatiguée après le déjeuner. Elle participe pourtant au travail de groupe et relit attentivement les consignes avant de commencer.", "question": "Que peut-on déduire ?", "answers": ["Elle veut rester attentive malgré sa fatigue.", "Elle refuse de travailler.", "Elle ne comprend aucune consigne."], "correct": 0, "kind": "explicite"}, {"theme": "Journée à l'école", "passage": "À 16 h 20, les élèves rangent leurs affaires. Yanis regarde son emploi du temps et vérifie qu'il a bien noté le devoir de sciences pour vendredi.", "question": "Pourquoi consulte-t-il son emploi du temps ?", "answers": ["Pour ne pas oublier son travail à venir.", "Pour choisir son activité sportive.", "Pour savoir quand commence la récréation."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la ferme", "passage": "Le fermier ouvre l'enclos des poules et remplit leurs abreuvoirs. Ensuite, il distribue du foin aux chèvres avant d'aller dans les champs.", "question": "Quels animaux reçoivent du foin ?", "answers": ["Les poules", "Les chèvres", "Les agneaux"], "correct": 1, "kind": "explicite"}, {"theme": "Animaux de la ferme", "passage": "Trois vaches avancent vers l'abreuvoir. Plus loin, le cheval broute près de la clôture et les canards restent autour de la mare.", "question": "Quel animal est près de la clôture ?", "answers": ["Le cheval", "Le canard", "La vache"], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la ferme", "passage": "Les poules se dirigent vers l'abri dès les premières gouttes. Elles y restent jusqu'à ce que l'averse soit terminée.", "question": "Pourquoi restent-elles dans l'abri ?", "answers": ["Pour se protéger de la pluie.", "Pour attendre le cheval.", "Parce qu'elles ont fini de manger."], "correct": 0, "kind": "explicite"}, {"theme": "Animaux de la ferme", "passage": "Un agneau s'éloigne du troupeau et bêle. Il se retourne lorsqu'il entend le fermier, qui le reconduit doucement vers les autres.", "question": "Que peut-on déduire ?", "answers": ["L'agneau semble avoir besoin d'être guidé ou rassuré.", "Il veut quitter définitivement la ferme.", "Il cherche à rejoindre les poules."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la ferme", "passage": "La fermière constate que les lapins bougent moins que d'habitude. Elle vérifie leur eau et leur enclos avant de poursuivre ses tâches.", "question": "Pourquoi vérifie-t-elle plusieurs éléments ?", "answers": ["Pour s'assurer que les lapins vont bien.", "Pour les faire sortir.", "Pour préparer une course."], "correct": 0, "kind": "explicite"}, {"theme": "Repas", "passage": "À midi, la cantine sert une salade de tomates, du poulet avec du riz et un yaourt. Léa choisit aussi une pomme et laisse une partie du riz.", "question": "Quel dessert choisit Léa ?", "answers": ["Une pomme", "Un yaourt", "Des tomates"], "correct": 0, "kind": "implicite"}, {"theme": "Repas", "passage": "Pour une soupe, les élèves disposent de carottes, de poireaux, de pommes de terre et d'une courgette. Ils doivent d'abord laver les légumes.", "question": "Quel légume n'est pas cité ?", "answers": ["La courgette", "La tomate", "Le poireau"], "correct": 1, "kind": "explicite"}, {"theme": "Repas", "passage": "Sami goûte un plat inconnu. Il fait une grimace, puis reprend une bouchée après avoir vu son voisin manger avec plaisir.", "question": "Que montre son comportement ?", "answers": ["Il accepte de découvrir un aliment malgré sa première impression.", "Il refuse de manger.", "Il veut finir avant les autres."], "correct": 0, "kind": "implicite"}, {"theme": "Repas", "passage": "Clara choisit un fruit et du pain plutôt que les biscuits très sucrés proposés au goûter.", "question": "Pourquoi son choix paraît-il réfléchi ?", "answers": ["Elle cherche probablement un goûter plus équilibré.", "Elle déteste les fruits.", "Elle veut cacher les biscuits."], "correct": 0, "kind": "explicite"}, {"theme": "Repas", "passage": "Paul termine son repas puis remarque des miettes autour de son assiette. Il prend une éponge et nettoie sa place avant de partir.", "question": "Que peut-on comprendre ?", "answers": ["Il prend soin de laisser sa place propre.", "Il prépare le repas suivant.", "Il cherche quelque chose sous la table."], "correct": 0, "kind": "implicite"}, {"theme": "Fruits et légumes", "passage": "Emma achète deux pommes, une banane, trois kiwis et une orange pour une salade de fruits.", "question": "Combien de kiwis achète-t-elle ?", "answers": ["Deux", "Trois", "Quatre"], "correct": 1, "kind": "explicite"}, {"theme": "Fruits et légumes", "passage": "Dans le potager, les élèves récoltent des radis, des salades et des courgettes. Les tomates restent sur les plants car elles ne sont pas encore mûres.", "question": "Quels légumes récoltent-ils ?", "answers": ["Radis, salades et courgettes", "Tomates et pommes", "Carottes et poireaux"], "correct": 0, "kind": "implicite"}, {"theme": "Fruits et légumes", "passage": "Deux pommes sont comparées. La première est brillante mais légèrement molle ; la seconde est moins brillante mais bien ferme. Il faut choisir celle qui se conservera quelques jours.", "question": "Pourquoi choisir la seconde ?", "answers": ["Elle est plus ferme et risque moins de s'abîmer rapidement.", "Elle est plus brillante.", "Elle est forcément plus sucrée."], "correct": 0, "kind": "explicite"}, {"theme": "Fruits et légumes", "passage": "Les feuilles des courgettes sont grandes, mais certaines plantes ne portent pas encore de fruits. Les élèves savent qu'ils devront patienter.", "question": "Pourquoi doivent-ils patienter ?", "answers": ["Les fruits doivent encore se développer après la floraison.", "Les courgettes sont déjà trop mûres.", "Le potager doit être déplacé."], "correct": 0, "kind": "implicite"}, {"theme": "Fruits et légumes", "passage": "Nora trouve qu'un kiwi est plus acide que celui mangé la veille. Son frère lui explique que la maturité peut modifier le goût d'un fruit.", "question": "Quelle explication convient ?", "answers": ["Le goût peut varier selon le degré de maturité.", "Tous les kiwis ont toujours le même goût.", "Le goût dépend de la couleur de l'assiette."], "correct": 0, "kind": "explicite"}, {"theme": "Saisons", "passage": "En automne, les journées raccourcissent. Les élèves remarquent que les feuilles de plusieurs arbres changent de couleur puis tombent.", "question": "Quelle saison est décrite ?", "answers": ["Le printemps", "L'automne", "L'été"], "correct": 1, "kind": "implicite"}, {"theme": "Saisons", "passage": "En hiver, les températures sont basses. Après une nuit froide, une fine couche blanche recouvre les voitures et les pelouses.", "question": "Quel phénomène est observé ?", "answers": ["Du givre", "De la pluie chaude", "Du sable"], "correct": 0, "kind": "explicite"}, {"theme": "Saisons", "passage": "Au printemps, les journées deviennent plus longues. Des fleurs apparaissent et plusieurs oiseaux construisent leur nid dans les arbres.", "question": "Pourquoi ces observations correspondent-elles au printemps ?", "answers": ["La végétation reprend et les animaux deviennent plus actifs.", "Les arbres perdent toutes leurs feuilles.", "Les températures restent toujours négatives."], "correct": 0, "kind": "implicite"}, {"theme": "Saisons", "passage": "La classe organise une sortie tôt le matin en été. L'enseignante demande aux élèves de boire régulièrement et d'éviter les heures les plus chaudes.", "question": "Pourquoi partir tôt ?", "answers": ["Pour éviter une partie des fortes chaleurs.", "Parce que l'école ferme à midi.", "Pour observer les étoiles."], "correct": 0, "kind": "explicite"}, {"theme": "Saisons", "passage": "Jules porte une veste le matin, la retire à midi lorsque l'air devient plus doux, puis la remet en fin d'après-midi.", "question": "Que peut-on déduire ?", "answers": ["La température varie au cours de la journée.", "Il fait constamment très froid.", "Jules a perdu son manteau."], "correct": 0, "kind": "implicite"}, {"theme": "Vêtements", "passage": "Pour une randonnée, les élèves portent des chaussures adaptées, un pantalon confortable et une veste imperméable. Ils prennent aussi un petit sac à dos.", "question": "Quel vêtement protège notamment de la pluie ?", "answers": ["Le pantalon", "La veste imperméable", "Les chaussures"], "correct": 1, "kind": "explicite"}, {"theme": "Vêtements", "passage": "Pour la cérémonie, Adam porte une chemise blanche, un pantalon sombre et des chaussures propres. Sa sœur choisit une robe bleue.", "question": "Que porte Adam en haut ?", "answers": ["Une chemise blanche", "Une robe bleue", "Un cardigan"], "correct": 0, "kind": "implicite"}, {"theme": "Vêtements", "passage": "Lina regarde par la fenêtre. Le ciel est couvert et le vent souffle fort. Elle choisit un pull épais plutôt qu'un tee-shirt.", "question": "Pourquoi choisit-elle ce vêtement ?", "answers": ["Elle pense qu'il fera assez frais pour porter un vêtement chaud.", "Elle se prépare pour aller nager.", "Elle veut ressembler à sa sœur."], "correct": 0, "kind": "explicite"}, {"theme": "Vêtements", "passage": "Après le sport, Hugo range son tee-shirt humide dans un sac prévu pour ses affaires de sport plutôt que dans son cartable avec ses cahiers.", "question": "Pourquoi ?", "answers": ["Pour éviter de mouiller ou salir ses affaires scolaires.", "Parce qu'il a perdu son cartable.", "Pour donner son tee-shirt à l'enseignant."], "correct": 0, "kind": "implicite"}, {"theme": "Vêtements", "passage": "Avant une sortie en forêt, l'enseignante recommande des chaussures fermées et solides, même si la journée est chaude.", "question": "Pourquoi déconseille-t-elle les sandales ?", "answers": ["Le terrain peut être accidenté et les pieds doivent être protégés.", "Les sandales donnent toujours trop chaud.", "Les sandales sont interdites dans toutes les écoles."], "correct": 0, "kind": "explicite"}, {"theme": "Animaux de la forêt", "passage": "Les élèves trouvent des traces dans la boue. Le guide pense qu'elles ont été laissées par un sanglier. Plus loin, ils observent un écureuil.", "question": "Quel animal a probablement laissé les traces ?", "answers": ["Un renard", "Un sanglier", "Un écureuil"], "correct": 1, "kind": "implicite"}, {"theme": "Animaux de la forêt", "passage": "Le renard est surtout actif à la tombée du jour et pendant la nuit. Il se déplace discrètement à la recherche de nourriture.", "question": "Quand est-il particulièrement actif ?", "answers": ["À midi seulement", "À la tombée du jour et pendant la nuit", "Uniquement le matin"], "correct": 1, "kind": "explicite"}, {"theme": "Animaux de la forêt", "passage": "Le guide lève la main et montre un chevreuil entre deux arbres. Les élèves restent silencieux, puis l'animal disparaît dans les broussailles.", "question": "Pourquoi restent-ils silencieux ?", "answers": ["Pour éviter d'effrayer l'animal.", "Pour écouter une chanson.", "Pour téléphoner au guide."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la forêt", "passage": "Au pied d'un arbre, les élèves trouvent des noisettes ouvertes et des morceaux de coquille. Le guide leur explique qu'un animal les a probablement mangées.", "question": "Quel animal peut être associé à ces indices ?", "answers": ["Un écureuil", "Un cheval", "Une poule"], "correct": 0, "kind": "explicite"}, {"theme": "Animaux de la forêt", "passage": "Après une forte pluie, de nombreuses empreintes apparaissent dans le sol. Le guide précise qu'elles sont difficiles à identifier car plusieurs animaux sont passés au même endroit.", "question": "Pourquoi sont-elles difficiles à identifier ?", "answers": ["Plusieurs animaux ont laissé des traces dans la même zone.", "Le sol est complètement sec.", "Aucun animal n'est passé."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la savane", "passage": "Les lions vivent souvent en groupe. Les femelles participent généralement à la chasse tandis que les petits restent sous la surveillance des adultes.", "question": "Quels lions participent généralement à la chasse ?", "answers": ["Les femelles", "Les petits uniquement", "Les plus âgés uniquement"], "correct": 0, "kind": "explicite"}, {"theme": "Animaux de la savane", "passage": "L'éléphant utilise sa trompe pour saisir de la nourriture, boire et projeter de l'eau sur son corps. Ses grandes oreilles l'aident aussi à évacuer de la chaleur.", "question": "À quoi sert notamment sa trompe ?", "answers": ["À saisir de la nourriture et à boire.", "À courir plus vite.", "À construire des nids."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la savane", "passage": "Un groupe de zèbres se déplace lorsqu'un lion apparaît au loin. Les animaux se rapprochent et restent attentifs aux mouvements du prédateur.", "question": "Pourquoi se rapprochent-ils ?", "answers": ["Le groupe facilite la surveillance et la protection.", "Ils veulent aider le lion à chasser.", "Ils cherchent tous à dormir."], "correct": 0, "kind": "explicite"}, {"theme": "Animaux de la savane", "passage": "À la tombée de la nuit, certains animaux deviennent actifs tandis que d'autres cherchent un endroit où se reposer. Le guide rappelle que les espèces ont des habitudes différentes.", "question": "Que peut-on comprendre ?", "answers": ["Les animaux ont des rythmes d'activité différents.", "Tous dorment le jour.", "Tous chassent uniquement la nuit."], "correct": 0, "kind": "implicite"}, {"theme": "Animaux de la savane", "passage": "La girafe atteint les feuilles situées très haut dans les arbres. Les autres herbivores se nourrissent d'une végétation plus basse.", "question": "Quel avantage cela procure-t-il à la girafe ?", "answers": ["Elle accède à une nourriture située plus haut.", "Elle court plus vite que tous les autres.", "Elle n'a jamais besoin de boire."], "correct": 0, "kind": "explicite"}, {"theme": "Récréation et sport", "passage": "Pendant la récréation, Paul choisit de faire quelques tours de terrain avec un camarade avant de rejoindre son groupe.", "question": "Que choisit-il de faire ?", "answers": ["Quelques tours de terrain", "Lire en classe", "Jouer aux échecs"], "correct": 0, "kind": "implicite"}, {"theme": "Récréation et sport", "passage": "Lors d'un relais, chaque équipe doit transmettre un objet au coureur suivant. Le départ est donné lorsque les premiers coureurs sont prêts derrière la ligne.", "question": "Quel objet est transmis ?", "answers": ["Un ballon", "Un témoin", "Une corde"], "correct": 1, "kind": "explicite"}, {"theme": "Récréation et sport", "passage": "L'équipe de Lina prend de l'avance, puis un coureur laisse tomber le témoin. Il doit revenir le chercher avant de continuer.", "question": "Pourquoi l'équipe perd-elle du temps ?", "answers": ["Le témoin doit être récupéré.", "Les coureurs changent de piste.", "L'équipe ralentit volontairement."], "correct": 0, "kind": "implicite"}, {"theme": "Récréation et sport", "passage": "Pendant un match, Tom voit un camarade tomber. Il s'arrête et vérifie qu'il va bien avant de reprendre le jeu.", "question": "Que montre son comportement ?", "answers": ["Il fait passer l'entraide avant le jeu.", "Il veut empêcher son équipe de gagner.", "Il ne connaît pas les règles."], "correct": 0, "kind": "explicite"}, {"theme": "Récréation et sport", "passage": "Après plusieurs essais de saut, Chloé remarque qu'elle saute moins loin lorsqu'elle commence sa course trop près de la ligne. Elle modifie son élan.", "question": "Que montre cette situation ?", "answers": ["Elle analyse ses essais pour progresser.", "Elle abandonne le sport.", "Elle refuse les règles."], "correct": 0, "kind": "implicite"}, {"theme": "Classe et apprentissages", "passage": "Pour une expérience, les élèves disposent d'un verre, d'eau, d'une lampe et de plusieurs objets. Ils observent lesquels flottent puis notent les résultats dans un tableau.", "question": "Que font-ils après leurs observations ?", "answers": ["Ils notent les résultats dans un tableau.", "Ils quittent la classe.", "Ils dessinent seulement la lampe."], "correct": 0, "kind": "explicite"}, {"theme": "Classe et apprentissages", "passage": "En géographie, la classe compare une photographie de montagne, une photographie de littoral et une photographie de plaine.", "question": "Quels paysages compare-t-elle ?", "answers": ["Montagne, littoral et plaine", "Forêt, désert et savane", "Ville, école et ferme"], "correct": 0, "kind": "implicite"}, {"theme": "Classe et apprentissages", "passage": "Sarah trouve rapidement la réponse d'un exercice, mais remarque qu'elle n'a pas expliqué son raisonnement. Elle reprend son travail et ajoute les étapes de son calcul.", "question": "Pourquoi complète-t-elle sa réponse ?", "answers": ["Pour montrer et justifier son raisonnement.", "Parce que sa réponse était forcément fausse.", "Pour recopier un camarade."], "correct": 0, "kind": "explicite"}, {"theme": "Classe et apprentissages", "passage": "Une expérience donne un résultat différent de celui prévu par l'hypothèse de départ. L'enseignant demande aux élèves de chercher une nouvelle explication.", "question": "Que leur apprend cette situation ?", "answers": ["Une hypothèse peut être modifiée si les observations la contredisent.", "Une hypothèse ne doit jamais changer.", "Une expérience réussit seulement si l'hypothèse est exacte."], "correct": 0, "kind": "implicite"}, {"theme": "Classe et apprentissages", "passage": "Deux groupes ne sont pas d'accord sur une réponse. Au lieu de voter immédiatement, ils relisent le document et recherchent les informations permettant de trancher.", "question": "Pourquoi relisent-ils le document ?", "answers": ["Pour s'appuyer sur des informations précises.", "Pour éviter de terminer le travail.", "Pour choisir une réponse au hasard."], "correct": 0, "kind": "explicite"}];
+let questions = [];
+let position = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(list) {
+  const copy = list.slice();
+  for (let n = copy.length - 1; n > 0; n--) {
+    const j = Math.floor(Math.random() * (n + 1));
+    [copy[n], copy[j]] = [copy[j], copy[n]];
+  }
+  return copy;
+}
+function startGame() {
+  const explicit = shuffle(BANK.filter(item => item.kind === "explicite")).slice(0, 5);
+  const implicit = shuffle(BANK.filter(item => item.kind === "implicite")).slice(0, 5);
+  questions = shuffle(explicit.concat(implicit));
+  position = 0;
+  score = 0;
+  document.getElementById("score").textContent = "0";
+  document.getElementById("game").classList.remove("hidden");
+  document.getElementById("finish").classList.add("hidden");
+  renderQuestion();
+}
+function renderQuestion() {
+  answered = false;
+  const item = questions[position];
+  document.getElementById("counter").textContent = "Question " + (position + 1) + " / 10";
+  document.getElementById("kind").textContent = item.kind === "explicite" ? "Compréhension explicite" : "Compréhension implicite";
+  document.getElementById("passage").textContent = item.passage;
+  document.getElementById("question").textContent = item.question;
+  const container = document.getElementById("answers");
+  container.replaceChildren();
+  const choices = shuffle(item.answers.map((label, index) => ({label, correct:index === item.correct})));
+  choices.forEach(choice => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "answer";
+    button.textContent = choice.label;
+    button.addEventListener("click", () => selectAnswer(button, choice.correct));
+    container.appendChild(button);
+  });
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("next").style.display = "none";
+}
+function selectAnswer(selected, isCorrect) {
+  if (answered) return;
+  answered = true;
+  const buttons = Array.from(document.querySelectorAll(".answer"));
+  buttons.forEach(button => button.disabled = true);
+  if (isCorrect) {
+    selected.classList.add("correct");
+    score++;
+    document.getElementById("score").textContent = String(score);
+    document.getElementById("feedback").textContent = "✅ Bonne réponse !";
+  } else {
+    selected.classList.add("wrong");
+    document.getElementById("feedback").textContent = "❌ Ce n'est pas la bonne réponse.";
+    const correctText = questions[position].answers[questions[position].correct];
+    const correctButton = buttons.find(button => button.textContent === correctText);
+    if (correctButton) correctButton.classList.add("correct");
+  }
+  const next = document.getElementById("next");
+  next.textContent = position === 9 ? "Voir mon score →" : "Question suivante →";
+  next.style.display = "inline-block";
+}
+document.getElementById("next").addEventListener("click", () => {
+  if (position < 9) {
+    position++;
+    renderQuestion();
+  } else {
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("finish").classList.remove("hidden");
+    document.getElementById("finalScore").textContent = String(score);
+    document.getElementById("message").textContent =
+      score === 10 ? "Excellent ! 🏆" :
+      score >= 8 ? "Très bon travail ! 👏" :
+      score >= 6 ? "Bon travail, continue à chercher les indices du texte. 💪" :
+      "Continue tes efforts : relis bien le texte et cherche les indices. 🌟";
+  }
+});
+document.getElementById("restart").addEventListener("click", startGame);
+startGame();
+</script>
+</body>
+</html>
