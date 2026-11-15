@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Construis la phrase !</title>
+<style>
+  :root{
+    --bg1:#ffe29f; --bg2:#ffa99f; --bg3:#a1c4fd;
+    --ink:#2d2a4a; --card:#ffffffee;
+    --good:#2ecc71; --bad:#ff5e5e; --main:#6c5ce7; --accent:#ff9f1c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:"Trebuchet MS","Arial Rounded MT Bold","Comic Sans MS",Verdana,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2) 50%,var(--bg3));
+    background-attachment:fixed;
+    padding:16px;
+  }
+  #app{max-width:860px;margin:0 auto}
+  .card{
+    background:var(--card);border-radius:28px;padding:22px;
+    box-shadow:0 10px 30px rgba(45,42,74,.18);
+  }
+  h1{margin:0 0 6px;font-size:clamp(28px,6vw,46px);text-align:center;color:var(--main)}
+  h2{margin:0 0 10px;font-size:clamp(22px,4.5vw,32px);text-align:center}
+  .center{text-align:center}
+  .big-emoji{font-size:clamp(60px,14vw,110px);line-height:1.1;animation:bounce 2s infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  p.lead{font-size:clamp(18px,3.6vw,24px);line-height:1.5;margin:10px 0}
+
+  button{
+    font-family:inherit;cursor:pointer;border:none;border-radius:20px;
+    font-weight:bold;transition:transform .12s, box-shadow .12s, opacity .2s;
+  }
+  button:active{transform:scale(.95)}
+  .btn{
+    font-size:clamp(20px,4vw,26px);padding:14px 28px;color:#fff;
+    background:linear-gradient(180deg,#8c7bff,var(--main));
+    box-shadow:0 6px 0 #4a3cb5;margin:8px;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn.green{background:linear-gradient(180deg,#58e08f,var(--good));box-shadow:0 6px 0 #1c8f4d}
+  .btn.orange{background:linear-gradient(180deg,#ffbe55,var(--accent));box-shadow:0 6px 0 #c47400}
+  .btn.grey{background:linear-gradient(180deg,#b9b9d0,#9c9cb8);box-shadow:0 6px 0 #6f6f8a}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+  /* progression */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .badge{
+    background:var(--main);color:#fff;border-radius:999px;padding:6px 16px;
+    font-weight:bold;font-size:clamp(16px,3.2vw,20px);
+  }
+  .stars{font-size:clamp(18px,3.5vw,24px);margin-left:auto;letter-spacing:2px}
+  .bar{height:18px;background:#e6e3ff;border-radius:999px;overflow:hidden;margin-bottom:16px}
+  .bar>div{
+    height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,#ff9f1c,#ff5e8a,#6c5ce7);
+    transition:width .5s ease;
+  }
+
+  /* zone image + consigne */
+  .scene{text-align:center;margin-bottom:6px}
+  .scene .emoji{font-size:clamp(56px,13vw,96px);line-height:1.1}
+  .instr{text-align:center;font-size:clamp(17px,3.4vw,22px);margin:4px 0 14px}
+
+  /* ligne de réponse */
+  .answer{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;
+    padding:14px;border-radius:22px;background:#fff;
+    border:4px dashed #b5a8ff;margin-bottom:16px;
+  }
+  .answer.ok{border-color:var(--good);background:#eafff2}
+  .answer.ko{border-color:var(--bad);background:#fff0f0}
+  .hint{color:#9a95c4;font-size:clamp(16px,3vw,20px);font-style:italic}
+
+  .bank{
+    display:flex;flex-wrap:wrap;gap:12px;justify-content:center;
+    padding:12px;min-height:80px;
+  }
+
+  .tile{
+    font-size:clamp(20px,4.6vw,30px);padding:10px 18px;color:#fff;
+    border-radius:18px;box-shadow:0 5px 0 rgba(0,0,0,.22);line-height:1.2;
+  }
+  .tile:hover{transform:translateY(-3px) rotate(-1deg)}
+  .tile.locked{cursor:default;pointer-events:none}
+  @keyframes pop{0%{transform:scale(.6)}80%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .c0{background:#ef5da8}.c1{background:#ff8a3d}.c2{background:#2fb8a6}
+  .c3{background:#4d8bff}.c4{background:#9b5de5}.c5{background:#3ab54a}
+  .c6{background:#e5484d}.c7{background:#d9a400}
+
+  .actions{text-align:center;margin-top:8px}
+
+  /* emplacements fixes : rien ne bouge quand on choisit un mot */
+  .aslot{
+    height:66px;border:3px dashed #d3ccff;border-radius:20px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .aslot.filled{border-color:transparent}
+  .bslot{
+    display:inline-flex;border:3px dashed transparent;border-radius:22px;padding:2px;flex:none;
+  }
+  .bslot.empty{border-color:#dcd7ff}
+  .bslot.empty .tile{visibility:hidden}
+  .tile.dotTile{
+    background:#2d2a4a;font-size:clamp(26px,5vw,36px);font-weight:bold;
+    min-width:58px;text-align:center;padding:6px 18px 10px;
+  }
+
+  /* retour d'information */
+  .feedback{
+    margin-top:14px;padding:16px;border-radius:22px;text-align:center;
+    font-size:clamp(18px,3.6vw,24px);animation:pop .3s ease;
+  }
+  .feedback.ok{background:#d6f8e4;color:#14663a}
+  .feedback.ko{background:#ffe0e0;color:#8a1f1f}
+  .feedback .sentence{font-weight:bold;font-size:clamp(20px,4vw,28px);margin:6px 0}
+
+  /* résultats */
+  .score{
+    font-size:clamp(54px,14vw,100px);font-weight:bold;color:var(--main);
+    line-height:1.1;margin:6px 0;
+  }
+  .score small{font-size:.5em;color:#8b86b8}
+  .stars-big{font-size:clamp(34px,8vw,54px);letter-spacing:6px}
+  .errors{margin-top:18px;text-align:left}
+  .errors h3{text-align:center;font-size:clamp(20px,4vw,28px);margin:6px 0 12px}
+  .err{
+    background:#fff;border-radius:18px;padding:12px 16px;margin-bottom:12px;
+    border-left:10px solid var(--bad);font-size:clamp(17px,3.4vw,22px);line-height:1.5;
+  }
+  .err .e{font-size:1.8em;float:left;margin-right:12px}
+  .err .mine{color:#b3261e}
+  .err .right{color:#14804a;font-weight:bold}
+  .perfect{
+    background:#d6f8e4;border-radius:18px;padding:16px;text-align:center;
+    font-size:clamp(18px,3.6vw,24px);
+  }
+
+  .confetti{
+    position:fixed;top:-40px;font-size:28px;pointer-events:none;z-index:50;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9}}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   BANQUE DE 100 PHRASES, classées par nombre de mots
+   (chaque élément = [emoji, phrase]).
+   Le point final est ajouté automatiquement sous forme d'étiquette.
+   ============================================================ */
+var BANK = {
+5: [
+ ["✏️","Je taille mon crayon rouge"],
+ ["🏫","Les élèves entrent en classe"],
+ ["🐄","La vache mange de l’herbe"],
+ ["🐖","Le cochon est très gros"],
+ ["🍎","Je mange une pomme rouge"],
+ ["🥕","La carotte est très orange"],
+ ["☀️","Il fait chaud en été"],
+ ["❄️","En hiver il fait froid"],
+ ["🌧️","Il pleut sur la ville"],
+ ["👕","Je porte un pull bleu"],
+ ["👗","Ma jupe est très jolie"],
+ ["🦊","Le renard vit en forêt"],
+ ["🦁","Le lion dort sous l’arbre"],
+ ["🐘","L’éléphant gris boit de l’eau"],
+ ["⚽","Nous jouons au football ensemble",["Nous jouons ensemble au football"]],
+ ["🏃","Nous courons dans la cour"],
+ ["👀","Mes yeux sont très bleus"],
+ ["🛏️","Je me lève très tôt"],
+ ["🧼","Je me lave les mains"],
+ ["🍳","Papa prépare un bon repas"],
+ ["🎒","Ma trousse est très pleine"],
+ ["🔔","La cloche sonne à midi"],
+ ["🐱","Le chat est derrière l’arbre"],
+ ["🍽️","Nous mangeons dans le salon"],
+ ["🌞","Le soleil est très jaune"]
+],
+6: [
+ ["👨‍🏫","Le maître écrit au tableau noir"],
+ ["🐔","Les poules dorment dans le poulailler"],
+ ["🐑","Le mouton mange de l’herbe fraîche"],
+ ["🥛","Ma sœur boit un verre d’eau"],
+ ["🍅","Maman coupe les grosses tomates rouges"],
+ ["🍂","En automne les feuilles jaunes tombent"],
+ ["☁️","Aujourd’hui le ciel est tout gris"],
+ ["🥾","Je mets mes bottes de pluie"],
+ ["🦓","Le zèbre court dans la savane"],
+ ["🦉","Le hibou dort dans le chêne"],
+ ["🪢","Léa saute à la corde rose"],
+ ["🏀","Je tape dans le ballon rond"],
+ ["✋","Je lève ma main bien haut",["Je lève bien haut ma main"]],
+ ["🦒","La girafe a un long cou"],
+ ["✏️","Le crayon est sous la chaise"]
+],
+7: [
+ ["🌸","Le printemps arrive et les fleurs poussent"],
+ ["🎒","Je range mes livres dans mon cartable"],
+ ["🥐","Le matin je prends mon petit déjeuner"],
+ ["🍌","Mon grand frère mange une banane jaune"],
+ ["🦆","Les canards nagent dans la mare bleue"],
+ ["🍦","En été nous mangeons des glaces fraîches"],
+ ["💨","Aujourd’hui il y a beaucoup de vent"],
+ ["🐰","Le lapin blanc mange une carotte orange"],
+ ["📒","Le professeur distribue les cahiers aux élèves"],
+ ["👟","Je mets mes chaussures avant de sortir"],
+ ["🐒","Le singe mange une banane dans l’arbre"],
+ ["🎨","Nous dessinons un arbre sur la feuille"],
+ ["🍲","Le soir nous mangeons de la soupe"],
+ ["🥅","La balle est entre les deux buts"],
+ ["🐶","Le chien dort sous la grande table"]
+],
+8: [
+ ["🦊","Le renard se cache derrière un grand arbre"],
+ ["🔵","Les enfants jouent aux billes dans la cour"],
+ ["🧑‍🌾","Le fermier donne du grain aux petites poules"],
+ ["🥧","Ma mère prépare une tarte dans la cuisine"],
+ ["🛁","Je me lave dans la salle de bain"],
+ ["🧤","Le gardien de but attrape le ballon rond"],
+ ["⛄","En hiver il neige beaucoup sur les montagnes"],
+ ["🦒","Les girafes mangent les feuilles des grands arbres"],
+ ["🧥","Je mets une veste chaude quand il pleut"],
+ ["🍇","Les enfants mangent des fruits à la récréation"],
+ ["👃","Mon nez est au milieu de mon visage"],
+ ["🏠","Après la classe nous rentrons à la maison"],
+ ["🐦","Le petit oiseau bleu chante dans le nid"]
+],
+9: [
+ ["🐦","Le petit oiseau chante en haut du grand arbre"],
+ ["🦓","Les zèbres courent avec les girafes dans la savane",["Les girafes courent avec les zèbres dans la savane"]],
+ ["🌲","En hiver les arbres de la forêt sont blancs"],
+ ["👖","Je mets mon pantalon vert et mon pull rouge",["Je mets mon pull rouge et mon pantalon vert"]],
+ ["👃","Mon nez est entre mes yeux et ma bouche",["Mon nez est entre ma bouche et mes yeux"]],
+ ["☀️","Le matin je me lève puis je me lave"],
+ ["🍴","À midi tous les élèves mangent à la cantine"],
+ ["🐿️","L’écureuil roux monte vite en haut du grand chêne"],
+ ["🖍️","La maîtresse range les crayons dans la grande boîte"],
+ ["🌷","Au printemps les cerisiers ont de jolies fleurs roses"],
+ ["🏅","Le mercredi nous faisons du sport avec le maître"],
+ ["🐷","Sur la ferme les cochons dorment dans la paille"]
+],
+10: [
+ ["🪥","Je me lave les dents dans la salle de bain"],
+ ["🧤","Le gardien de but attrape le ballon avec ses mains"],
+ ["🎒","Mon sac bleu est posé à côté de la porte"],
+ ["🥧","Ma mère prépare une tarte aux pommes dans la cuisine"],
+ ["🌾","Le fermier donne du foin aux vaches et aux chevaux",["Le fermier donne du foin aux chevaux et aux vaches"]],
+ ["🚲","Le dimanche nous faisons du vélo avec papa et maman",["Le dimanche nous faisons du vélo avec maman et papa"]],
+ ["🌸","Au printemps les arbres ont des fleurs roses et blanches",["Au printemps les arbres ont des fleurs blanches et roses"]],
+ ["📖","Les élèves lisent une histoire à voix haute en classe",["Les élèves lisent une histoire en classe à voix haute"]],
+ ["☔","Quand il pleut je mets mon manteau et mes bottes",["Quand il pleut je mets mes bottes et mon manteau"]],
+ ["🏐","À la récréation nous jouons au ballon dans la cour",["À la récréation nous jouons dans la cour au ballon"]],
+ ["🌙","Le soir papa lit une histoire à mon petit frère"]
+],
+11: [
+ ["🦁","Le lion se repose sous un grand arbre dans la savane",["Le lion se repose dans la savane sous un grand arbre"]],
+ ["🤸","Pendant la récréation les enfants jouent au ballon dans la cour",["Pendant la récréation les enfants jouent dans la cour au ballon"]],
+ ["🦷","Le matin je me lève puis je me brosse les dents"],
+ ["📚","Les élèves lisent une belle histoire à voix haute en classe",["Les élèves lisent une belle histoire en classe à voix haute"]],
+ ["🖊️","Dans ma trousse il y a des crayons et un stylo",["Dans ma trousse il y a un stylo et des crayons"]],
+ ["🛋️","Mon chat dort sur le canapé du salon toute la journée",["Mon chat dort toute la journée sur le canapé du salon"]],
+ ["🍁","En automne les feuilles rouges et jaunes tombent des grands arbres",["En automne les feuilles jaunes et rouges tombent des grands arbres"]],
+ ["🐕","Le chien noir court derrière le ballon rouge dans le jardin",["Le chien noir court dans le jardin derrière le ballon rouge"]],
+ ["🐘","Au zoo nous voyons un éléphant gris et une girafe jaune",["Au zoo nous voyons une girafe jaune et un éléphant gris"]]
+]
+};
+
+/* Plan de la partie : 4 phrases de 5 mots, puis difficulté croissante */
+var PLAN = [5,5,5,5,6,6,7,7,8,8,9,9,10,10,11];
+var TOTAL = PLAN.length;
+
+/* ------------------------------ utilitaires ------------------------------ */
+function shuffle(a){
+  a = a.slice();
+  for (var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+function pickQuestions(){
+  var used = {}, qs = [];
+  PLAN.forEach(function(n){
+    var pool = shuffle(BANK[n]).filter(function(x){ return !used[x[1]]; });
+    var q = pool[0];
+    used[q[1]] = true;
+    qs.push({emoji:q[0], text:q[1], alts:q[2]||[], words:q[1].split(" ")});
+  });
+  return qs;
+}
+function esc(s){
+  return s.replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+  });
+}
+
+/* ------------------------------ état ------------------------------ */
+var app = document.getElementById("app");
+var S = null; // état de la partie
+
+function newGame(){
+  S = { qs: pickQuestions(), i:0, score:0, errors:[], done:false };
+  showQuestion();
+}
+
+/* ------------------------------ écran d'accueil ------------------------------ */
+function showHome(){
+  app.innerHTML =
+    '<div class="card center">' +
+      '<div class="big-emoji">🧩</div>' +
+      '<h1>Construis la phrase !</h1>' +
+      '<p class="lead">Clique sur les mots pour les mettre dans le bon ordre et fabriquer une phrase.</p>' +
+      '<p class="lead">🔤 Le mot avec une <b>majuscule</b> commence la phrase.<br>⚫ Le <b>point</b> est une étiquette comme les autres : place-le à la <b>fin</b> de la phrase !</p>' +
+      '<p class="lead">Il y a <b>15 questions</b>. Elles deviennent de plus en plus difficiles. Bonne chance ! 🍀</p>' +
+      '<button class="btn green" id="go">▶️ Commencer</button>' +
+    '</div>';
+  document.getElementById("go").onclick = newGame;
+}
+
+/* ------------------------------ question ------------------------------ */
+function $(id){ return document.getElementById(id); }
+
+function showQuestion(){
+  var q = S.qs[S.i];
+  S.done = false;
+  var n = q.words.length;
+
+  // les mots + l'étiquette point (qui compte comme une étiquette, pas comme un mot)
+  var list = q.words.map(function(w,idx){ return {id:idx, word:w, color:idx%8, dot:false}; });
+  list.push({id:n, word:".", color:0, dot:true});
+  S.tiles = shuffle(list);
+  S.byId = {};
+  S.tiles.forEach(function(t){ S.byId[t.id] = t; });
+  S.answer = [];
+  for (var k=0;k<=n;k++) S.answer.push(null);
+  S.bankEls = {};
+  S.slotEls = [];
+
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="top">' +
+        '<span class="badge">Question ' + (S.i+1) + ' / ' + TOTAL + '</span>' +
+        '<span class="badge" style="background:var(--accent)">Score : ' + S.score + '</span>' +
+      '</div>' +
+      '<div class="bar"><div id="barfill" style="width:' + (S.i/TOTAL*100) + '%"></div></div>' +
+      '<div class="scene"><div class="emoji">' + q.emoji + '</div></div>' +
+      '<div class="instr">Remets les mots dans l’ordre, puis n’oublie pas le point ⚫ à la fin 👇</div>' +
+      '<div class="answer" id="answer"></div>' +
+      '<div class="bank" id="bank"></div>' +
+      '<div class="actions" id="actions">' +
+        '<button class="btn grey" id="reset">↩️ Effacer</button>' +
+        '<button class="btn green" id="check" disabled>✅ Valider</button>' +
+      '</div>' +
+      '<div id="fb"></div>' +
+    '</div>';
+
+  $("reset").onclick = clearAll;
+  $("check").onclick = validate;
+  buildBoard();
+  setTimeout(function(){ var f = $("barfill"); if (f) f.style.width = ((S.i+1)/TOTAL*100)+"%"; }, 50);
+}
+
+function tileBtn(t){
+  var b = document.createElement("button");
+  b.type = "button";
+  b.className = "tile " + (t.dot ? "dotTile" : "c"+t.color);
+  b.textContent = t.word;
+  return b;
+}
+
+/* Le plateau est construit UNE SEULE FOIS par question :
+   les étiquettes ne sont jamais déplacées ni reconstruites. */
+function buildBoard(){
+  var bank = $("bank");
+  S.tiles.forEach(function(t){
+    var slot = document.createElement("div");
+    slot.className = "bslot";
+    var b = tileBtn(t);
+    b.onclick = function(){ pickTile(t.id); };
+    slot.appendChild(b);
+    bank.appendChild(slot);
+    S.bankEls[t.id] = { slot:slot, btn:b };
+  });
+
+  // largeur des emplacements de la ligne de réponse = mot le plus large
+  var mw = 0;
+  S.tiles.forEach(function(t){
+    if (!t.dot) mw = Math.max(mw, S.bankEls[t.id].btn.offsetWidth);
+  });
+  if (!mw) mw = 130;
+  mw = Math.max(mw, 80);
+
+  var ans = $("answer");
+  for (var k=0;k<S.answer.length;k++){
+    var s = document.createElement("div");
+    s.className = "aslot";
+    s.style.width = (mw + 8) + "px";
+    ans.appendChild(s);
+    S.slotEls.push(s);
+  }
+}
+
+function updateCheck(){
+  $("check").disabled = S.done || S.answer.indexOf(null) !== -1;
+}
+
+function pickTile(id){
+  if (S.done) return;
+  var k = S.answer.indexOf(null);
+  if (k < 0) return;
+  S.answer[k] = id;
+  S.bankEls[id].slot.classList.add("empty");
+  var b = tileBtn(S.byId[id]);
+  b.onclick = function(){ unpick(k); };
+  S.slotEls[k].appendChild(b);
+  S.slotEls[k].classList.add("filled");
+  updateCheck();
+}
+
+function unpick(k){
+  if (S.done) return;
+  var id = S.answer[k];
+  if (id === null) return;
+  S.answer[k] = null;
+  S.slotEls[k].innerHTML = "";
+  S.slotEls[k].classList.remove("filled");
+  S.bankEls[id].slot.classList.remove("empty");
+  updateCheck();
+}
+
+function clearAll(){
+  if (S.done) return;
+  for (var k=0;k<S.answer.length;k++) unpick(k);
+}
+
+/* ------------------------------ validation ------------------------------ */
+var GOOD_MSGS = ["Bravo ! 🎉","Super ! 🌟","Excellent ! 👏","Bien joué ! 💪","Génial ! 🚀","Tu es fort(e) ! 🏆"];
+
+function validate(){
+  if (S.done) return;
+  if (S.answer.indexOf(null) !== -1) return;
+  var q = S.qs[S.i];
+  var raw = S.answer.map(function(id){ return S.byId[id].word; }).join(" ");
+  var accepted = [q.text].concat(q.alts || []).map(function(s){ return s + " ."; });
+  var ok = accepted.indexOf(raw) !== -1;
+  var mine = raw.replace(/ \.$/, ".");
+  S.done = true;
+
+  $("answer").className = "answer " + (ok ? "ok" : "ko");
+  S.slotEls.forEach(function(s){ if (s.firstChild) s.firstChild.classList.add("locked"); });
+  updateCheck();
+
+  var fb = $("fb");
+  var last = (S.i === TOTAL-1);
+  var nextLabel = last ? "🏁 Voir mon résultat" : "Suivant ➜";
+
+  if (ok){
+    S.score++;
+    fb.innerHTML =
+      '<div class="feedback ok">' +
+        '<div>' + GOOD_MSGS[Math.floor(Math.random()*GOOD_MSGS.length)] + ' C’est une bonne phrase !</div>' +
+      '</div>';
+    smallConfetti();
+  } else {
+    S.errors.push({ emoji:q.emoji, mine: mine, right: q.text + "." });
+    fb.innerHTML =
+      '<div class="feedback ko">' +
+        '<div>Presque ! 💪 Voici la bonne phrase :</div>' +
+        '<div class="sentence">' + esc(q.text) + '.</div>' +
+      '</div>';
+  }
+
+  var extra = '';
+  if ("speechSynthesis" in window){
+    extra = '<button class="btn orange" id="say">🔊 Écouter</button>';
+  }
+  $("actions").innerHTML =
+    extra + '<button class="btn green" id="next">' + nextLabel + '</button>';
+
+  var say = $("say");
+  if (say) say.onclick = function(){
+    try{
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(q.text + ".");
+      u.lang = "fr-FR"; u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  };
+  $("next").onclick = function(){
+    try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+    if (last){ showResults(); } else { S.i++; showQuestion(); }
+  };
+  $("next").focus();
+}
+
+/* ------------------------------ résultats ------------------------------ */
+function showResults(){
+  var s = S.score;
+  var title, msg, face, nbStars;
+  if (s === 15){ title="Parfait ! Tu es un champion !"; msg="Toutes les phrases sont justes ! Tu es incroyable. Bravo, continue comme ça !"; face="🏆"; nbStars=5; }
+  else if (s >= 12){ title="Excellent travail !"; msg="Tu construis très bien les phrases. Encore un petit effort et ce sera parfait !"; face="🌟"; nbStars=4; }
+  else if (s >= 8){ title="Très bien, continue !"; msg="Tu progresses bien. Regarde tes erreurs, puis rejoue : tu vas faire encore mieux !"; face="😊"; nbStars=3; }
+  else if (s >= 4){ title="Bon début !"; msg="Ne t’inquiète pas, on apprend en s’entraînant. Regarde bien les bonnes phrases et recommence !"; face="💪"; nbStars=2; }
+  else { title="Courage !"; msg="Chaque essai t’aide à progresser. Lis les bonnes phrases ci-dessous, puis réessaie. Tu peux y arriver !"; face="🌈"; nbStars=1; }
+
+  var starStr = "";
+  for (var k=0;k<5;k++){ starStr += k<nbStars ? "⭐" : "☆"; }
+
+  var errHtml;
+  if (S.errors.length === 0){
+    errHtml = '<div class="perfect">🎉 Aucune erreur dans cette partie. Bravo !</div>';
+  } else {
+    errHtml = '<div class="errors"><h3>📝 Tes erreurs de cette partie (' + S.errors.length + ')</h3>';
+    S.errors.forEach(function(e){
+      errHtml +=
+        '<div class="err"><span class="e">' + e.emoji + '</span>' +
+        '<div>❌ Ta réponse : <span class="mine">' + esc(e.mine) + '</span></div>' +
+        '<div>✅ La bonne phrase : <span class="right">' + esc(e.right) + '</span></div></div>';
+    });
+    errHtml += '</div>';
+  }
+
+  app.innerHTML =
+    '<div class="card center">' +
+      '<div class="big-emoji">' + face + '</div>' +
+      '<h2>' + title + '</h2>' +
+      '<div class="score">' + s + '<small> / 15</small></div>' +
+      '<div class="stars-big">' + starStr + '</div>' +
+      '<p class="lead">' + msg + '</p>' +
+      '<button class="btn green" id="again">🔄 Recommencer</button>' +
+      errHtml +
+    '</div>';
+  document.getElementById("again").onclick = newGame;
+  window.scrollTo(0,0);
+  if (s >= 8) bigConfetti(s === 15 ? 90 : 50);
+}
+
+/* ------------------------------ confettis ------------------------------ */
+function confettiPiece(list){
+  var d = document.createElement("div");
+  d.className = "confetti";
+  d.textContent = list[Math.floor(Math.random()*list.length)];
+  d.style.left = Math.random()*100 + "vw";
+  d.style.animationDuration = (2 + Math.random()*2.5) + "s";
+  d.style.fontSize = (20 + Math.random()*20) + "px";
+  document.body.appendChild(d);
+  setTimeout(function(){ d.remove(); }, 5000);
+}
+function smallConfetti(){
+  for (var i=0;i<10;i++) confettiPiece(["⭐","✨","🎉"]);
+}
+function bigConfetti(n){
+  for (var i=0;i<n;i++) setTimeout(function(){ confettiPiece(["🎉","⭐","🎈","✨","🌟","🎊"]); }, i*40);
+}
+
+showHome();
+</script>
+</body>
+</html>

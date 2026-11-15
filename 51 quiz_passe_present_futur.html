@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passé, présent, futur : le grand quiz !</title>
+<style>
+:root{
+  --past:#ff9f43; --past-d:#e67e22;
+  --pres:#2ecc71; --pres-d:#1e9e55;
+  --fut:#6c5ce7; --fut-d:#4b3fc4;
+  --ink:#2d3436; --bg1:#74b9ff; --bg2:#fd79a8;
+  --ok:#2ecc71; --ko:#e74c3c;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--ink);
+  font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",Verdana,sans-serif;
+  background:linear-gradient(135deg,var(--bg1),#a29bfe 50%,var(--bg2));
+  display:flex; justify-content:center; padding:14px;
+}
+#app{width:100%; max-width:820px}
+header{text-align:center; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,.25); margin-bottom:8px}
+header h1{margin:4px 0; font-size:clamp(1.4rem,4.5vw,2.2rem)}
+.card{
+  background:#fff; border-radius:24px; padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.progress{display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap}
+.dot{width:20px; height:20px; border-radius:50%; background:#dfe6e9; border:2px solid #b2bec3;
+  display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:bold; color:#636e72}
+.dot.cur{background:#ffeaa7; border-color:#fdcb6e; transform:scale(1.25)}
+.dot.good{background:var(--ok); border-color:var(--pres-d); color:#fff}
+.dot.mid{background:var(--past); border-color:var(--past-d); color:#fff}
+.dot.bad{background:var(--ko); border-color:#c0392b; color:#fff}
+.partTag{display:inline-block; padding:4px 14px; border-radius:99px; color:#fff; font-weight:bold; margin-bottom:6px}
+.p1{background:var(--past-d)} .p2{background:var(--pres-d)} .p3{background:var(--fut-d)}
+h2{margin:6px 0 12px; font-size:clamp(1.1rem,3.4vw,1.5rem)}
+.hint{color:#636e72; font-size:.95rem; margin:0 0 10px}
+
+button{font-family:inherit; cursor:pointer}
+.big{
+  border:none; border-radius:16px; padding:12px 22px; font-size:1.15rem; font-weight:bold; color:#fff;
+  background:linear-gradient(#ff7675,#d63031); box-shadow:0 5px 0 #a82424; transition:transform .1s;
+}
+.big:hover{transform:translateY(-2px)}
+.big:active{transform:translateY(3px); box-shadow:0 2px 0 #a82424}
+.big:disabled{background:#b2bec3; box-shadow:0 5px 0 #8e9aa0; cursor:not-allowed; transform:none}
+.big.green{background:linear-gradient(#55efc4,#00b894); box-shadow:0 5px 0 #008a6d}
+.big.green:active{box-shadow:0 2px 0 #008a6d}
+.center{text-align:center; margin-top:14px}
+
+/* Partie 1 */
+.match{display:grid; grid-template-columns:1fr 150px; gap:14px; align-items:start}
+.sents{display:flex; flex-direction:column; gap:10px}
+.sent{
+  text-align:left; border:3px solid #dfe6e9; background:#f9fbfc; border-radius:16px;
+  padding:12px 14px; font-size:1.1rem; display:flex; gap:10px; align-items:center; justify-content:space-between;
+  min-height:62px;
+}
+.sent.sel{border-color:#fdcb6e; background:#fff8e1; box-shadow:0 0 0 4px #ffeaa755}
+.sent.ok{border-color:var(--ok); background:#eafaf1}
+.sent.ko{border-color:var(--ko); background:#fdecea}
+.sent .badge{flex:none}
+.badge{display:inline-block; padding:3px 10px; border-radius:99px; color:#fff; font-size:.9rem; font-weight:bold; white-space:nowrap}
+.b0{background:var(--past-d)} .b1{background:var(--pres-d)} .b2{background:var(--fut-d)}
+.tenses{display:flex; flex-direction:column; gap:10px}
+.tense{
+  border:none; border-radius:16px; padding:14px 8px; color:#fff; font-size:1.15rem; font-weight:bold;
+  box-shadow:0 4px 0 rgba(0,0,0,.25); transition:transform .1s;
+}
+.tense:hover:not(:disabled){transform:scale(1.04)}
+.tense:disabled{opacity:.35; cursor:not-allowed}
+.t0{background:var(--past)} .t1{background:var(--pres)} .t2{background:var(--fut)}
+
+/* Parties 2 et 3 */
+.choices{display:flex; flex-direction:column; gap:12px}
+.choice{
+  text-align:left; border:3px solid #dfe6e9; background:#f9fbfc; border-radius:16px;
+  padding:16px; font-size:1.2rem; display:flex; justify-content:space-between; gap:10px; align-items:center;
+}
+.choice:hover:not(:disabled){border-color:#74b9ff; background:#eef7ff}
+.choice.ok{border-color:var(--ok); background:#eafaf1}
+.choice.ko{border-color:var(--ko); background:#fdecea}
+.bigSentence{
+  font-size:clamp(1.3rem,4.5vw,1.9rem); text-align:center; background:#fff8e1; border:3px dashed #fdcb6e;
+  border-radius:20px; padding:24px 14px; margin:8px 0 16px;
+}
+.labels{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+.labels .tense{flex:1 1 150px; font-size:1.3rem; padding:18px 10px}
+
+.feedback{margin-top:14px; padding:12px 14px; border-radius:14px; font-weight:bold; font-size:1.1rem; text-align:center}
+.feedback.good{background:#d5f5e3; color:#1e8449}
+.feedback.bad{background:#fadbd8; color:#a93226}
+.feedback.warn{background:#fdebd0; color:#a04000}
+.feedback .why{display:block; font-weight:normal; font-size:1rem; margin-top:4px}
+
+/* Accueil / fin */
+.hero{text-align:center}
+.hero .emoji{font-size:4rem}
+.legend{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:14px 0}
+.score{font-size:clamp(2.4rem,9vw,4rem); font-weight:bold; color:var(--fut-d); margin:0}
+.stars{font-size:2rem; letter-spacing:4px}
+.errors{margin-top:18px}
+.err{border:2px solid #fab1a0; background:#fff5f2; border-radius:16px; padding:12px 14px; margin-bottom:10px}
+.err h4{margin:0 0 6px}
+.err ul{margin:4px 0 0; padding-left:0; list-style:none}
+.err li{margin:5px 0}
+.wrong{text-decoration:line-through; color:#c0392b}
+.fall{position:fixed; top:-40px; font-size:1.8rem; pointer-events:none; animation:fall linear forwards; z-index:50}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media (max-width:560px){
+  .match{grid-template-columns:1fr}
+  .tenses{flex-direction:row}
+  .tense{flex:1; padding:12px 4px; font-size:1rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>🕰️ Passé, présent, futur : le grand quiz ! 🚀</h1></header>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* ===== Banque de 100 questions : [passé, présent, futur] ===== */
+const BANK = [
+/* École */
+["Hier, j'ai appris une nouvelle poésie.","Aujourd'hui, j'apprends une nouvelle poésie.","Demain, j'apprendrai une nouvelle poésie."],
+["Les élèves ont rangé leurs cartables.","Les élèves rangent leurs cartables.","Les élèves rangeront leurs cartables."],
+["La maîtresse a distribué les cahiers.","La maîtresse distribue les cahiers.","La maîtresse distribuera les cahiers."],
+["Nous avons visité la bibliothèque de l'école.","Nous visitons la bibliothèque de l'école.","Nous visiterons la bibliothèque de l'école."],
+["Léa a écrit son prénom au tableau.","Léa écrit son prénom au tableau.","Léa écrira son prénom au tableau."],
+["Le directeur a salué les parents.","Le directeur salue les parents.","Le directeur saluera les parents."],
+/* Déroulement de la journée */
+["Tom s'est levé de bonne heure.","Tom se lève de bonne heure.","Tom se lèvera de bonne heure."],
+["Hier soir, nous avons dîné à sept heures.","Ce soir, nous dînons à sept heures.","Demain soir, nous dînerons à sept heures."],
+["Maman a réveillé mon frère.","Maman réveille mon frère.","Maman réveillera mon frère."],
+["J'ai pris le bus à huit heures.","Je prends le bus à huit heures.","Je prendrai le bus à huit heures."],
+["Nous avons fini l'école à quatre heures.","Nous finissons l'école à quatre heures.","Nous finirons l'école à quatre heures."],
+["Le soleil s'est couché très tard.","Le soleil se couche très tard.","Le soleil se couchera très tard."],
+/* Animaux de la ferme */
+["La vache a mangé de l'herbe.","La vache mange de l'herbe.","La vache mangera de l'herbe."],
+["Les poules ont pondu des œufs.","Les poules pondent des œufs.","Les poules pondront des œufs."],
+["Le cochon a roulé dans la boue.","Le cochon roule dans la boue.","Le cochon roulera dans la boue."],
+["Le fermier a nourri les moutons.","Le fermier nourrit les moutons.","Le fermier nourrira les moutons."],
+["Le coq a chanté au lever du soleil.","Le coq chante au lever du soleil.","Le coq chantera au lever du soleil."],
+["Le cheval a couru dans le pré.","Le cheval court dans le pré.","Le cheval courra dans le pré."],
+["Les canards ont nagé dans la mare.","Les canards nagent dans la mare.","Les canards nageront dans la mare."],
+/* Repas */
+["Nous avons mangé une soupe chaude.","Nous mangeons une soupe chaude.","Nous mangerons une soupe chaude."],
+["Papa a coupé le pain.","Papa coupe le pain.","Papa coupera le pain."],
+["J'ai bu un grand verre de lait.","Je bois un grand verre de lait.","Je boirai un grand verre de lait."],
+["Mamie a préparé un gâteau au chocolat.","Mamie prépare un gâteau au chocolat.","Mamie préparera un gâteau au chocolat."],
+["Les enfants ont goûté du fromage.","Les enfants goûtent du fromage.","Les enfants goûteront du fromage."],
+["Nous avons mis la table.","Nous mettons la table.","Nous mettrons la table."],
+["Julie a peint le ciel en bleu.","Julie peint le ciel en bleu.","Julie peindra le ciel en bleu."],
+/* Actions à la maison */
+["Je me suis lavé les mains dans la salle de bain.","Je me lave les mains dans la salle de bain.","Je me laverai les mains dans la salle de bain."],
+["Papa a préparé le repas dans la cuisine.","Papa prépare le repas dans la cuisine.","Papa préparera le repas dans la cuisine."],
+["Nous avons regardé un film dans le salon.","Nous regardons un film dans le salon.","Nous regarderons un film dans le salon."],
+["Maman a rangé ma chambre.","Maman range ma chambre.","Maman rangera ma chambre."],
+["J'ai brossé mes dents avant de dormir.","Je brosse mes dents avant de dormir.","Je brosserai mes dents avant de dormir."],
+["Mon frère a dormi dans sa chambre.","Mon frère dort dans sa chambre.","Mon frère dormira dans sa chambre."],
+["Nous avons lavé la vaisselle.","Nous lavons la vaisselle.","Nous laverons la vaisselle."],
+["Le chat a sauté sur le canapé.","Le chat saute sur le canapé.","Le chat sautera sur le canapé."],
+/* Fruits et légumes */
+["J'ai croqué une pomme rouge.","Je croque une pomme rouge.","Je croquerai une pomme rouge."],
+["Maman a épluché les carottes.","Maman épluche les carottes.","Maman épluchera les carottes."],
+["Nous avons cueilli des fraises.","Nous cueillons des fraises.","Nous cueillerons des fraises."],
+["Le jardinier a planté des tomates.","Le jardinier plante des tomates.","Le jardinier plantera des tomates."],
+["Léo a colorié le soleil en jaune.","Léo colorie le soleil en jaune.","Léo coloriera le soleil en jaune."],
+["J'ai pressé une orange.","Je presse une orange.","Je presserai une orange."],
+["La grand-mère a ramassé des poireaux.","La grand-mère ramasse des poireaux.","La grand-mère ramassera des poireaux."],
+/* Saisons */
+["En automne, les feuilles sont tombées.","En automne, les feuilles tombent.","En automne, les feuilles tomberont."],
+["L'hiver dernier, il a neigé.","Cet hiver, il neige.","L'hiver prochain, il neigera."],
+["Au printemps, les fleurs ont poussé.","Au printemps, les fleurs poussent.","Au printemps, les fleurs pousseront."],
+["L'été dernier, nous avons nagé dans la mer.","En été, nous nageons dans la mer.","L'été prochain, nous nagerons dans la mer."],
+["Le vent a soufflé fort.","Le vent souffle fort.","Le vent soufflera fort."],
+["Zoé a mélangé le rouge et le blanc.","Zoé mélange le rouge et le blanc.","Zoé mélangera le rouge et le blanc."],
+/* Vêtements */
+["J'ai mis mon manteau.","Je mets mon manteau.","Je mettrai mon manteau."],
+["Lina a enfilé ses bottes.","Lina enfile ses bottes.","Lina enfilera ses bottes."],
+["Nous avons porté des maillots de bain.","Nous portons des maillots de bain.","Nous porterons des maillots de bain."],
+["Papa a cherché son écharpe.","Papa cherche son écharpe.","Papa cherchera son écharpe."],
+["Le chien a couru à côté de moi.","Le chien court à côté de moi.","Le chien courra à côté de moi."],
+["Maman a lavé mon pull rouge.","Maman lave mon pull rouge.","Maman lavera mon pull rouge."],
+["Tu as perdu ton bonnet.","Tu perds ton bonnet.","Tu perdras ton bonnet."],
+/* Animaux de la forêt */
+["Le renard a couru entre les arbres.","Le renard court entre les arbres.","Le renard courra entre les arbres."],
+["L'écureuil a caché des noisettes.","L'écureuil cache des noisettes.","L'écureuil cachera des noisettes."],
+["Le hibou a hululé dans la nuit.","Le hibou hulule dans la nuit.","Le hibou hululera dans la nuit."],
+["Le sanglier a fouillé la terre.","Le sanglier fouille la terre.","Le sanglier fouillera la terre."],
+["Le cerf a traversé la clairière.","Le cerf traverse la clairière.","Le cerf traversera la clairière."],
+["Les hérissons ont dormi sous les feuilles.","Les hérissons dorment sous les feuilles.","Les hérissons dormiront sous les feuilles."],
+["L'ours a cherché du miel.","L'ours cherche du miel.","L'ours cherchera du miel."],
+/* Animaux de la savane */
+["Le lion a rugi très fort.","Le lion rugit très fort.","Le lion rugira très fort."],
+["L'éléphant a bu à la rivière.","L'éléphant boit à la rivière.","L'éléphant boira à la rivière."],
+["La girafe a mangé les feuilles de l'arbre.","La girafe mange les feuilles de l'arbre.","La girafe mangera les feuilles de l'arbre."],
+["Les zèbres ont galopé dans la plaine.","Les zèbres galopent dans la plaine.","Les zèbres galoperont dans la plaine."],
+["Le guépard a couru très vite.","Le guépard court très vite.","Le guépard courra très vite."],
+["Les singes ont grimpé dans le baobab.","Les singes grimpent dans le baobab.","Les singes grimperont dans le baobab."],
+["Le crocodile a attendu au bord de l'eau.","Le crocodile attend au bord de l'eau.","Le crocodile attendra au bord de l'eau."],
+/* Cour de récréation */
+["Nous avons sauté à la corde.","Nous sautons à la corde.","Nous sauterons à la corde."],
+["Les filles ont joué aux billes.","Les filles jouent aux billes.","Les filles joueront aux billes."],
+["J'ai attrapé le ballon.","J'attrape le ballon.","J'attraperai le ballon."],
+["Tom a dessiné une marelle à la craie.","Tom dessine une marelle à la craie.","Tom dessinera une marelle à la craie."],
+["Les élèves ont couru dans la cour.","Les élèves courent dans la cour.","Les élèves courront dans la cour."],
+["Nous avons joué à chat perché.","Nous jouons à chat perché.","Nous jouerons à chat perché."],
+["Le peintre a repeint le mur en vert.","Le peintre repeint le mur en vert.","Le peintre repeindra le mur en vert."],
+/* Sport */
+["J'ai nagé vingt longueurs.","Je nage vingt longueurs.","Je nagerai vingt longueurs."],
+["L'équipe a marqué un but.","L'équipe marque un but.","L'équipe marquera un but."],
+["Nous avons fait du vélo.","Nous faisons du vélo.","Nous ferons du vélo."],
+["Hugo a lancé le ballon dans le panier.","Hugo lance le ballon dans le panier.","Hugo lancera le ballon dans le panier."],
+["Les gymnastes ont fait la roue.","Les gymnastes font la roue.","Les gymnastes feront la roue."],
+["Le poisson a nagé dans le bocal.","Le poisson nage dans le bocal.","Le poisson nagera dans le bocal."],
+/* Vie de classe */
+["Nous avons rangé les crayons.","Nous rangeons les crayons.","Nous rangerons les crayons."],
+["Le délégué a effacé le tableau.","Le délégué efface le tableau.","Le délégué effacera le tableau."],
+["J'ai levé la main pour répondre.","Je lève la main pour répondre.","Je lèverai la main pour répondre."],
+["Nous avons lu une histoire en classe.","Nous lisons une histoire en classe.","Nous lirons une histoire en classe."],
+["Clara a collé la photo dans son cahier.","Clara colle la photo dans son cahier.","Clara collera la photo dans son cahier."],
+["La classe a écouté la maîtresse.","La classe écoute la maîtresse.","La classe écoutera la maîtresse."],
+/* Parties du corps */
+["J'ai tendu mon bras droit.","Je tends mon bras droit.","Je tendrai mon bras droit."],
+["Tu as fermé les yeux.","Tu fermes les yeux.","Tu fermeras les yeux."],
+["Il a plié ses genoux.","Il plie ses genoux.","Il pliera ses genoux."],
+["Nous avons battu des mains.","Nous battons des mains.","Nous battrons des mains."],
+["Elle a tourné la tête.","Elle tourne la tête.","Elle tournera la tête."],
+["Nous avons choisi un crayon violet.","Nous choisissons un crayon violet.","Nous choisirons un crayon violet."],
+/* Repères spatiaux */
+["Le chat a dormi sous la table.","Le chat dort sous la table.","Le chat dormira sous la table."],
+["J'ai posé mon livre sur l'étagère.","Je pose mon livre sur l'étagère.","Je poserai mon livre sur l'étagère."],
+["L'oiseau a volé au-dessus de la maison.","L'oiseau vole au-dessus de la maison.","L'oiseau volera au-dessus de la maison."],
+["Léa s'est cachée derrière l'arbre.","Léa se cache derrière l'arbre.","Léa se cachera derrière l'arbre."],
+["Nous avons marché devant la maîtresse.","Nous marchons devant la maîtresse.","Nous marcherons devant la maîtresse."],
+["Le ballon a roulé entre les deux chaises.","Le ballon roule entre les deux chaises.","Le ballon roulera entre les deux chaises."],
+["Les oiseaux ont chanté en haut de l'arbre.","Les oiseaux chantent en haut de l'arbre.","Les oiseaux chanteront en haut de l'arbre."]
+];
+
+const T = [
+  {n:"Passé",   e:"⏮️", art:"au passé"},
+  {n:"Présent", e:"📍", art:"au présent"},
+  {n:"Futur",   e:"🚀", art:"au futur"}
+];
+const NQ = 15;
+
+/* ===== Outils ===== */
+const $ = id => document.getElementById(id);
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function el(tag, cls, txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e; }
+function fmt(n){ return String(n).replace(".",","); }
+function badge(k){ return el("span","badge b"+k, T[k].e+" "+T[k].n); }
+function plan(){ // 5 temps, chacun des 3 présent au moins une fois
+  return shuffle([0,1,2,Math.floor(Math.random()*3),Math.floor(Math.random()*3)]);
+}
+
+/* ===== État ===== */
+let Q=[], R=[], cur=0;
+const card = $("card");
+
+function clearCard(){ card.innerHTML=""; }
+
+function header(i){
+  const wrap = el("div");
+  const prog = el("div","progress");
+  for(let k=0;k<NQ;k++){
+    const d = el("div","dot",String(k+1));
+    if(k<i){ const p=R[k].pts; d.classList.add(p===1?"good":(p>0?"mid":"bad")); }
+    if(k===i) d.classList.add("cur");
+    prog.appendChild(d);
+  }
+  wrap.appendChild(prog);
+  const part = Q[i].part;
+  const names = {1:"Partie 1 : relie les phrases",2:"Partie 2 : trouve la bonne phrase",3:"Partie 3 : trouve le temps"};
+  wrap.appendChild(el("span","partTag p"+part, names[part]+"  •  Question "+(i+1)+"/"+NQ));
+  return wrap;
+}
+
+/* ===== Accueil ===== */
+function home(){
+  clearCard();
+  const h = el("div","hero");
+  h.appendChild(el("div","emoji","🦉🕰️🌈"));
+  h.appendChild(el("h2",null,"Bienvenue, petit explorateur du temps !"));
+  const p = el("p",null,"Sauras-tu reconnaître si une phrase est au passé, au présent ou au futur ?");
+  h.appendChild(p);
+  const lg = el("div","legend");
+  [0,1,2].forEach(k=>lg.appendChild(badge(k)));
+  h.appendChild(lg);
+  const ul = el("p","hint","15 questions • 3 parties • une nouvelle partie à chaque fois ✨");
+  h.appendChild(ul);
+  const b = el("button","big green","C'est parti ! 🚀");
+  b.onclick = startGame;
+  h.appendChild(b);
+  card.appendChild(h);
+}
+
+function startGame(){
+  const idx = shuffle([...Array(BANK.length).keys()]).slice(0,NQ);
+  const p2 = plan(), p3 = plan();
+  Q = idx.map((b,i)=>{
+    if(i<5)  return {part:1, t:BANK[b]};
+    if(i<10) return {part:2, t:BANK[b], target:p2[i-5]};
+    return {part:3, t:BANK[b], target:p3[i-10]};
+  });
+  R = []; cur = 0;
+  show();
+}
+
+function show(){
+  if(cur>=NQ) return finish();
+  clearCard();
+  card.appendChild(header(cur));
+  const q = Q[cur];
+  if(q.part===1) part1(q);
+  else if(q.part===2) part2(q);
+  else part3(q);
+}
+
+function next(){ cur++; show(); }
+
+/* ===== Partie 1 : relier ===== */
+function part1(q){
+  card.appendChild(el("h2",null,"Relie chaque phrase au bon temps."));
+  card.appendChild(el("p","hint","1) Clique sur une phrase.  2) Clique sur son temps.  3) Valide !"));
+  const items = shuffle([0,1,2]).map(k=>({txt:q.t[k], tense:k}));
+  const a = [null,null,null], locked=[false,false,false];
+  let sel = 0, tries = 0, finished=false;
+
+  const grid = el("div","match");
+  const sents = el("div","sents");
+  const tenses = el("div","tenses");
+  grid.appendChild(sents); grid.appendChild(tenses);
+  card.appendChild(grid);
+  const fb = el("div"); card.appendChild(fb);
+  const act = el("div","center");
+  const vb = el("button","big","Valider ✅"); vb.disabled=true;
+  act.appendChild(vb); card.appendChild(act);
+
+  function nextFree(){
+    for(let i=0;i<3;i++) if(!locked[i] && a[i]===null) return i;
+    return null;
+  }
+  function draw(res){
+    sents.innerHTML=""; tenses.innerHTML="";
+    items.forEach((it,i)=>{
+      const b = el("button","sent");
+      b.appendChild(el("span",null,it.txt));
+      if(a[i]!==null) b.appendChild(badge(a[i]));
+      if(sel===i && !locked[i] && !finished) b.classList.add("sel");
+      if(res){ b.classList.add(res[i] ? "ok":"ko"); }
+      b.disabled = locked[i] || finished;
+      b.onclick = ()=>{ sel=i; draw(); };
+      sents.appendChild(b);
+    });
+    [0,1,2].forEach(k=>{
+      const b = el("button","tense t"+k, T[k].e+" "+T[k].n);
+      const usedLocked = a.some((v,i)=>v===k && locked[i]);
+      b.disabled = usedLocked || finished;
+      b.onclick = ()=>{
+        if(sel===null || locked[sel]){ fb.innerHTML=""; fb.appendChild(msg("warn","👆 Clique d'abord sur une phrase !")); return; }
+        fb.innerHTML="";
+        for(let i=0;i<3;i++) if(a[i]===k && !locked[i]) a[i]=null;
+        a[sel]=k;
+        sel = nextFree();
+        draw();
+      };
+      tenses.appendChild(b);
+    });
+    vb.disabled = finished ? false : !a.every(v=>v!==null);
+  }
+  function msg(cls, txt, why){
+    const m = el("div","feedback "+cls, txt);
+    if(why) m.appendChild(el("span","why",why));
+    return m;
+  }
+  vb.onclick = ()=>{
+    if(finished){ next(); return; }
+    const res = items.map((it,i)=>a[i]===it.tense);
+    const nOk = res.filter(Boolean).length;
+    fb.innerHTML="";
+    if(nOk===3){
+      finished=true;
+      const pts = tries===0 ? 1 : 0.5;
+      R[cur] = {pts, tries, type:1, items:items.map((it,i)=>({txt:it.txt,correct:it.tense,given:a[i]})), firstWrong:R[cur]&&R[cur].firstWrong};
+      if(tries>0) R[cur].retry=true;
+      draw(res);
+      fb.appendChild(msg("good", tries===0 ? "🎉 Bravo, tout est juste !" : "👏 Bien corrigé ! Tu as réussi au 2e essai.", tries===0?"":"(½ point)"));
+      vb.textContent="Question suivante ➡️"; vb.className="big green";
+    } else if(tries===0){
+      tries=1;
+      const firstGiven = a.slice();
+      R[cur] = {firstWrong:firstGiven};
+      draw(res);
+      res.forEach((ok,i)=>{ if(ok) locked[i]=true; });
+      fb.appendChild(msg("warn","🤔 Presque ! Les phrases en rouge sont à corriger.","Tu as droit à un deuxième essai : relis bien le verbe !"));
+      // on libère les phrases fausses
+      const wrongIdx = res.map((ok,i)=>ok?null:i).filter(v=>v!==null);
+      wrongIdx.forEach(i=>{ a[i]=null; });
+      sel = wrongIdx[0];
+      vb.disabled = true;
+      // on garde l'affichage rouge un instant puis on redessine
+      setTimeout(()=>{ draw(); },1200);
+      R[cur].items = items.map((it,i)=>({txt:it.txt,correct:it.tense,given:firstGiven[i]}));
+    } else {
+      finished=true;
+      const prev = R[cur];
+      R[cur] = {pts:0, tries:2, type:1, items:items.map((it,i)=>({txt:it.txt,correct:it.tense,given:(prev.items?prev.items[i].given:a[i])}))};
+      // on montre la correction
+      for(let i=0;i<3;i++){ a[i]=items[i].tense; }
+      draw(items.map((it,i)=>locked[i]));
+      fb.appendChild(msg("bad","😯 Ce n'est pas encore ça. Voici la correction :","Regarde bien les étiquettes de couleur et retiens-les !"));
+      vb.textContent="Question suivante ➡️"; vb.className="big green";
+    }
+  };
+  draw();
+}
+
+/* ===== Partie 2 : clique sur la phrase ===== */
+function part2(q){
+  const h = el("h2",null,"");
+  h.appendChild(document.createTextNode("Clique sur la phrase qui est "));
+  const b = badge(q.target); b.style.fontSize="1.2rem"; h.appendChild(b);
+  h.appendChild(document.createTextNode(" ."));
+  card.appendChild(h);
+  const items = shuffle([0,1,2]).map(k=>({txt:q.t[k], tense:k}));
+  const box = el("div","choices"); card.appendChild(box);
+  const fb = el("div"); card.appendChild(fb);
+  const act = el("div","center"); card.appendChild(act);
+  let done=false;
+  items.forEach(it=>{
+    const c = el("button","choice");
+    c.appendChild(el("span",null,it.txt));
+    c.onclick = ()=>{
+      if(done) return; done=true;
+      const good = it.tense===q.target;
+      R[cur] = {pts:good?1:0, tries:1, type:2, target:q.target, correctTxt:q.t[q.target], givenTxt:it.txt, givenTense:it.tense};
+      [...box.children].forEach((btn,i)=>{
+        btn.disabled=true;
+        btn.appendChild(badge(items[i].tense));
+        if(items[i].tense===q.target) btn.classList.add("ok");
+        else if(btn===c) btn.classList.add("ko");
+      });
+      const m = el("div","feedback "+(good?"good":"bad"), good?"🎉 Bravo, c'est la bonne phrase !":"😯 Oups, ce n'est pas celle-ci.");
+      if(!good) m.appendChild(el("span","why","La bonne réponse est en vert."));
+      fb.appendChild(m);
+      const nb = el("button","big green","Question suivante ➡️"); nb.onclick=next; act.appendChild(nb);
+    };
+    box.appendChild(c);
+  });
+}
+
+/* ===== Partie 3 : trouve le temps ===== */
+function part3(q){
+  card.appendChild(el("h2",null,"Lis la phrase. À quel temps est-elle ?"));
+  const txt = q.t[q.target];
+  card.appendChild(el("div","bigSentence",txt));
+  const row = el("div","labels"); card.appendChild(row);
+  const fb = el("div"); card.appendChild(fb);
+  const act = el("div","center"); card.appendChild(act);
+  let done=false;
+  [0,1,2].forEach(k=>{
+    const b = el("button","tense t"+k, T[k].e+" "+T[k].n);
+    b.onclick = ()=>{
+      if(done) return; done=true;
+      const good = k===q.target;
+      R[cur] = {pts:good?1:0, tries:1, type:3, txt, correct:q.target, given:k};
+      [...row.children].forEach((btn,i)=>{
+        btn.disabled=true;
+        if(i===q.target){ btn.disabled=false; btn.style.outline="5px solid #2ecc71"; btn.style.transform="scale(1.06)"; }
+        else if(i===k && !good){ btn.style.outline="5px solid #e74c3c"; }
+        else btn.style.opacity=.35;
+      });
+      const m = el("div","feedback "+(good?"good":"bad"), good?"🎉 Bravo, c'est bien "+T[q.target].art+" !":"😯 Oups ! Cette phrase est "+T[q.target].art+".");
+      fb.appendChild(m);
+      const nb = el("button","big green","Question suivante ➡️"); nb.onclick=next; act.appendChild(nb);
+    };
+    row.appendChild(b);
+  });
+}
+
+/* ===== Fin ===== */
+function finish(){
+  clearCard();
+  const total = R.reduce((s,r)=>s+r.pts,0);
+  const hero = el("div","hero");
+  hero.appendChild(el("p","hint","Ton score"));
+  hero.appendChild(el("p","score", fmt(total)+" / "+NQ));
+  const nStars = total>=14?3:total>=10?2:total>=6?1:0;
+  hero.appendChild(el("div","stars","⭐".repeat(nStars)+"☆".repeat(3-nStars)));
+  let m, e;
+  if(total===NQ){ e="🏆"; m="PARFAIT ! Tu es un champion du temps ! Aucune erreur, bravo !"; }
+  else if(total>=12){ e="🌟"; m="Excellent travail ! Tu maîtrises presque tout, continue comme ça !"; }
+  else if(total>=9){ e="👍"; m="Très bien ! Tu progresses vite. Regarde tes erreurs et rejoue pour faire encore mieux !"; }
+  else if(total>=5){ e="💪"; m="Bon début ! Avec un peu d'entraînement, tu vas y arriver. Courage !"; }
+  else { e="🌱"; m="Ne te décourage pas ! On apprend en s'entraînant. Relis les corrections et retente ta chance !"; }
+  hero.appendChild(el("div","emoji",e));
+  hero.appendChild(el("h2",null,m));
+  const again = el("button","big green","🔄 Recommencer avec de nouvelles questions");
+  again.onclick = startGame;
+  hero.appendChild(again);
+  card.appendChild(hero);
+
+  const bad = R.map((r,i)=>({r,i})).filter(o=>o.r.pts<1);
+  const errs = el("div","errors");
+  if(bad.length===0){
+    errs.appendChild(el("h3",null,"✅ Aucune erreur dans cette partie !"));
+  } else {
+    errs.appendChild(el("h3",null,"📝 À revoir ("+bad.length+")"));
+    bad.forEach(({r,i})=>{
+      const box = el("div","err");
+      const retry = r.pts===0.5;
+      if(r.type===1){
+        box.appendChild(el("h4",null,"Question "+(i+1)+" – Relier les phrases"+(retry?" (réussie au 2e essai)":"")));
+        const ul = el("ul");
+        r.items.slice().sort((x,y)=>x.correct-y.correct).forEach(it=>{
+          const li = el("li");
+          li.appendChild(badge(it.correct));
+          li.appendChild(document.createTextNode(" "+it.txt));
+          if(it.given!==null && it.given!==undefined && it.given!==it.correct){
+            const w = el("span","wrong"," (tu avais mis : "+T[it.given].n+")");
+            li.appendChild(w);
+          }
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      } else if(r.type===2){
+        box.appendChild(el("h4",null,"Question "+(i+1)+" – Clique sur la phrase "+T[r.target].art));
+        const ul = el("ul");
+        const l1 = el("li"); l1.appendChild(badge(r.target)); l1.appendChild(document.createTextNode(" "+r.correctTxt)); ul.appendChild(l1);
+        const l2 = el("li"); const w = el("span","wrong","Tu as choisi : "+r.givenTxt+" "); l2.appendChild(w); l2.appendChild(badge(r.givenTense)); ul.appendChild(l2);
+        box.appendChild(ul);
+      } else {
+        box.appendChild(el("h4",null,"Question "+(i+1)+" – Quel est le temps ?"));
+        const ul = el("ul");
+        const l1 = el("li"); l1.appendChild(document.createTextNode(r.txt+"  →  ")); l1.appendChild(badge(r.correct)); ul.appendChild(l1);
+        const l2 = el("li"); l2.appendChild(el("span","wrong","Tu avais répondu : "+T[r.given].n)); ul.appendChild(l2);
+        box.appendChild(ul);
+      }
+      errs.appendChild(box);
+    });
+    errs.appendChild(el("p","hint","Astuce : le passé parle de ce qui est fini, le présent de ce qui se passe maintenant, le futur de ce qui va arriver."));
+  }
+  card.appendChild(errs);
+  const again2 = el("div","center");
+  const b2 = el("button","big","🔄 Rejouer !"); b2.onclick=startGame; again2.appendChild(b2);
+  card.appendChild(again2);
+  if(total>=9) confetti();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function confetti(){
+  const em = ["🎉","⭐","🌈","🎈","✨","🦄","🏅"];
+  for(let i=0;i<36;i++){
+    const s = el("span","fall",em[Math.floor(Math.random()*em.length)]);
+    s.style.left = Math.random()*100+"vw";
+    s.style.animationDuration = (2.5+Math.random()*2.5)+"s";
+    s.style.animationDelay = (Math.random()*1.2)+"s";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),7000);
+  }
+}
+
+home();
+</script>
+</body>
+</html>
