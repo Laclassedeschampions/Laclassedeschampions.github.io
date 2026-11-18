@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz des groupes de verbes</title>
+<style>
+  :root{
+    --g1:#2f80ed; --g1d:#1c5fc0;
+    --g2:#27ae60; --g2d:#1b8548;
+    --g3:#f2994a; --g3d:#c97423;
+    --ok:#27ae60; --ko:#eb5757;
+    --ink:#2d2a4a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:"Comic Sans MS","Trebuchet MS","Segoe UI",Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(135deg,#ffe29f 0%,#ffa99f 35%,#c3a6ff 70%,#8fd3f4 100%);
+    background-attachment:fixed;
+    display:flex;justify-content:center;align-items:flex-start;
+    padding:16px;
+  }
+  .card{
+    width:100%;max-width:820px;background:#fff;border-radius:28px;
+    box-shadow:0 12px 40px rgba(60,30,120,.25);padding:24px 22px 28px;
+    border:6px solid #fff;outline:4px dashed #ffd166;outline-offset:-14px;
+    position:relative;overflow:hidden;
+  }
+  h1{margin:0 0 6px;font-size:clamp(1.6rem,5vw,2.4rem);text-align:center;color:#7b2ff7}
+  h1 span.a{color:var(--g1)} h1 span.b{color:var(--g2)} h1 span.c{color:var(--g3)}
+  .sub{text-align:center;font-size:1.1rem;margin:0 0 18px}
+  .screen{display:none}
+  .screen.active{display:block;animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+
+  /* Accueil */
+  .mascots{font-size:2.6rem;text-align:center;letter-spacing:8px;margin:8px 0}
+  .rules{display:grid;gap:10px;margin:16px 0 22px}
+  .rule{border-radius:18px;padding:12px 16px;color:#fff;font-size:1.05rem}
+  .rule b{font-size:1.2rem}
+  .rule.r1{background:var(--g1)} .rule.r2{background:var(--g2)} .rule.r3{background:var(--g3)}
+  .btn-main{
+    display:block;margin:0 auto;border:0;cursor:pointer;font:inherit;font-weight:bold;
+    font-size:1.5rem;padding:16px 36px;border-radius:999px;color:#fff;
+    background:linear-gradient(180deg,#ff6bcb,#d6249f);box-shadow:0 6px 0 #9c1a74;
+    transition:transform .1s, box-shadow .1s;
+  }
+  .btn-main:hover{transform:translateY(-2px)}
+  .btn-main:active{transform:translateY(4px);box-shadow:0 2px 0 #9c1a74}
+
+  /* Quiz */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-weight:bold}
+  .bar{flex:1;height:18px;background:#eee;border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff6bcb,#7b2ff7);border-radius:999px;transition:width .4s}
+  .scorebadge{background:#fff3c4;border-radius:999px;padding:4px 14px}
+  .theme{
+    text-align:center;margin:6px auto 0;display:table;background:#eef;border-radius:999px;
+    padding:4px 16px;font-size:1rem;
+  }
+  .verb{
+    text-align:center;font-weight:900;margin:16px 0 6px;
+    font-size:clamp(2.8rem,13vw,6.2rem);line-height:1.1;color:#4a2fbd;
+    text-shadow:3px 3px 0 #ffd166;word-break:break-word;
+  }
+  .question{text-align:center;font-size:1.15rem;margin-bottom:14px}
+  .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .choice{
+    border:0;cursor:pointer;font:inherit;font-weight:bold;color:#fff;
+    font-size:clamp(1rem,3.6vw,1.6rem);padding:20px 6px;border-radius:20px;
+    transition:transform .1s, box-shadow .1s, opacity .2s;
+  }
+  .choice small{display:block;font-weight:normal;font-size:.7em;opacity:.95;margin-top:4px}
+  .choice[data-g="1"]{background:var(--g1);box-shadow:0 6px 0 var(--g1d)}
+  .choice[data-g="2"]{background:var(--g2);box-shadow:0 6px 0 var(--g2d)}
+  .choice[data-g="3"]{background:var(--g3);box-shadow:0 6px 0 var(--g3d)}
+  .choice:hover:not(:disabled){transform:translateY(-3px)}
+  .choice:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+  .choice:disabled{cursor:default}
+  .choice.dim{opacity:.35}
+  .choice.right{outline:6px solid var(--ok);outline-offset:3px;animation:bounce .5s}
+  .choice.wrong{outline:6px solid var(--ko);outline-offset:3px;animation:shake .4s}
+  @keyframes bounce{0%,100%{transform:scale(1)}40%{transform:scale(1.1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .feedback{min-height:104px;margin-top:18px;text-align:center;font-size:1.25rem;border-radius:18px;padding:10px 12px}
+  .feedback.ok{background:#e3f9e9;color:#14683a}
+  .feedback.ko{background:#fde8e8;color:#9b2020}
+  .feedback .big{font-size:1.6rem;font-weight:bold;display:block}
+  .feedback .piege{display:block;margin-top:6px;font-size:1.05rem;color:#7a3c00;background:#fff0d6;border-radius:12px;padding:4px 10px}
+  .timer{height:8px;background:#eee;border-radius:999px;margin-top:10px;overflow:hidden;visibility:hidden}
+  .timer i{display:block;height:100%;width:100%;background:#7b2ff7}
+  .timer.run{visibility:visible}
+  .timer.run i{animation:shrink 3s linear forwards}
+  @keyframes shrink{from{width:100%}to{width:0}}
+
+  /* Résultat */
+  .trophy{font-size:4.5rem;text-align:center;margin:0}
+  .final{text-align:center;font-size:clamp(2.6rem,12vw,5rem);font-weight:900;color:#7b2ff7;margin:0}
+  .final small{font-size:.45em;color:var(--ink)}
+  .stars{text-align:center;font-size:2rem;margin:4px 0}
+  .msg{text-align:center;font-size:1.3rem;margin:8px 0 18px}
+  .errors{margin:22px 0 0}
+  .errors h2{font-size:1.3rem;text-align:center;color:#c0392b;margin:0 0 10px}
+  .err{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:#fff6f0;border-left:8px solid var(--ko);border-radius:14px;padding:10px 14px;margin-bottom:8px}
+  .err .v{font-size:1.5rem;font-weight:900;color:#4a2fbd;min-width:130px}
+  .tag{color:#fff;border-radius:999px;padding:3px 12px;font-weight:bold;font-size:.95rem;white-space:nowrap}
+  .tag.t1{background:var(--g1)} .tag.t2{background:var(--g2)} .tag.t3{background:var(--g3)}
+  .err .why{flex-basis:100%;font-size:.95rem;color:#555}
+  .perfect{background:#e3f9e9;border-radius:18px;padding:14px;text-align:center;font-size:1.2rem;color:#14683a}
+
+  canvas#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+  @media (max-width:520px){
+    .card{padding:18px 12px 22px}
+    .choices{gap:8px}
+    .choice{padding:16px 2px}
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<main class="card">
+  <!-- ACCUEIL -->
+  <section id="screen-home" class="screen active">
+    <h1>🎨 Les <span class="a">groupes</span> <span class="b">de</span> <span class="c">verbes</span> 🎨</h1>
+    <p class="sub">Es-tu capable de reconnaître le groupe de chaque verbe ?</p>
+    <div class="mascots">🐮 🦁 🍎 ⚽ 🌈</div>
+    <div class="rules">
+      <div class="rule r1"><b>1er groupe</b> : les verbes qui finissent par <b>-er</b> <i>(sauf aller !)</i><br>Exemple : chanter</div>
+      <div class="rule r2"><b>2ème groupe</b> : les verbes en <b>-ir</b> qui font <b>-issons</b> avec « nous »<br>Exemple : finir → nous finissons</div>
+      <div class="rule r3"><b>3ème groupe</b> : tous les autres verbes, et <b>aller</b><br>Exemple : prendre, partir, aller</div>
+    </div>
+    <p class="sub">15 verbes à classer. Tu as 3 secondes pour lire la réponse après chaque clic.</p>
+    <button class="btn-main" id="btn-start">▶ Commencer !</button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="screen-quiz" class="screen">
+    <div class="top">
+      <span id="qnum">Question 1 / 15</span>
+      <div class="bar"><i id="barfill"></i></div>
+      <span class="scorebadge">⭐ <span id="liveScore">0</span></span>
+    </div>
+    <div class="theme" id="theme"></div>
+    <div class="verb" id="verb">…</div>
+    <div class="question">De quel groupe est ce verbe ?</div>
+    <div class="choices" id="choices">
+      <button class="choice" data-g="1">1<sup>er</sup> groupe<small>(-er)</small></button>
+      <button class="choice" data-g="2">2<sup>ème</sup> groupe<small>(-issons)</small></button>
+      <button class="choice" data-g="3">3<sup>ème</sup> groupe<small>(les autres)</small></button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="timer" id="timer"><i></i></div>
+  </section>
+
+  <!-- RESULTAT -->
+  <section id="screen-end" class="screen">
+    <p class="trophy" id="trophy">🏆</p>
+    <p class="final"><span id="finalScore">0</span><small> / 15</small></p>
+    <div class="stars" id="stars"></div>
+    <p class="msg" id="msg"></p>
+    <button class="btn-main" id="btn-again">🔄 Recommencer</button>
+    <div class="errors" id="errors"></div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   BANQUE DE 100 VERBES : [verbe, groupe, thème]
+   40 verbes du 1er groupe, 30 du 2ème, 30 du 3ème (dont aller)
+   ============================================================ */
+const BANK = [
+  // ---------- 1er groupe (40) ----------
+  ["écouter",1,"🏫 L'école"],["dessiner",1,"🏫 L'école"],["colorier",1,"🎨 Les couleurs"],
+  ["effacer",1,"✏️ Le matériel"],["coller",1,"✏️ Le matériel"],["ranger",1,"🏫 En classe"],
+  ["calculer",1,"🏫 En classe"],["poser",1,"📍 Se repérer"],["cacher",1,"📍 Se repérer"],
+  ["monter",1,"📍 Se repérer"],
+  ["se laver",1,"🏠 La salle de bain"],["se brosser",1,"🏠 La salle de bain"],
+  ["manger",1,"🍽️ Les repas"],["cuisiner",1,"🏠 La cuisine"],["éplucher",1,"🥕 Fruits et légumes"],
+  ["goûter",1,"🍽️ Les repas"],["couper",1,"🥕 Fruits et légumes"],["mélanger",1,"🏠 La cuisine"],
+  ["brouter",1,"🐄 La ferme"],["galoper",1,"🐴 La ferme"],["aboyer",1,"🐶 La ferme"],
+  ["ronronner",1,"🐱 La maison"],["grimper",1,"🐒 La savane"],["chasser",1,"🦁 La savane"],
+  ["bêler",1,"🐑 La ferme"],
+  ["sauter",1,"🤾 La récréation"],["lancer",1,"⚽ Le sport"],["attraper",1,"⚽ Le sport"],
+  ["jouer",1,"🤾 La récréation"],["marcher",1,"🌲 La forêt"],["nager",1,"🏊 Le sport"],
+  ["glisser",1,"❄️ L'hiver"],
+  ["neiger",1,"🌨️ La météo"],["geler",1,"❄️ L'hiver"],["briller",1,"☀️ La météo"],
+  ["tonner",1,"⛈️ La météo"],["souffler",1,"🌬️ La météo"],
+  ["porter",1,"👕 Les vêtements"],["enfiler",1,"👕 Les vêtements"],["toucher",1,"🖐️ Le corps"],
+
+  // ---------- 2ème groupe (30) ----------
+  ["finir",2,"🏫 La journée"],["choisir",2,"🏫 En classe"],["remplir",2,"✏️ Le matériel"],
+  ["grandir",2,"🖐️ Le corps"],["grossir",2,"🐷 La ferme"],["maigrir",2,"🖐️ Le corps"],
+  ["réussir",2,"🏫 L'école"],["obéir",2,"🏫 L'école"],["punir",2,"🏫 L'école"],
+  ["applaudir",2,"🤾 La récréation"],["réfléchir",2,"🏫 En classe"],
+  ["rougir",2,"🎨 Les couleurs"],["pâlir",2,"🎨 Les couleurs"],["jaunir",2,"🍂 L'automne"],
+  ["verdir",2,"🌱 Le printemps"],["noircir",2,"🎨 Les couleurs"],["blanchir",2,"🎨 Les couleurs"],
+  ["mûrir",2,"🍎 Les fruits"],["fleurir",2,"🌸 Le printemps"],["nourrir",2,"🐄 La ferme"],
+  ["ralentir",2,"⚽ Le sport"],["saisir",2,"🤾 La récréation"],["bâtir",2,"🏠 La maison"],
+  ["agir",2,"🏫 À l'école"],["éclaircir",2,"☀️ La météo"],["rafraîchir",2,"🌡️ L'été"],
+  ["vieillir",2,"🍂 Les saisons"],["guérir",2,"🖐️ Le corps"],["rétrécir",2,"👕 Les vêtements"],
+  ["raccourcir",2,"👕 Les vêtements"],
+
+  // ---------- 3ème groupe (30) ----------
+  ["aller",3,"🏫 La journée"],
+  ["prendre",3,"🍽️ Les repas"],["mettre",3,"👕 Les vêtements"],["faire",3,"🏠 À la maison"],
+  ["dire",3,"🏫 En classe"],["voir",3,"🦁 La savane"],["venir",3,"🏫 L'école"],
+  ["partir",3,"🏫 La journée"],["sortir",3,"🤾 La récréation"],["courir",3,"🤾 La récréation"],
+  ["lire",3,"📚 En classe"],["écrire",3,"✏️ Le matériel"],["ouvrir",3,"📍 Se repérer"],
+  ["boire",3,"🍽️ Les repas"],["savoir",3,"🏫 En classe"],["pouvoir",3,"🏫 À l'école"],
+  ["vouloir",3,"🏫 À l'école"],["dormir",3,"🏠 La chambre"],["attendre",3,"🏫 La journée"],
+  ["entendre",3,"🖐️ Le corps"],["répondre",3,"🏫 En classe"],["descendre",3,"📍 Se repérer"],
+  ["apprendre",3,"🏫 En classe"],["comprendre",3,"🏫 En classe"],["tenir",3,"🖐️ Le corps"],
+  ["battre",3,"🍳 La cuisine"],["cueillir",3,"🍓 Fruits et légumes"],["pleuvoir",3,"🌧️ La météo"],
+  ["suivre",3,"🌲 La forêt"],["perdre",3,"⚽ Le sport"]
+];
+
+const GROUP_NAME = {1:"1er groupe",2:"2ème groupe",3:"3ème groupe"};
+const WHY = {
+  1:"Il finit par -er (et ce n'est pas « aller »).",
+  2:"Il finit par -ir et fait -issons avec « nous » (nous finissons).",
+  3:"C'est un verbe du 3ème groupe : il ne se range ni dans le 1er, ni dans le 2ème."
+};
+const WHY_VERB = {
+  "aller":"ALLER finit par -er mais c'est un verbe du 3ème groupe (je vais, nous allons) : c'est le piège !"
+};
+
+/* ---------- Outils ---------- */
+const $ = id => document.getElementById(id);
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function pick(group, n, exclude){
+  return shuffle(BANK.filter(v=>v[1]===group && v[0]!==exclude)).slice(0,n);
+}
+function buildQuiz(){
+  const aller = BANK.find(v=>v[0]==="aller");
+  const set = [...pick(1,5), ...pick(2,5), ...pick(3,4,"aller"), aller];
+  return shuffle(set);
+}
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- État ---------- */
+let questions=[], idx=0, score=0, errors=[], locked=false, nextTimer=null;
+
+function startQuiz(){
+  questions = buildQuiz(); idx=0; score=0; errors=[]; locked=false;
+  $("liveScore").textContent="0";
+  show("screen-quiz");
+  showQuestion();
+}
+
+function showQuestion(){
+  const [verb,g,theme] = questions[idx];
+  locked=false;
+  $("qnum").textContent = "Question "+(idx+1)+" / 15";
+  $("barfill").style.width = (idx/15*100)+"%";
+  $("theme").textContent = theme;
+  $("verb").textContent = verb;
+  $("feedback").className="feedback";
+  $("feedback").innerHTML="";
+  const t=$("timer"); t.classList.remove("run");
+  document.querySelectorAll(".choice").forEach(b=>{
+    b.disabled=false; b.classList.remove("dim","right","wrong");
+  });
+}
+
+function answer(choice){
+  if(locked) return;
+  locked=true;
+  const [verb,good] = questions[idx];
+  const fb=$("feedback");
+  document.querySelectorAll(".choice").forEach(b=>{
+    b.disabled=true;
+    const g=+b.dataset.g;
+    if(g===good) b.classList.add("right");
+    else if(g===choice) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  const piege = WHY_VERB[verb] ? `<span class="piege">⚠️ ${WHY_VERB[verb]}</span>` : "";
+  if(choice===good){
+    score++; $("liveScore").textContent=score;
+    fb.className="feedback ok";
+    fb.innerHTML = `<span class="big">🎉 Bravo ! C'est exact !</span>« ${verb} » est du <b>${GROUP_NAME[good]}</b>.${piege}`;
+    launchConfetti();
+  }else{
+    errors.push({verb, good, chosen:choice});
+    fb.className="feedback ko";
+    fb.innerHTML = `<span class="big">😮 Oups, pas tout à fait…</span>La bonne réponse : « ${verb} » est du <b>${GROUP_NAME[good]}</b>.${piege}`;
+  }
+  const t=$("timer"); t.classList.remove("run"); void t.offsetWidth; t.classList.add("run");
+  nextTimer=setTimeout(nextQuestion,3000);
+}
+
+function nextQuestion(){
+  clearTimeout(nextTimer);
+  idx++;
+  if(idx>=15) endQuiz(); else showQuestion();
+}
+
+function endQuiz(){
+  $("barfill").style.width="100%";
+  show("screen-end");
+  $("finalScore").textContent=score;
+  const stars = score>=14?3:score>=10?2:score>=6?1:0;
+  $("stars").textContent = "⭐".repeat(stars)+"☆".repeat(3-stars);
+  let trophy,msg;
+  if(score===15){trophy="🏆";msg="PARFAIT ! 15 sur 15 ! Tu es un champion des verbes ! 🥇";}
+  else if(score>=12){trophy="🥇";msg="Excellent travail ! Tu connais très bien les groupes de verbes !";}
+  else if(score>=9){trophy="🥈";msg="Très bien ! Tu es sur la bonne voie, encore un petit effort !";}
+  else if(score>=5){trophy="🥉";msg="C'est un bon début ! En t'entraînant, tu vas faire de gros progrès !";}
+  else{trophy="💪";msg="Courage ! Chaque erreur nous aide à apprendre. Retente ta chance !";}
+  $("trophy").textContent=trophy;
+  $("msg").textContent=msg;
+  const box=$("errors");
+  if(errors.length===0){
+    box.innerHTML = `<div class="perfect">✅ Aucune erreur dans cette partie, bravo !</div>`;
+  }else{
+    box.innerHTML = `<h2>📝 Les verbes à revoir (${errors.length})</h2>` + errors.map(e=>`
+      <div class="err">
+        <span class="v">${e.verb}</span>
+        <span>Ta réponse : <span class="tag t${e.chosen}">${GROUP_NAME[e.chosen]}</span></span>
+        <span>Bonne réponse : <span class="tag t${e.good}">${GROUP_NAME[e.good]}</span></span>
+        <span class="why">💡 ${WHY_VERB[e.verb] || WHY[e.good]}</span>
+      </div>`).join("");
+  }
+  if(score>=10) launchConfetti(true);
+}
+
+/* ---------- Événements ---------- */
+$("btn-start").onclick = startQuiz;
+$("btn-again").onclick = startQuiz;
+document.querySelectorAll(".choice").forEach(b=>{
+  b.addEventListener("click",()=>answer(+b.dataset.g));
+});
+document.addEventListener("keydown",e=>{
+  if($("screen-quiz").classList.contains("active") && ["1","2","3"].includes(e.key)) answer(+e.key);
+});
+
+/* ---------- Confettis ---------- */
+const cv=$("confetti"), ctx=cv.getContext("2d");
+let parts=[], anim=null;
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}
+addEventListener("resize",resize); resize();
+function launchConfetti(big){
+  const colors=["#ff6bcb","#ffd166","#2f80ed","#27ae60","#f2994a","#7b2ff7","#eb5757"];
+  const n=big?260:130;
+  for(let i=0;i<n;i++){
+    parts.push({
+      x:cv.width/2+(Math.random()-.5)*cv.width*(big?.9:.3),
+      y:cv.height*(big?0.1:0.45),
+      vx:(Math.random()-.5)*(big?10:14),
+      vy:Math.random()*-12-(big?2:4),
+      g:.3+Math.random()*.2,
+      s:6+Math.random()*8,
+      r:Math.random()*6.28, vr:(Math.random()-.5)*.4,
+      c:colors[Math.floor(Math.random()*colors.length)],
+      life:0, max:110+Math.random()*60
+    });
+  }
+  if(!anim) anim=requestAnimationFrame(tick);
+}
+function tick(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life<p.max && p.y<cv.height+30);
+  for(const p of parts){
+    p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.vx*=.99; p.r+=p.vr; p.life++;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+    ctx.globalAlpha=Math.max(0,1-p.life/p.max);
+    ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+    ctx.restore();
+  }
+  if(parts.length) anim=requestAnimationFrame(tick);
+  else{anim=null;ctx.clearRect(0,0,cv.width,cv.height);}
+}
+</script>
+</body>
+</html>
