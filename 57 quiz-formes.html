@@ -77,16 +77,17 @@
     font-weight: bold;
     padding: 14px 6px;
     border-radius: 16px;
-    border: 3px solid transparent;
-    color: #fff;
+    border: 3px solid #d9c7a3;
+    background: #f5e6c8;
+    color: #5a4630;
     cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,.2);
+    box-shadow: 0 4px 0 #cdb98f;
     transition: transform .1s;
   }
   .label-btn:hover:not(:disabled) { transform: translateY(-3px) scale(1.03); }
   .label-btn:disabled { cursor: default; }
-  .label-btn.good { outline: 5px solid #1fb94a; background: #1fb94a !important; transform: scale(1.06); }
-  .label-btn.bad { outline: 5px solid #e53935; background: #e53935 !important; animation: shake .4s; }
+  .label-btn.good { outline: 5px solid #1fb94a; background: #1fb94a !important; color: #fff; border-color: #1fb94a; transform: scale(1.06); }
+  .label-btn.bad { outline: 5px solid #e53935; background: #e53935 !important; color: #fff; border-color: #e53935; animation: shake .4s; }
   .label-btn.faded { opacity: .45; }
   @keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
 
@@ -207,8 +208,6 @@
     { id: "arc",       label: "un arc",       color: "#fb5607",
       svg: '<path d="M12 74 A38 38 0 0 1 88 74" fill="none" stroke="#fb5607" stroke-width="12" stroke-linecap="round"/>' }
   ];
-  var BTN_COLORS = ["#ef476f","#118ab2","#f5a300","#06a77d","#8a5cff","#ff7b00",
-                    "#d4a000","#00a5c8","#e63946","#9d4edd","#2a9d8f","#fb5607"];
 
   function svgOf(shape, size) {
     return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
@@ -268,7 +267,6 @@
       b.type = "button";
       b.textContent = s.label;
       b.dataset.id = s.id;
-      b.style.background = BTN_COLORS[i];
       b.addEventListener("click", function () { answer(s.id); });
       box.appendChild(b);
     });
